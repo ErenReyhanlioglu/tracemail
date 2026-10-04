@@ -1,0 +1,10 @@
+# dbt project (ADR-0014). Models are implemented in Phase 1, step 1.5.
+name: tracemail
+version: "0.0.0"
+config-version: 2
+profile: tracemail
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+clean-targets: ["target", "dbt_packages"]

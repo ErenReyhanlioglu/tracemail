@@ -1,0 +1,101 @@
+[project]
+name = "tracemail"
+version = "0.0.0"
+description = "Job-application mailbox tracking system (uv workspace root)."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "tracemail-pipeline",
+    "tracemail-llm",
+    "tracemail-evals",
+    "tracemail-api",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["packages/*", "apps/api"]
+exclude = ["dbt"]
+
+[tool.uv.sources]
+tracemail-pipeline = { workspace = true }
+tracemail-llm = { workspace = true }
+tracemail-evals = { workspace = true }
+tracemail-api = { workspace = true }
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",       # pycodestyle errors (incl. E722 bare except)
+    "W",       # pycodestyle warnings
+    "F",       # pyflakes (incl. F403 star imports)
+    "I",       # import order
+    "B",       # bugbear (incl. B006 mutable defaults)
+    "UP",      # modern syntax (X | None)
+    "C90",     # cyclomatic complexity
+    "D100",    # module docstring required
+    "D104",    # package docstring required
+    "T20",     # no print()
+    "FIX",     # no TODO / FIXME
+    "ERA",     # no commented-out code
+    "S101",    # no assert outside tests
+    "PLW0603", # no global statement
+    "DTZ",     # timezone-aware datetimes only
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S101"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+explicit_package_bases = true
+mypy_path = [
+    "packages/pipeline/src",
+    "packages/llm/src",
+    "packages/evals/src",
+    "apps/api/src",
+]
+files = [
+    "packages/pipeline/src",
+    "packages/pipeline/tests",
+    "packages/llm/src",
+    "packages/llm/tests",
+    "packages/evals/src",
+    "packages/evals/tests",
+    "apps/api/src",
+    "apps/api/tests",
+]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "packages/pipeline/tests",
+    "packages/llm/tests",
+    "packages/evals/tests",
+    "apps/api/tests",
+]
+addopts = "--import-mode=importlib --strict-markers -m 'not integration' --cov --cov-report=term-missing"
+markers = ["integration: touches real cloud services; run separately"]
+
+[tool.coverage.run]
+source = ["tracemail_pipeline", "tracemail_llm", "tracemail_evals", "tracemail_api"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+
+[dependency-groups]
+dev = [
+    "mypy>=2.4.0",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.16.10",
+]
