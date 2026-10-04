@@ -1,0 +1,5 @@
+# Single Compose definition for local and the VM (ADR-0016).
+# Services are added in Phase 1: 1.7 (Airflow), 1.9 (API), 1.10 (web),
+# 1.11 (tunnel).
+name: tracemail
+services: {}

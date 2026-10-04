@@ -1,0 +1,43 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Tooling caches
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Secrets and credentials — never committed
+.env
+.env.*
+!.env.example
+secrets/
+*.key.json
+*service-account*.json
+
+# Raw mail — never committed. Redacted fixtures are the only exception.
+*.eml
+!**/tests/fixtures/**/*.eml
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
