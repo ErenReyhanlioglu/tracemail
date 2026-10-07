@@ -4,7 +4,7 @@ Build order and current position. Scope per phase is defined in
 [SUMMARY.md](../SUMMARY.md); decisions in [adr/](adr/README.md).
 
 **Current phase:** Phase 1 — Core
-**Current step:** 1.0 (owner setup)
+**Current step:** 1.3 (`feat/parsers-linkedin`) — 1.0 to 1.2 done
 
 Each step is one branch and one or more pull requests. A step is done when its
 "Done when" line is true on `main`.
@@ -36,7 +36,9 @@ open from any device, running hourly in production. No LLM.
 
 These are recorded as unverified in ADRs; each is checked at the step named.
 
-- IMAP `SINCE` / `BEFORE` and `BODY.PEEK` behave as expected on Gmail — 1.2
+- ~~IMAP `SINCE` / `BEFORE` and `BODY.PEEK` behave as expected on Gmail — 1.2~~
+  Verified 2026-10-07: a 2026-10-01..07 run listed 114 messages, wrote 62, and
+  unread mail stayed unread in the mail client.
 - `external_python` subprocess inherits environment variables — 1.7
 - Cosmos DAG-parsing load is acceptable on the VM — 1.7 / 1.11
 - Oracle web-console emergency access works when Tailscale is down — 1.11
@@ -54,9 +56,8 @@ Things only the owner can do. Each lists the first step that needs it.
 
 ### A. Before 1.1
 
-- [ ] `git init`, create a **public** GitHub repository
-- [ ] Two-factor authentication on the GitHub account
-- [ ] Branch protection on `main`: pull requests required, required status
+- [x] `git init`, create a **public** GitHub repository
+- [x] Branch protection on `main`: pull requests required, required status
       checks (added once CI exists), no bypass for admins, no approval
       requirement (ADR-0002)
 - [ ] Actions policy: require actions pinned to full commit SHAs (ADR-0012)

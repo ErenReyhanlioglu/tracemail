@@ -186,6 +186,10 @@ docs/                ADRs, roadmap
 - One Pydantic `Settings` per package. Required production values have no
   default — a missing value fails at startup, never falls back to a
   plausible-looking local value.
+- Every `Settings` class sets `hide_input_in_errors=True` and every secret field
+  is `SecretStr`. `SecretStr` only masks after validation succeeds; without
+  `hide_input_in_errors`, a failed validation prints every raw input value,
+  secrets included.
 - Values not yet consumed by any code path are not added to `Settings` yet.
   A field becomes required in the same change that starts using it.
 - Secrets (IMAP app password, service account keys, API auth secret) come
@@ -254,8 +258,11 @@ company correspondence). This section overrides convenience.
   edited. Use a create-only precondition (`if_generation_match=0`).
 - Object keys are deterministic so a rerun writes the same key and the
   precondition turns a duplicate into a no-op, e.g.
-  `mail/ingest_date=YYYY-MM-DD/<sha256(Message-ID)>.eml`. Captured postings
-  and LinkedIn exports follow the same pattern under their own prefixes.
+  `raw/mail/received_date=YYYY-MM-DD/<sha256(Message-ID)>.eml`. The partition
+  is the message's own received date (IMAP internal date, UTC), never the run
+  date — a run date would give the same message different keys on different
+  days. Captured postings and LinkedIn exports follow the same pattern under
+  their own prefixes.
 - Store the original bytes (`.eml`, original export file), not a parsed
   version.
 - Flow: `raw/` (original bytes) → parse in `pipeline_venv` → `parsed/` (JSONL,
@@ -507,6 +514,24 @@ alert postings that have only a title.
 - Never log secrets, environment values, or any field listed under Privacy.
 - System monitoring lives in BigQuery `ops` tables summarized by dbt. Do not
   add Prometheus, Grafana, or a hosted observability tool.
+
+### Performance and Cost Measurement (ADR-0017)
+
+- **Every pipeline step returns a result model** with its duration
+  (`time.perf_counter`), volume (seen / processed / skipped / failed, bytes
+  written), and external operation counts per service (IMAP commands, GCS
+  reads and writes, BigQuery bytes processed and billed from job statistics,
+  LLM tokens). A new step without these is incomplete.
+- The result is logged at INFO when the step finishes and, from step 1.4,
+  written with the run record to `ops`.
+- Cost is estimated from operation counts × unit prices kept in one config
+  file, each price with its source URL and check date — researched, never
+  from memory. Free-tier usage is reported alongside cost.
+- **Optimizations are measured before and after.** Never claim a change is
+  faster or cheaper without both numbers; until measured, call it an
+  expectation.
+- Metrics contain counts, durations, bytes, and internal ids only — never
+  personal data.
 - LLM metrics are reported over **weekly windows with raw counts** (n is tiny
   — a daily rate is noise). Never show a percentage without its count.
 

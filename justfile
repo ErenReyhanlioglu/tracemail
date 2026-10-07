@@ -28,10 +28,18 @@ test:
 
 # Run integration tests against the real dev cloud project
 test-integration:
-    uv run pytest -m integration --no-cov
+    uv run --env-file .env pytest -m integration --no-cov
 
 # Everything CI runs: lint, typecheck, test
 check: lint typecheck test
+
+# List mailbox folder names (to set TRACEMAIL_IMAP_MAILBOX)
+list-mailboxes:
+    uv run --env-file .env python -m tracemail_pipeline.cli list-mailboxes
+
+# Ingest mail for [start, end) into the dev raw zone, e.g. just ingest-mail 2026-10-01 2026-10-04
+ingest-mail start end:
+    uv run --env-file .env python -m tracemail_pipeline.cli ingest-mail --start-date {{start}} --end-date {{end}}
 
 # Start the local Compose stack
 up:

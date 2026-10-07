@@ -47,6 +47,14 @@ select = [
     "DTZ",     # timezone-aware datetimes only
 ]
 
+[tool.ruff.lint.isort]
+known-first-party = [
+    "tracemail_pipeline",
+    "tracemail_llm",
+    "tracemail_evals",
+    "tracemail_api",
+]
+
 [tool.ruff.lint.mccabe]
 max-complexity = 10
 
@@ -74,6 +82,11 @@ files = [
     "apps/api/tests",
 ]
 
+# google-cloud-storage ships no type information (no py.typed marker).
+[[tool.mypy.overrides]]
+module = ["google.cloud", "google.cloud.storage", "google.cloud.storage.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = [
     "packages/pipeline/tests",
@@ -98,4 +111,5 @@ dev = [
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
     "ruff>=0.16.10",
+    "types-pyyaml>=6.0.12.20260906",
 ]
