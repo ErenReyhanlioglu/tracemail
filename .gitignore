@@ -22,6 +22,9 @@ secrets/
 *.key.json
 *service-account*.json
 
+# Real sender allowlist (company names are personal). The example is committed.
+infra/config/sender_allowlist.yaml
+
 # Raw mail — never committed. Redacted fixtures are the only exception.
 *.eml
 !**/tests/fixtures/**/*.eml
