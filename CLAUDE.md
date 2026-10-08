@@ -34,6 +34,11 @@ moment it is made — not drafted ahead of time. File naming:
 to reflect a new decision; write a new ADR that supersedes it and update the
 old one's status.
 
+A problem that is understood but not yet decided is written as a **Proposed**
+ADR: findings, options, and sources are recorded when they are found, and the
+status changes to Accepted when the choice is made. `docs/roadmap.md` only
+links to ADRs; it never holds their content.
+
 State what was actually verified (a dry run, a measured number, a test) and
 what is still an assumption — never present an assumption as a measurement.
 
@@ -48,7 +53,7 @@ sources before deciding — do not decide from memory.
 # ADR-XXXX: Title
 
 **Date:** YYYY-MM-DD
-**Status:** Accepted | Accepted (not yet implemented) | Deprecated | Superseded by ADR-XXXX
+**Status:** Proposed | Accepted | Accepted (not yet implemented) | Deprecated | Superseded by ADR-XXXX
 
 ## Context
 Why did we need to make this decision?
@@ -157,7 +162,10 @@ docs/                ADRs, roadmap
 - `TODO` comments — fix it or open an issue
 - Commented-out code
 - Hardcoded URLs, ports, bucket names, dataset names, project IDs, credentials
-- `datetime.now()` / `date.today()` inside pipeline logic (see Airflow)
+- `datetime.now()` / `date.today()` to decide **which data** to process (see
+  Airflow). Reading the wall clock only to **record** when something happened
+  (a run record's `started_at` / `finished_at`) is allowed; durations use
+  `time.perf_counter`.
 - Python's built-in `hash()` for anything persisted — use `hashlib.sha256`
 
 ---
@@ -246,7 +254,7 @@ company correspondence). This section overrides convenience.
   frontend, not real data rendered blurry.
 - A test asserts that every public endpoint's response schema contains no
   field from the private domain (company, role, sender, posting text, profile
-  evidence). Adding a public endpoint without passing this test is a blocker.
+  evidence, run `error_message`). Adding a public endpoint without passing this test is a blocker.
 - Do not paste real mail or posting content into docs, ADRs, issues, or
   commit messages.
 
@@ -334,6 +342,8 @@ company correspondence). This section overrides convenience.
   date window is still day-granular (see Ingestion), so each hourly run
   re-lists the day's mail and skips what is already in `raw/`.
 - `catchup` is set explicitly on every DAG, never left to the default.
+- The ingestion DAG sets `max_active_runs=1`: runs reload overlapping windows,
+  so two at once could interleave partition writes (ADR-0019).
 - Executor: `LocalExecutor` with the Postgres metadata DB. No Celery, no Redis.
   The stack must fit the Always Free ARM VM.
 - Airflow 3.3.x on Python 3.12, pinned to an exact patch version and installed

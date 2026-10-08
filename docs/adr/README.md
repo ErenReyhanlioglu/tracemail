@@ -32,4 +32,7 @@ written at the moment the decision is made — not drafted ahead of time.
 | [0015](0015-owner-login-with-google-sign-in.md) | Owner Login with Google Sign-In, Handled by the API | Accepted (not yet implemented) |
 | [0016](0016-self-host-web-on-vm-behind-cloudflare-tunnel.md) | Self-Host the Web App on the VM behind Cloudflare Tunnel | Accepted (not yet implemented) |
 | [0017](0017-every-step-measures-time-volume-operations-and-cost.md) | Every Step Measures Its Time, Volume, Operations, and Cost | Accepted |
-| [0018](0018-parsed-zone-uses-partition-overwrite.md) | The Parsed Zone Uses Partition Overwrite | Accepted (not yet implemented) |
+| [0018](0018-parsed-zone-uses-partition-overwrite.md) | The Parsed Zone Uses Partition Overwrite | Accepted |
+| [0019](0019-landing-load-schema-from-models-and-partition-replace.md) | Landing Load — Schema from Models, Tables Created by the Loader, Partition Replace | Accepted |
+| [0020](0020-run-records-follow-observability-frameworks.md) | Run Records Follow Established Observability Frameworks | Accepted |
+| [0021](0021-gcs-operations-under-hourly-runs.md) | Keeping GCS Operations within the Free Tier under Hourly Runs | Proposed |

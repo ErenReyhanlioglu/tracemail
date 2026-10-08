@@ -49,6 +49,14 @@ raw-inventory start end:
 parse-mail start end:
     uv run --env-file .env python -m tracemail_pipeline.cli parse-mail --start-date {{start}} --end-date {{end}}
 
+# Load the parsed zone for [start, end) into dev BigQuery landing (replaces those days)
+load-landing start end:
+    uv run --env-file .env python -m tracemail_pipeline.cli load-landing --start-date {{start}} --end-date {{end}}
+
+# Row counts and content fingerprints of landing tables for [start, end)
+landing-check start end:
+    uv run --env-file .env python -m tracemail_pipeline.cli landing-check --start-date {{start}} --end-date {{end}}
+
 # Start the local Compose stack
 up:
     docker compose -f {{compose_file}} up -d

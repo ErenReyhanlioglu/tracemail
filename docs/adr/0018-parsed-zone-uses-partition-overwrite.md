@@ -1,7 +1,7 @@
 # ADR-0018: The Parsed Zone Uses Partition Overwrite
 
 **Date:** 2026-10-07
-**Status:** Accepted (not yet implemented)
+**Status:** Accepted
 
 ## Context
 
