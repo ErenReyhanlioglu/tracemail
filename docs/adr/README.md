@@ -20,7 +20,7 @@ written at the moment the decision is made — not drafted ahead of time.
 | [0003](0003-isolated-python-environments-for-pipeline-and-dbt.md) | Isolated Python Environments for Pipeline Code and dbt | Accepted (not yet implemented) |
 | [0004](0004-monorepo-layout.md) | Monorepo Layout | Accepted (not yet implemented) |
 | [0005](0005-access-model-three-roles-and-share-links.md) | Access Model — Three Roles and Signed Share Links | Accepted (not yet implemented) |
-| [0006](0006-raw-parsed-landing-data-flow.md) | Raw → Parsed → Landing Data Flow | Accepted (not yet implemented) |
+| [0006](0006-raw-parsed-landing-data-flow.md) | Raw → Parsed → Landing Data Flow | Accepted; `parsed/` layout amended by [0018](0018-parsed-zone-uses-partition-overwrite.md) |
 | [0007](0007-date-window-ingestion-and-read-only-mailbox.md) | Date-Window Ingestion and a Read-Only Mailbox | Accepted (not yet implemented) |
 | [0008](0008-hourly-polling-instead-of-push.md) | Hourly Polling Instead of Push | Accepted (not yet implemented) |
 | [0009](0009-vm-to-gcp-auth-with-service-account-keys.md) | VM-to-GCP Authentication with Per-Role Service Account Keys | Accepted (not yet implemented) |
@@ -32,3 +32,4 @@ written at the moment the decision is made — not drafted ahead of time.
 | [0015](0015-owner-login-with-google-sign-in.md) | Owner Login with Google Sign-In, Handled by the API | Accepted (not yet implemented) |
 | [0016](0016-self-host-web-on-vm-behind-cloudflare-tunnel.md) | Self-Host the Web App on the VM behind Cloudflare Tunnel | Accepted (not yet implemented) |
 | [0017](0017-every-step-measures-time-volume-operations-and-cost.md) | Every Step Measures Its Time, Volume, Operations, and Cost | Accepted |
+| [0018](0018-parsed-zone-uses-partition-overwrite.md) | The Parsed Zone Uses Partition Overwrite | Accepted (not yet implemented) |
