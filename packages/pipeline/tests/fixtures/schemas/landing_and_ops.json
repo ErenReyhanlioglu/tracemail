@@ -1,0 +1,295 @@
+{
+  "job_actions": [
+    {
+      "name": "source_key",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "received_date",
+      "type": "DATE",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "parser_name",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "parser_version",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "template",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "job_id",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "action",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "action_date",
+      "type": "DATE",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "title",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "company",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "location",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    }
+  ],
+  "job_posting_sightings": [
+    {
+      "name": "source_key",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "received_date",
+      "type": "DATE",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "parser_name",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "parser_version",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "template",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "position",
+      "type": "INT64",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "job_id",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "title",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "company",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "location",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "flags",
+      "type": "STRING",
+      "mode": "REPEATED"
+    },
+    {
+      "name": "connections",
+      "type": "INT64",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "alumni",
+      "type": "INT64",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "unrecognized_lines",
+      "type": "STRING",
+      "mode": "REPEATED"
+    },
+    {
+      "name": "context",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "context_value",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "related_job_id",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    }
+  ],
+  "message_parse_outcomes": [
+    {
+      "name": "source_key",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "received_date",
+      "type": "DATE",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "outcome",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "parser_name",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "parser_version",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "template",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "reason",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "sightings",
+      "type": "INT64",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "actions",
+      "type": "INT64",
+      "mode": "NULLABLE"
+    }
+  ],
+  "pipeline_runs": [
+    {
+      "name": "records_in",
+      "type": "INT64",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "records_out",
+      "type": "INT64",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "records_failed",
+      "type": "INT64",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "bytes_in",
+      "type": "INT64",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "bytes_out",
+      "type": "INT64",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "run_id",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "job_name",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "status",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "inputs",
+      "type": "STRING",
+      "mode": "REPEATED"
+    },
+    {
+      "name": "outputs",
+      "type": "STRING",
+      "mode": "REPEATED"
+    },
+    {
+      "name": "interval_start",
+      "type": "TIMESTAMP",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "interval_end",
+      "type": "TIMESTAMP",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "started_at",
+      "type": "TIMESTAMP",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "finished_at",
+      "type": "TIMESTAMP",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "duration_seconds",
+      "type": "FLOAT64",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "schema_version",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "code_version",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "error_type",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "error_message",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "metrics",
+      "type": "JSON",
+      "mode": "NULLABLE"
+    }
+  ]
+}

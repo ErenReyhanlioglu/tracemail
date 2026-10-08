@@ -10,8 +10,8 @@ import hashlib
 from datetime import date
 from typing import Protocol
 
+import google.cloud.storage as storage
 from google.api_core.exceptions import PreconditionFailed
-from google.cloud import storage
 
 RAW_MAIL_PREFIX = "raw/mail"
 EML_CONTENT_TYPE = "message/rfc822"

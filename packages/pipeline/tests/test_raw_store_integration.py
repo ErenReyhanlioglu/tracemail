@@ -7,8 +7,8 @@ and deletes what it wrote. Run with ``just test-integration``.
 import uuid
 from collections.abc import Iterator
 
+import google.cloud.storage as storage
 import pytest
-from google.cloud import storage
 
 from tracemail_pipeline.config import PipelineSettings
 from tracemail_pipeline.ingest.raw_store import GcsRawStore

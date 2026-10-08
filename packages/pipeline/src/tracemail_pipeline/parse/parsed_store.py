@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from datetime import date
 from typing import Protocol
 
-from google.cloud import storage
+import google.cloud.storage as storage
 from pydantic import BaseModel
 
 PARSED_PREFIX = "parsed"

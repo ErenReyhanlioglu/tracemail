@@ -18,6 +18,7 @@ from email.utils import parsedate_to_datetime
 from pydantic import BaseModel
 
 from tracemail_pipeline.ingest.raw_store import RawStore, mail_partition_prefix
+from tracemail_pipeline.load.run_records import RunVolume
 from tracemail_pipeline.parse.base import (
     JobAction,
     JobPostingSighting,
@@ -59,6 +60,16 @@ class ParseMailResult(BaseModel):
     seconds_gcs_read: float = 0.0
     seconds_parse: float = 0.0
     seconds_gcs_write: float = 0.0
+
+    def volume(self) -> RunVolume:
+        """Common volume fields for the run record (ADR-0020)."""
+        return RunVolume(
+            records_in=self.messages,
+            records_out=self.sightings + self.actions,
+            records_failed=self.failed,
+            bytes_in=self.bytes_read,
+            bytes_out=self.bytes_written,
+        )
 
 
 class _DayRecords(BaseModel):

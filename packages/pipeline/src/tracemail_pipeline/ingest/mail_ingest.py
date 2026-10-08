@@ -24,6 +24,7 @@ from tracemail_pipeline.ingest.raw_store import (
     mail_partition_prefix,
     message_digest,
 )
+from tracemail_pipeline.load.run_records import RunVolume
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,7 @@ class MailIngestResult(BaseModel):
     rejected: int = 0
     already_stored: int = 0
     written: int = 0
+    bytes_fetched: int = 0
     bytes_written: int = 0
     imap_commands: int = 0
     gcs_lists: int = 0
@@ -45,6 +47,15 @@ class MailIngestResult(BaseModel):
     seconds_imap_headers: float = 0.0
     seconds_imap_bodies: float = 0.0
     seconds_gcs: float = 0.0
+
+    def volume(self) -> RunVolume:
+        """Common volume fields for the run record (ADR-0020)."""
+        return RunVolume(
+            records_in=self.listed,
+            records_out=self.written,
+            bytes_in=self.bytes_fetched,
+            bytes_out=self.bytes_written,
+        )
 
 
 def ingest_mail(
@@ -138,4 +149,5 @@ def _timed_fetch_raw(
     started = time.perf_counter()
     raw = reader.fetch_raw(uid)
     result.seconds_imap_bodies += time.perf_counter() - started
+    result.bytes_fetched += len(raw)
     return raw

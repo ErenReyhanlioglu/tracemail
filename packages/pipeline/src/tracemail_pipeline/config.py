@@ -29,3 +29,10 @@ class PipelineSettings(BaseSettings):
     sender_allowlist_path: Path
     gcp_project: str
     data_bucket: str
+    bq_location: str
+    bq_landing_dataset: str
+    bq_ops_dataset: str
+    bq_max_bytes_billed: int
+    ops_retention_days: int
+    # Commit SHA baked into the image at build time (ADR-0002); None locally.
+    code_version: str | None = None

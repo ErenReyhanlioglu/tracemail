@@ -102,6 +102,8 @@ def test_ingest_reports_operations_bytes_and_timings(
     assert result.imap_commands == 3
     assert (result.gcs_lists, result.gcs_writes) == (1, 1)
     assert result.bytes_written == len(written.raw)
+    assert result.bytes_fetched == len(written.raw)
+    assert result.volume().bytes_in == len(written.raw)
     timings = (
         result.seconds_imap_headers,
         result.seconds_imap_bodies,

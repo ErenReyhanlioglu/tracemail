@@ -18,6 +18,11 @@ ENV = {
     "TRACEMAIL_SENDER_ALLOWLIST_PATH": "allowlist.yaml",
     "TRACEMAIL_GCP_PROJECT": "test-project",
     "TRACEMAIL_DATA_BUCKET": "test-bucket",
+    "TRACEMAIL_BQ_LOCATION": "us-central1",
+    "TRACEMAIL_BQ_LANDING_DATASET": "landing",
+    "TRACEMAIL_BQ_OPS_DATASET": "ops",
+    "TRACEMAIL_BQ_MAX_BYTES_BILLED": "1073741824",
+    "TRACEMAIL_OPS_RETENTION_DAYS": "400",
 }
 
 
