@@ -81,6 +81,9 @@ class FakeRawStore:
     def existing_keys(self, prefix: str) -> set[str]:
         return {key for key in self.objects if key.startswith(prefix)}
 
+    def read(self, key: str) -> bytes:
+        return self.objects[key]
+
     def write_once(self, key: str, data: bytes) -> bool:
         if key in self.objects:
             return False

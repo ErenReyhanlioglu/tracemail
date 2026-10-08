@@ -54,6 +54,26 @@ def test_main_dispatches_ingest_mail_with_parsed_dates(
     assert (start, end) == (date(2026, 10, 1), date(2026, 10, 2))
 
 
+def test_main_dispatches_raw_inventory_with_parsed_dates(
+    env: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[tuple[Any, ...]] = []
+    monkeypatch.setattr(cli, "run_raw_inventory", lambda *a: calls.append(a))
+    cli.main(
+        ["raw-inventory", "--start-date", "2026-10-01", "--end-date", "2026-10-02"]
+    )
+    assert (calls[0][1], calls[0][2]) == (date(2026, 10, 1), date(2026, 10, 2))
+
+
+def test_main_dispatches_parse_mail_with_parsed_dates(
+    env: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[tuple[Any, ...]] = []
+    monkeypatch.setattr(cli, "run_parse_mail", lambda *a: calls.append(a))
+    cli.main(["parse-mail", "--start-date", "2026-10-01", "--end-date", "2026-10-02"])
+    assert (calls[0][1], calls[0][2]) == (date(2026, 10, 1), date(2026, 10, 2))
+
+
 def test_main_dispatches_list_mailboxes(
     env: None, monkeypatch: pytest.MonkeyPatch
 ) -> None:

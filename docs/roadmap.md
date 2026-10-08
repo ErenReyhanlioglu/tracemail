@@ -21,12 +21,12 @@ open from any device, running hourly in production. No LLM.
 | 1.0 | — | Owner setup (local): see checklist A | Public repo exists with branch protection |
 | 1.1 | `chore/skeleton` | Full tree with stubs (ADR-0004), uv workspace, `dbt/` as its own uv project, ruff/mypy/pytest config, justfile, `.gitignore`, `.env.example`, CI (lint, typecheck, test) | `just check` passes locally and in CI |
 | 1.2 | `feat/imap-ingest` | Read-only IMAP fetch by date window (ADR-0007), sender allowlist, write-once raw objects to the dev bucket (ADR-0006) | A real day of mail lands in `raw/`; rerunning the same day writes nothing new; mailbox shows no change |
-| 1.3 | `feat/parsers-linkedin` | First parsers (LinkedIn alert, LinkedIn confirmation), `parsed/` JSONL, `parse_failures`, redacted fixtures | Parser tests pass, including a "changed template" fixture |
+| 1.3 | `feat/parsers-linkedin` | LinkedIn parser for all five templates seen in real mail (alert, application confirmation, viewed / saved reminders, suggestions), `parsed/` JSONL with partition overwrite (ADR-0018), `message_parse_outcomes`, redacted fixtures, raw inventory command | Parser tests pass, including a "changed template" fixture |
 | 1.4 | `feat/landing-load` | BigQuery load jobs into `landing` (partition replace), run-record rows in `ops` | Loading the same interval twice leaves identical tables |
 | 1.5 | `feat/dbt-core-models` | Sources, staging, intermediate dedup, marts: applications, events, companies, channels; application stage, waiting time, follow-up flag; dbt test results to `ops` | `dbt build` passes on dev with tests; an application's stage is correct for a hand-checked sample |
 | 1.6 | `feat/linkedin-history` | LinkedIn export through the same raw → parsed → landing path, merged with mail-derived applications | Historical applications appear once, not duplicated against mail |
 | 1.7 | `feat/airflow-stack` | Airflow image with three environments (ADR-0003), hourly DAG with `external_python` tasks and Cosmos (ADR-0013, ADR-0014), local Compose stack | Stack runs locally end-to-end; a backfill of past days works |
-| 1.8 | `feat/more-parsers` | Parsers for the other templates seen in real mail (Workable, Lever, hrpanda, ...) | Parse-success rate per template is recorded; unclaimed mail is counted as "other" |
+| 1.8 | `feat/more-parsers` | Parsers for the other sources seen in real mail (company replies, Workable, Lever, hrpanda, ...); decide how sent mail (direct applications) enters ingestion | Parse-success rate per template is recorded; unclaimed mail is counted as "other" |
 | 1.9 | `feat/api-owner-auth` | FastAPI: Google Sign-In (ADR-0015), owner session, read endpoint for applications, `/health`, public/private privacy test | Owner logs in on localhost; any other account is refused; privacy test passes |
 | 1.10 | `feat/web-application-list` | Next.js standalone app: login, minimal read-only application list, design tokens | Owner sees real applications in the browser locally |
 | 1.11 | `ci/deploy` | Prod GCP project, Oracle VM, Tailscale, Cloudflare Tunnel, `arm64` build to GHCR, deploy workflow, GitHub → GCP via WIF (ADR-0009, ADR-0010, ADR-0012, ADR-0016) | A merge to `main` deploys; the site is reachable on the domain with no open inbound ports |
@@ -60,20 +60,20 @@ Things only the owner can do. Each lists the first step that needs it.
 - [x] Branch protection on `main`: pull requests required, required status
       checks (added once CI exists), no bypass for admins, no approval
       requirement (ADR-0002)
-- [ ] Actions policy: require actions pinned to full commit SHAs (ADR-0012)
+- [x] Actions policy: require actions pinned to full commit SHAs (ADR-0012)
 
 ### B. Before 1.2
 
-- [ ] Gmail app password for IMAP
-- [ ] Initial sender allowlist (domains / addresses of job platforms and
+- [x] Gmail app password for IMAP
+- [x] Initial sender allowlist (domains / addresses of job platforms and
       companies)
-- [ ] GCP billing account and the **dev** project (`us-central1`), budget
+- [x] GCP billing account and the **dev** project (`us-central1`), budget
       alert (ADR-0010, ADR-0011)
-- [ ] Two-step verification or a passkey on the Google account
+- [x] Two-step verification or a passkey on the Google account
 
 ### C. Before 1.3
 
-- [ ] A few real sample mails per template, redacted together before they
+- [x] A few real sample mails per template, redacted together before they
       enter the repository
 
 ### D. Before 1.9

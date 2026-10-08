@@ -23,6 +23,9 @@ class FakeBlob:
     def exists(self) -> bool:
         return self._key in self._bucket.objects
 
+    def download_as_bytes(self) -> bytes:
+        return self._bucket.objects[self._key]
+
     def upload_from_string(self, data: bytes, **kwargs: Any) -> None:
         self._bucket.upload_kwargs.append(kwargs)
         if kwargs.get("if_generation_match") == 0 and self.exists():
@@ -93,6 +96,12 @@ def test_existing_keys_lists_only_keys_under_the_prefix() -> None:
     store.write_once("raw/mail/received_date=2026-10-05/b.eml", b"b")
     keys = store.existing_keys("raw/mail/received_date=2026-10-04/")
     assert keys == {"raw/mail/received_date=2026-10-04/a.eml"}
+
+
+def test_read_returns_the_stored_bytes() -> None:
+    store = GcsRawStore(FakeBucket())
+    store.write_once("k", b"original")
+    assert store.read("k") == b"original"
 
 
 def test_exists_reflects_stored_objects() -> None:

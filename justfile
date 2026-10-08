@@ -41,6 +41,14 @@ list-mailboxes:
 ingest-mail start end:
     uv run --env-file .env python -m tracemail_pipeline.cli ingest-mail --start-date {{start}} --end-date {{end}}
 
+# Count stored raw mail per allowlist entry for [start, end)
+raw-inventory start end:
+    uv run --env-file .env python -m tracemail_pipeline.cli raw-inventory --start-date {{start}} --end-date {{end}}
+
+# Parse raw mail for [start, end) into the dev parsed zone (overwrites those days)
+parse-mail start end:
+    uv run --env-file .env python -m tracemail_pipeline.cli parse-mail --start-date {{start}} --end-date {{end}}
+
 # Start the local Compose stack
 up:
     docker compose -f {{compose_file}} up -d
