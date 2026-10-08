@@ -1,7 +1,7 @@
 # ADR-0006: Raw → Parsed → Landing Data Flow
 
 **Date:** 2026-10-03
-**Status:** Accepted (not yet implemented)
+**Status:** Accepted; the `parsed/` path layout is amended by ADR-0018
 
 ## Context
 

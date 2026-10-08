@@ -47,6 +47,20 @@ def test_allowlist_rejects_everything_else(from_header: str) -> None:
     assert not ALLOWLIST.allows(from_header)
 
 
+@pytest.mark.parametrize(
+    ("from_header", "entry"),
+    [
+        ("Alerts <alerts@example.com>", "alerts@example.com"),
+        ("Recruiter <hr@careers.company.example>", "company.example"),
+        ("Other <other@example.com>", None),
+    ],
+)
+def test_matching_entry_returns_the_configured_entry_not_the_address(
+    from_header: str, entry: str | None
+) -> None:
+    assert ALLOWLIST.matching_entry(from_header) == entry
+
+
 def test_load_allowlist_reads_yaml(tmp_path: Path) -> None:
     path = tmp_path / "allowlist.yaml"
     path.write_text("exact:\n  - a@example.com\ndomains:\n  - example.org\n")

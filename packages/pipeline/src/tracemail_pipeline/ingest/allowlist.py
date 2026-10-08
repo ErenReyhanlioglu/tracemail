@@ -30,13 +30,25 @@ class SenderAllowlist(BaseModel):
 
     def allows(self, from_header: str) -> bool:
         """Return whether a ``From`` header value belongs to an allowed sender."""
+        return self.matching_entry(from_header) is not None
+
+    def matching_entry(self, from_header: str) -> str | None:
+        """Return the allowlist entry a ``From`` header matches, if any.
+
+        Used to report volumes per configured entry instead of per sender
+        address, so reports contain only configuration values (CLAUDE.md,
+        Privacy).
+        """
         address = parseaddr(from_header)[1].strip().lower()
         if "@" not in address:
-            return False
+            return None
         if address in self.exact:
-            return True
+            return address
         host = address.rsplit("@", maxsplit=1)[1]
-        return any(host == d or host.endswith(f".{d}") for d in self.domains)
+        for domain in self.domains:
+            if host == domain or host.endswith(f".{domain}"):
+                return domain
+        return None
 
 
 def load_allowlist(path: Path) -> SenderAllowlist:

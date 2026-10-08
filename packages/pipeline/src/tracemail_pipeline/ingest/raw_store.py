@@ -25,6 +25,8 @@ class RawStore(Protocol):
 
     def existing_keys(self, prefix: str) -> set[str]: ...
 
+    def read(self, key: str) -> bytes: ...
+
     def write_once(self, key: str, data: bytes) -> bool: ...
 
 
@@ -66,6 +68,10 @@ class GcsRawStore:
         """Return every key under a prefix, in one listing (a Class A operation
         per page) instead of one existence check per object."""
         return {blob.name for blob in self._bucket.list_blobs(prefix=prefix)}
+
+    def read(self, key: str) -> bytes:
+        """Return an object's original bytes."""
+        return bytes(self._bucket.blob(key).download_as_bytes())
 
     def write_once(self, key: str, data: bytes) -> bool:
         """Create the object; return ``False`` if it already existed."""

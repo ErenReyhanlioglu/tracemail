@@ -265,12 +265,15 @@ company correspondence). This section overrides convenience.
   their own prefixes.
 - Store the original bytes (`.eml`, original export file), not a parsed
   version.
-- Flow: `raw/` (original bytes) → parse in `pipeline_venv` → `parsed/` (JSONL,
-  path carries the parser version and ingest date) → BigQuery load job into
-  `landing` → dbt. The `parsed/` zone exists for debugging: it must always
-  show exactly what the parser understood from each source record.
-- `parsed/` is derived data: it may be regenerated (overwritten) by a rerun or
-  a replay. Only `raw/` is write-once.
+- Flow: `raw/` (original bytes) → parse in `pipeline_venv` → `parsed/` (JSONL)
+  → BigQuery load job into `landing` → dbt. The `parsed/` zone exists for
+  debugging: it must always show exactly what the parser understood from each
+  source record.
+- `parsed/` uses **partition overwrite** (ADR-0018):
+  `parsed/<record_type>/received_date=YYYY-MM-DD/data.jsonl`, one file per
+  record type per day, rewritten whole when that day is parsed again.
+  `parser_name` and `parser_version` live on every row, never in the path.
+  Only `raw/` is write-once.
 - Any parser change must be replayable: the whole analytic layer can be
   rebuilt from raw. Never introduce a step whose output cannot be regenerated
   from GCS.
@@ -292,11 +295,21 @@ company correspondence). This section overrides convenience.
   uses `PEEK` and the mailbox is opened read-only.
 - **Dedup key** for mail is the Message-ID. Mail without one gets a sha256 of
   the raw bytes.
-- **Parsers are rule-based per template** (LinkedIn alert, LinkedIn
-  confirmation, Workable, Lever, hrpanda, ...). One parser per template, one
-  module per parser, each with a `PARSER_VERSION` constant.
+- **Parsers are rule-based.** One parser per source (LinkedIn, Workable,
+  Lever, hrpanda, ...), each with a `PARSER_VERSION` constant. A source with
+  several templates shares one structure reader and describes each template
+  as a small spec (LinkedIn: `parse/parsers/linkedin/templates.py`); adding a
+  template is a spec, a redacted fixture, and a test — no new reader.
+- Templates are identified by a language-independent marker where one exists
+  (LinkedIn's `urn:li:page:<id>`). Language-dependent phrases live in one
+  module per source (`phrases.py`), never scattered through code.
+- Record schemas are template-independent: new templates add values, never
+  columns. Unrecognized card lines are kept in `unrecognized_lines`, never
+  dropped — a non-empty value is a data-quality signal to investigate.
+- Every message yields exactly one `message_parse_outcomes` row (parsed /
+  failed / unclaimed, with reason). Parse-quality metrics come from it.
 - Every parsed row carries `parser_name` and `parser_version`. Bump the version
-  on any change that can alter output.
+  on any change that can alter output, then re-parse the affected range.
 - Every parser has fixture tests built from redacted real samples, including
   at least one "template changed" sample that must fail gracefully, not
   produce wrong data silently.
@@ -337,7 +350,8 @@ company correspondence). This section overrides convenience.
 ## BigQuery and dbt
 
 - Datasets per layer: `landing` (parser output loaded from `parsed/`, one
-  table per record type plus `parse_failures`), `staging`, `intermediate`,
+  table per record type: `job_posting_sightings`, `job_actions`,
+  `message_parse_outcomes`), `staging`, `intermediate`,
   `marts`, plus `ops` for run records, test results, and LLM call logs.
   There is no BigQuery `raw` dataset — raw data lives only in GCS.
 - Load data with **batch load jobs from GCS**, not streaming inserts.
