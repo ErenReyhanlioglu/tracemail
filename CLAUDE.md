@@ -303,8 +303,10 @@ company correspondence). This section overrides convenience.
   uses `PEEK` and the mailbox is opened read-only.
 - **Dedup key** for mail is the Message-ID. Mail without one gets a sha256 of
   the raw bytes.
-- **Parsers are rule-based.** One parser per source (LinkedIn, Workable,
-  Lever, hrpanda, ...), each with a `PARSER_VERSION` constant. A source with
+- **Parsers are rule-based.** One parser per source, each with a
+  `PARSER_VERSION` constant. LinkedIn carries most of the volume; another
+  source gets a parser only when its real mail volume justifies one (see the
+  raw inventory), and until then its mail is "other". A source with
   several templates shares one structure reader and describes each template
   as a small spec (LinkedIn: `parse/parsers/linkedin/templates.py`); adding a
   template is a spec, a redacted fixture, and a test — no new reader.

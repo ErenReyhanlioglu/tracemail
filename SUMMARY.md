@@ -165,7 +165,7 @@ implementation, the concrete counterparts of these items must not be skipped.
 | Data privacy and access separation | Excluding sensitive sources at the ingestion stage; never sending data to an unauthorized view | Allowlist, FastAPI authentication |
 | API design | Endpoints that receive data and serve data; authentication; caching | FastAPI |
 | Portable deployment | The same definition runs locally and on the server; the environment comes up with a single command | Docker Compose |
-| Going from data to decisions | Producing channel- and role-based rates from raw events; presenting findings in a readable interface | SQL, Next.js |
+| Going from data to decisions | Turning raw mail events into actionable signals: applications flagged for follow-up, and parse-health rates (LinkedIn per template, other senders combined) that point to a broken template; presenting findings in a readable interface | SQL, Next.js |
 
 ### Deliberately not covered
 
