@@ -8,6 +8,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from tracemail_pipeline.dates import days_between
 from tracemail_pipeline.ingest.raw_store import mail_object_key
 from tracemail_pipeline.parse.parse_mail import (
     ACTIONS,
@@ -57,7 +58,7 @@ def test_parse_mail_writes_one_partition_per_record_type_per_day(
         fake_store, ["linkedin_job_alert", "linkedin_application_confirmation"]
     )
     parsed = FakeParsedStore()
-    result = parse_mail(fake_store, parsed, DAY, NEXT_DAY)
+    result = parse_mail(fake_store, parsed, days_between(DAY, NEXT_DAY))
     assert set(parsed.files) == {
         (SIGHTINGS, DAY),
         (ACTIONS, DAY),
@@ -74,7 +75,7 @@ def test_parse_mail_writes_application_updates_to_their_own_partition(
 ) -> None:
     store_fixtures(fake_store, ["linkedin_application_rejected"])
     parsed = FakeParsedStore()
-    result = parse_mail(fake_store, parsed, DAY, NEXT_DAY)
+    result = parse_mail(fake_store, parsed, days_between(DAY, NEXT_DAY))
     [row] = parsed.rows(UPDATES)
     assert (row["job_id"], row["update_type"]) == ("1000000005", "rejection")
     assert result.updates == 1
@@ -89,15 +90,15 @@ def test_parse_mail_records_unclaimed_and_failed_messages_without_stopping(
     fake_store.write_once(mail_object_key(DAY, "other"), other.raw)
     broken = message_factory("jobs-noreply@linkedin.com", "<y@linkedin.com>")
     fake_store.write_once(mail_object_key(DAY, "broken"), broken.raw)
-    result = parse_mail(fake_store, FakeParsedStore(), DAY, NEXT_DAY)
+    result = parse_mail(fake_store, FakeParsedStore(), days_between(DAY, NEXT_DAY))
     assert (result.parsed, result.failed, result.unclaimed) == (1, 1, 1)
 
 
 def test_parse_mail_is_idempotent(fake_store: Any) -> None:
     store_fixtures(fake_store, ["linkedin_saved_job_reminder"])
     first, second = FakeParsedStore(), FakeParsedStore()
-    parse_mail(fake_store, first, DAY, NEXT_DAY)
-    parse_mail(fake_store, second, DAY, NEXT_DAY)
+    parse_mail(fake_store, first, days_between(DAY, NEXT_DAY))
+    parse_mail(fake_store, second, days_between(DAY, NEXT_DAY))
     assert first.files == second.files
 
 
@@ -105,7 +106,7 @@ def test_parse_mail_writes_empty_partitions_for_a_day_without_mail(
     fake_store: Any,
 ) -> None:
     parsed = FakeParsedStore()
-    result = parse_mail(fake_store, parsed, DAY, NEXT_DAY)
+    result = parse_mail(fake_store, parsed, days_between(DAY, NEXT_DAY))
     assert parsed.files == {
         (SIGHTINGS, DAY): b"",
         (ACTIONS, DAY): b"",
@@ -118,7 +119,9 @@ def test_parse_mail_writes_empty_partitions_for_a_day_without_mail(
 def test_parse_mail_reports_operations_and_timings(fake_store: Any) -> None:
     store_fixtures(fake_store, ["linkedin_job_alert"], DAY)
     store_fixtures(fake_store, ["linkedin_facet_suggestions"], NEXT_DAY)
-    result = parse_mail(fake_store, FakeParsedStore(), DAY, date(2026, 10, 3))
+    result = parse_mail(
+        fake_store, FakeParsedStore(), days_between(DAY, date(2026, 10, 3))
+    )
     assert (result.gcs_lists, result.gcs_reads, result.gcs_writes) == (2, 2, 8)
     assert result.bytes_read > 0 and result.bytes_written > 0
     parts = (result.seconds_gcs_read, result.seconds_parse, result.seconds_gcs_write)

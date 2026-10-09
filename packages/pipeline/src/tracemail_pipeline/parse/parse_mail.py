@@ -85,19 +85,16 @@ class _DayRecords(BaseModel):
 def parse_mail(
     raw_store: RawStore,
     parsed_store: ParsedStore,
-    start: date,
-    end: date,
+    days: Sequence[date],
     parsers: Sequence[Parser] = PARSERS,
 ) -> ParseMailResult:
-    """Parse every raw message received in ``[start, end)``, one day at a time."""
+    """Parse every raw message received on the given days, one day at a time."""
     started = time.perf_counter()
     result = ParseMailResult()
-    day = start
-    while day < end:
+    for day in days:
         records = _parse_day(raw_store, day, parsers, result)
         _write_day(parsed_store, day, records, result)
         result.days += 1
-        day += ONE_DAY
     result.seconds_total = time.perf_counter() - started
     logger.info("Parse finished: %s", result.model_dump())
     return result

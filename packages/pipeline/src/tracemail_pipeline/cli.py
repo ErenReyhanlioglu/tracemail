@@ -11,38 +11,22 @@ Privacy).
 import argparse
 import logging
 from collections.abc import Sequence
-from datetime import UTC, date, datetime, time
+from datetime import date
 from pathlib import Path
 
-import google.cloud.storage as storage
-from google.cloud import bigquery
-
+from tracemail_pipeline import jobs
 from tracemail_pipeline.config import PipelineSettings
+from tracemail_pipeline.dates import day_start_utc, days_between
 from tracemail_pipeline.ingest.imap_client import open_mailbox
-from tracemail_pipeline.ingest.mail_ingest import ingest_mail
 from tracemail_pipeline.ingest.raw_inventory import raw_inventory
-from tracemail_pipeline.ingest.raw_store import RAW_MAIL_PREFIX, GcsRawStore
+from tracemail_pipeline.ingest.raw_store import GcsRawStore
 from tracemail_pipeline.ingest.sender_exclusions import load_sender_exclusions
 from tracemail_pipeline.load.dbt_results import record_dbt_build
-from tracemail_pipeline.load.landing import (
-    LANDING_MODELS,
-    landing_fingerprints,
-    landing_schema_version,
-    load_landing,
-)
-from tracemail_pipeline.load.run_records import (
-    RunContext,
-    WarehouseRunRecordWriter,
-    lineage_names,
-    run_recorded,
-)
-from tracemail_pipeline.load.warehouse import BigQueryWarehouse
-from tracemail_pipeline.parse.parse_mail import parse_mail
-from tracemail_pipeline.parse.parsed_store import PARSED_PREFIX, GcsParsedStore
+from tracemail_pipeline.load.landing import LANDING_MODELS, landing_fingerprints
+from tracemail_pipeline.load.run_records import RunContext, lineage_names
 
 logger = logging.getLogger(__name__)
 
-LOG_FORMAT = "%(asctime)s %(levelname)s %(name)s: %(message)s"
 DATE_RANGE_COMMANDS = {
     "ingest-mail": "Ingest mail for a date range",
     "raw-inventory": "Count stored raw mail per sender domain",
@@ -74,55 +58,6 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def day_start_utc(day: date) -> datetime:
-    """Return midnight UTC at the start of a day."""
-    return datetime.combine(day, time.min, tzinfo=UTC)
-
-
-def _bucket(settings: PipelineSettings) -> storage.Bucket:
-    return storage.Client(project=settings.gcp_project).bucket(settings.data_bucket)
-
-
-def _warehouse(settings: PipelineSettings) -> BigQueryWarehouse:
-    client = bigquery.Client(project=settings.gcp_project)
-    return BigQueryWarehouse(client, settings.bq_location, settings.bq_max_bytes_billed)
-
-
-def _writer(settings: PipelineSettings) -> WarehouseRunRecordWriter:
-    return WarehouseRunRecordWriter(
-        _warehouse(settings), settings.bq_ops_dataset, settings.ops_retention_days
-    )
-
-
-def _context(
-    settings: PipelineSettings,
-    job_name: str,
-    inputs: list[str],
-    outputs: list[str],
-    start: date,
-    end: date,
-    produces_records: bool = True,
-) -> RunContext:
-    """Build a run context; ``schema_version`` only for steps that write
-    records with the landing schemas (raw ingestion writes original bytes)."""
-    return RunContext(
-        job_name=job_name,
-        inputs=inputs,
-        outputs=outputs,
-        interval_start=day_start_utc(start),
-        interval_end=day_start_utc(end),
-        schema_version=landing_schema_version() if produces_records else None,
-        code_version=settings.code_version,
-    )
-
-
-def _parsed_names(settings: PipelineSettings) -> list[str]:
-    return lineage_names(
-        "gcs",
-        [f"{settings.data_bucket}/{PARSED_PREFIX}/{name}" for name in LANDING_MODELS],
-    )
-
-
 def run_list_mailboxes(settings: PipelineSettings) -> None:
     """Log every mailbox name so the right one can be put in configuration."""
     with open_mailbox(settings) as reader:
@@ -132,69 +67,23 @@ def run_list_mailboxes(settings: PipelineSettings) -> None:
 
 def run_ingest_mail(settings: PipelineSettings, start: date, end: date) -> None:
     """Ingest mail whose interval is ``[start, end)`` in UTC."""
-    exclusions = load_sender_exclusions(settings.sender_exclusions_path)
-    store = GcsRawStore(_bucket(settings))
-    context = _context(
-        settings,
-        "ingest_mail",
-        lineage_names("imap", [settings.imap_mailbox]),
-        lineage_names("gcs", [f"{settings.data_bucket}/{RAW_MAIL_PREFIX}"]),
-        start,
-        end,
-        produces_records=False,
-    )
-    with open_mailbox(settings) as reader:
-        reader.select_read_only(settings.imap_mailbox)
-        run_recorded(
-            _writer(settings),
-            context,
-            lambda: ingest_mail(
-                reader, store, exclusions, day_start_utc(start), day_start_utc(end)
-            ),
-        )
+    jobs.ingest_interval(settings, day_start_utc(start), day_start_utc(end))
 
 
 def run_parse_mail(settings: PipelineSettings, start: date, end: date) -> None:
     """Parse raw mail received in ``[start, end)`` into the parsed zone."""
-    bucket = _bucket(settings)
-    context = _context(
-        settings,
-        "parse_mail",
-        lineage_names("gcs", [f"{settings.data_bucket}/{RAW_MAIL_PREFIX}"]),
-        _parsed_names(settings),
-        start,
-        end,
-    )
-    run_recorded(
-        _writer(settings),
-        context,
-        lambda: parse_mail(GcsRawStore(bucket), GcsParsedStore(bucket), start, end),
-    )
+    jobs.parse_mail_days(settings, days_between(start, end))
 
 
 def run_load_landing(settings: PipelineSettings, start: date, end: date) -> None:
     """Replace the ``[start, end)`` partitions of every landing table."""
-    warehouse = _warehouse(settings)
-    dataset = settings.bq_landing_dataset
-    context = _context(
-        settings,
-        "load_landing",
-        _parsed_names(settings),
-        lineage_names("bq", [f"{dataset}.{name}" for name in LANDING_MODELS]),
-        start,
-        end,
-    )
-    run_recorded(
-        _writer(settings),
-        context,
-        lambda: load_landing(warehouse, dataset, settings.data_bucket, start, end),
-    )
+    jobs.load_landing_days(settings, days_between(start, end))
 
 
 def run_landing_check(settings: PipelineSettings, start: date, end: date) -> None:
     """Log row counts and fingerprints, to compare before and after a reload."""
     fingerprints = landing_fingerprints(
-        _warehouse(settings), settings.bq_landing_dataset, start, end
+        jobs.warehouse(settings), settings.bq_landing_dataset, start, end
     )
     for table, value in fingerprints.items():
         logger.info(
@@ -205,7 +94,7 @@ def run_landing_check(settings: PipelineSettings, start: date, end: date) -> Non
 def run_raw_inventory(settings: PipelineSettings, start: date, end: date) -> None:
     """Log how many stored messages each sender domain accounts for."""
     exclusions = load_sender_exclusions(settings.sender_exclusions_path)
-    result = raw_inventory(GcsRawStore(_bucket(settings)), exclusions, start, end)
+    result = raw_inventory(GcsRawStore(jobs.bucket(settings)), exclusions, start, end)
     for domain, count in result.by_domain.items():
         logger.info("%5d  %s", count, domain)
 
@@ -223,7 +112,11 @@ def run_record_dbt_build(
         code_version=settings.code_version,
     )
     result = record_dbt_build(
-        _warehouse(settings), _writer(settings), context, run_results, manifest
+        jobs.warehouse(settings),
+        jobs.run_writer(settings),
+        context,
+        run_results,
+        manifest,
     )
     logger.info("dbt build recorded: %s", result.model_dump())
 
@@ -231,7 +124,7 @@ def run_record_dbt_build(
 def main(argv: Sequence[str] | None = None) -> None:
     """Parse arguments and run the chosen command."""
     args = build_parser().parse_args(argv)
-    logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
+    logging.basicConfig(level=logging.INFO, format=jobs.LOG_FORMAT)
     settings = PipelineSettings()  # type: ignore[call-arg]  # values come from env
     match args.command:
         case "list-mailboxes":

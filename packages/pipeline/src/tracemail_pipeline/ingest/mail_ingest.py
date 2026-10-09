@@ -38,6 +38,9 @@ class MailIngestResult(BaseModel):
     excluded: int = 0
     already_stored: int = 0
     written: int = 0
+    # Received dates that got new raw objects: the days later steps must
+    # process (ADR-0021).
+    written_days: list[date] = []
     bytes_fetched: int = 0
     bytes_written: int = 0
     imap_commands: int = 0
@@ -76,6 +79,7 @@ def ingest_mail(
     for position, header in enumerate(kept, start=1):
         if _store_message(reader, store, header, existing, result):
             result.written += 1
+            _mark_written_day(result, header.internal_date.date())
         else:
             result.already_stored += 1
         if position % PROGRESS_LOG_EVERY == 0:
@@ -84,6 +88,11 @@ def ingest_mail(
     result.seconds_total = time.perf_counter() - started
     logger.info("Mail ingest finished: %s", result.model_dump())
     return result
+
+
+def _mark_written_day(result: MailIngestResult, day: date) -> None:
+    if day not in result.written_days:
+        result.written_days = sorted([*result.written_days, day])
 
 
 def _kept_headers(

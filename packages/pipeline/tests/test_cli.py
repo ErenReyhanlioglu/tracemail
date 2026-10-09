@@ -8,6 +8,7 @@ from pydantic import ValidationError
 
 from tracemail_pipeline import cli
 from tracemail_pipeline.config import PipelineSettings
+from tracemail_pipeline.dates import day_start_utc
 
 ENV = {
     "TRACEMAIL_IMAP_HOST": "imap.example.com",
@@ -45,7 +46,7 @@ def test_parser_requires_a_command() -> None:
 
 
 def test_day_start_utc_returns_midnight_utc() -> None:
-    assert cli.day_start_utc(date(2026, 10, 4)) == datetime(2026, 10, 4, tzinfo=UTC)
+    assert day_start_utc(date(2026, 10, 4)) == datetime(2026, 10, 4, tzinfo=UTC)
 
 
 def test_main_dispatches_ingest_mail_with_parsed_dates(
