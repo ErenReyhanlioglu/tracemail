@@ -1,5 +1,153 @@
-# Single Compose definition for local and the VM (ADR-0016).
-# Services are added in Phase 1: 1.7 (Airflow), 1.9 (API), 1.10 (web),
-# 1.11 (tunnel).
+# Single Compose definition for local and the VM (ADR-0016). Run from the
+# repository root through the justfile (`just up`), which passes --env-file
+# .env: every value below comes from that file, and a missing required value
+# stops the stack instead of falling back to a default.
+#
+# Airflow 3.3 with the LocalExecutor (CLAUDE.md, Airflow): the scheduler runs
+# the tasks, so only the scheduler (and the debug CLI) receive the pipeline's
+# secrets and GCP credentials. Adapted from the official Airflow 3.3.2 compose
+# file, without Celery and Redis. Services for the API (1.9), web (1.10), and
+# tunnel (1.11) are added in their steps.
 name: tracemail
-services: {}
+
+x-airflow-common: &airflow-common
+  build:
+    context: ..
+    dockerfile: apps/airflow/Dockerfile
+  image: tracemail-airflow:local
+  user: "50000:0"
+  environment: &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${TRACEMAIL_AIRFLOW_DB_PASSWORD:?set in .env}@postgres/airflow
+    AIRFLOW__CORE__FERNET_KEY: ${TRACEMAIL_AIRFLOW_FERNET_KEY:?set in .env}
+    AIRFLOW__API_AUTH__JWT_SECRET: ${TRACEMAIL_AIRFLOW_JWT_SECRET:?set in .env}
+    AIRFLOW__API_AUTH__JWT_ISSUER: tracemail
+    AIRFLOW__CORE__EXECUTION_API_SERVER_URL: http://airflow-apiserver:8080/execution/
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+    AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS: owner:admin
+    # Generated login password, kept across restarts in the state volume.
+    AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_PASSWORDS_FILE: /opt/airflow/state/passwords.json
+    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
+  volumes:
+    - ../apps/airflow/dags:/opt/airflow/dags:ro
+    - airflow-logs:/opt/airflow/logs
+    - airflow-home:/opt/airflow/state
+  depends_on: &airflow-common-depends-on
+    postgres:
+      condition: service_healthy
+
+# What the pipeline tasks need: settings, the private exclusion list, and
+# read-only GCP credentials (gcloud ADC locally, a role key on the VM).
+x-pipeline-runtime: &pipeline-runtime
+  env_file:
+    - ../.env
+  environment:
+    <<: *airflow-common-env
+    TRACEMAIL_SENDER_EXCLUSIONS_PATH: /opt/tracemail-config/sender_exclusions.yaml
+    GOOGLE_APPLICATION_CREDENTIALS: /opt/tracemail-secrets/gcp-credentials.json
+  volumes:
+    - ../apps/airflow/dags:/opt/airflow/dags:ro
+    - airflow-logs:/opt/airflow/logs
+    - airflow-home:/opt/airflow/state
+    - ./config/sender_exclusions.yaml:/opt/tracemail-config/sender_exclusions.yaml:ro
+    - ${TRACEMAIL_GCP_CREDENTIALS_FILE:?set in .env}:/opt/tracemail-secrets/gcp-credentials.json:ro
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: ${TRACEMAIL_AIRFLOW_DB_PASSWORD:?set in .env}
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    restart: always
+
+  airflow-init:
+    <<: *airflow-common
+    command: ["bash", "-c", "airflow db migrate && airflow version"]
+    restart: "no"
+
+  airflow-apiserver:
+    <<: *airflow-common
+    command: api-server
+    ports:
+      # Local only; the VM exposes nothing (ADR-0016), access is over Tailscale.
+      - "127.0.0.1:8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/api/v2/monitor/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-scheduler:
+    # pipeline-runtime first: in a YAML merge list the first map wins.
+    <<: [*pipeline-runtime, *airflow-common]
+    command: scheduler
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-dag-processor:
+    <<: *airflow-common
+    command: dag-processor
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type DagProcessorJob --hostname "$${HOSTNAME}"']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  # Runs the deferrable Cosmos watcher sensors (ADR-0029).
+  airflow-triggerer:
+    <<: *airflow-common
+    command: triggerer
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}"']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  # Debug shell with the pipeline runtime: `just airflow <args>`.
+  airflow-cli:
+    # pipeline-runtime first: in a YAML merge list the first map wins.
+    <<: [*pipeline-runtime, *airflow-common]
+    profiles: [debug]
+    entrypoint: ["airflow"]
+    command: ["version"]
+
+volumes:
+  postgres-db:
+  airflow-logs:
+  airflow-home:

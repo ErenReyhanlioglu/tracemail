@@ -88,8 +88,16 @@ dbt-freshness:
 
 # Start the local Compose stack
 up:
-    docker compose -f {{compose_file}} up -d
+    docker compose -f {{compose_file}} --env-file .env up -d --build
 
 # Stop the local Compose stack
 down:
-    docker compose -f {{compose_file}} down
+    docker compose -f {{compose_file}} --env-file .env down
+
+# Run an Airflow CLI command with the pipeline runtime, e.g. just airflow dags list
+airflow *args:
+    docker compose -f {{compose_file}} --env-file .env run --rm airflow-cli {{args}}
+
+# Show the generated Airflow login password for the user "owner"
+airflow-password:
+    docker compose -f {{compose_file}} --env-file .env exec airflow-apiserver cat /opt/airflow/state/passwords.json
