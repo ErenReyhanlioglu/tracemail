@@ -358,9 +358,10 @@ company correspondence). This section overrides convenience.
   The stack must fit the Always Free ARM VM.
 - Airflow 3.3.x on Python 3.12, pinned to an exact patch version and installed
   with its constraint file (ADR-0013). Python 3.12 everywhere.
-- dbt runs through Cosmos (`ExecutionMode.LOCAL`, `dbt_executable_path` →
-  `dbt_venv`), one Airflow task per model and test (ADR-0014). Cosmos lives in
-  the Airflow environment; dbt never does.
+- dbt runs through Cosmos (`ExecutionMode.WATCHER`, `dbt_executable_path` →
+  `dbt_venv`): one `dbt build` per run, with one Airflow sensor task per model
+  and test (ADR-0014, ADR-0029). Cosmos lives in the Airflow environment; dbt
+  never does. The stack includes the triggerer for the deferrable sensors.
 - Each run writes a run-record row (start, end, status, counts per stage) to
   BigQuery. The health panel is built from these rows, not from Airflow's
   metadata DB.

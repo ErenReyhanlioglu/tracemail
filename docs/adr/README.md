@@ -28,7 +28,7 @@ written at the moment the decision is made — not drafted ahead of time.
 | [0011](0011-gcp-region-us-central1.md) | GCP Region `us-central1` | Accepted (not yet implemented) |
 | [0012](0012-build-in-ci-ghcr-and-push-deploy-over-tailscale.md) | Build in CI, Publish to GHCR, Push-Deploy over Tailscale | Accepted (not yet implemented) |
 | [0013](0013-airflow-3-3-on-python-3-12.md) | Airflow 3.3 on Python 3.12 | Accepted (not yet implemented) |
-| [0014](0014-dbt-1x-orchestrated-with-cosmos.md) | dbt 1.x Orchestrated with Cosmos | Accepted (not yet implemented) |
+| [0014](0014-dbt-1x-orchestrated-with-cosmos.md) | dbt 1.x Orchestrated with Cosmos | Accepted (not yet implemented); execution mode superseded by [0029](0029-cosmos-watcher-execution-mode.md) |
 | [0015](0015-owner-login-with-google-sign-in.md) | Owner Login with Google Sign-In, Handled by the API | Accepted (not yet implemented) |
 | [0016](0016-self-host-web-on-vm-behind-cloudflare-tunnel.md) | Self-Host the Web App on the VM behind Cloudflare Tunnel | Accepted (not yet implemented) |
 | [0017](0017-every-step-measures-time-volume-operations-and-cost.md) | Every Step Measures Its Time, Volume, Operations, and Cost | Accepted |
@@ -43,3 +43,4 @@ written at the moment the decision is made — not drafted ahead of time.
 | [0026](0026-dbt-bigquery-transitive-vertex-ai-sdk.md) | Accept the Vertex AI SDK as a Transitive Dependency of dbt-bigquery | Accepted |
 | [0027](0027-close-silent-applications-after-30-days.md) | Open Applications Close without Reply after 30 Silent Days | Accepted |
 | [0028](0028-exclude-account-security-mail-by-subject.md) | Exclude Account-Security Mail by Subject | Accepted |
+| [0029](0029-cosmos-watcher-execution-mode.md) | Run dbt through Cosmos in Watcher Execution Mode | Accepted (not yet implemented) |
