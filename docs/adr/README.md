@@ -39,3 +39,4 @@ written at the moment the decision is made — not drafted ahead of time.
 | [0022](0022-dbt-builds-only-when-landing-changes.md) | dbt Builds Only When Landing Changes | Proposed |
 | [0023](0023-dbt-run-metrics-from-artifacts-and-job-labels.md) | dbt Run Metrics from Artifacts and Job Labels, without Monitoring Packages | Proposed |
 | [0024](0024-application-status-model.md) | Application Status Model — Events, Three Statuses, and a Silence Indicator | Accepted (not yet implemented) |
+| [0025](0025-sender-exclusion-list-instead-of-allowlist.md) | A Sender Exclusion List Instead of an Allowlist | Accepted |

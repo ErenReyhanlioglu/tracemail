@@ -107,7 +107,7 @@ rejected.
 Monorepo, per ADR-0004. Keep the boundaries: each directory owns one concern.
 
 ```
-packages/pipeline/   IMAP fetch, allowlist, raw writes, parsers, loads
+packages/pipeline/   IMAP fetch, sender exclusions, raw writes, parsers, loads
 packages/llm/        Phase 2: provider interface, prompts, call logging, budget
 packages/evals/      Phase 2: golden set, evaluation runner, MLflow logging
 apps/airflow/        Dockerfile + dags/ (wiring only — no business logic)
@@ -139,7 +139,7 @@ docs/                ADRs, roadmap
 - Pydantic for every structure that crosses a boundary (parsed mail, API
   schemas, LLM output, config). No TypedDict, no dataclass for those.
 - No magic numbers or strings — named constants. Thresholds that define
-  product behaviour (follow-up silence window, budget cap, allowlist) live in
+  product behaviour (follow-up silence window, budget cap, sender exclusions) live in
   config, not in code.
 - Every module has a docstring explaining what it does.
 - f-strings only (except in logging calls — see Logging).
@@ -223,9 +223,13 @@ docs/                ADRs, roadmap
 The mailbox contains third-party personal data (recruiter names, addresses,
 company correspondence). This section overrides convenience.
 
-- **Allowlist at ingestion.** A mail from a sender that is not on the
-  allowlist is never written to GCS, never logged beyond a count. Filtering
-  later is not acceptable — what is not stored cannot leak.
+- **Exclusion list at ingestion.** The mailbox is dedicated to the job
+  search (ADR-0025): every message is stored except mail from senders on the
+  exclusion list (personal accounts, newsletters), which is never written to
+  GCS and never logged beyond a count. Filtering those later is not
+  acceptable — what is not stored cannot leak. Mail later judged irrelevant
+  stays in `raw/` and is filtered in the analytic layer; removing stored mail
+  is the manual purge procedure of ADR-0025, never automatic.
 - **Logs:** never log mail bodies, subjects, sender addresses, or posting
   text. Log internal ids (hashed Message-ID, GCS object key) and counts.
 - **Test fixtures** derived from real mail are redacted by hand before they
@@ -363,7 +367,7 @@ company correspondence). This section overrides convenience.
 
 - Datasets per layer: `landing` (parser output loaded from `parsed/`, one
   table per record type: `job_posting_sightings`, `job_actions`,
-  `message_parse_outcomes`), `staging`, `intermediate`,
+  `application_updates`, `message_parse_outcomes`), `staging`, `intermediate`,
   `marts`, plus `ops` for run records, test results, and LLM call logs.
   There is no BigQuery `raw` dataset — raw data lives only in GCS.
 - Load data with **batch load jobs from GCS**, not streaming inserts.

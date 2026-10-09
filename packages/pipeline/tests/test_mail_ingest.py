@@ -8,22 +8,22 @@ from typing import Any
 
 import pytest
 
-from tracemail_pipeline.ingest.allowlist import SenderAllowlist
 from tracemail_pipeline.ingest.mail_ingest import (
     PROGRESS_LOG_EVERY,
     MailIngestResult,
     ingest_mail,
 )
+from tracemail_pipeline.ingest.sender_exclusions import SenderExclusions
 
 START = datetime(2026, 10, 4, 13, tzinfo=UTC)
 END = datetime(2026, 10, 4, 14, tzinfo=UTC)
-ALLOWLIST = SenderAllowlist(domains=["allowed.example"])
+EXCLUSIONS = SenderExclusions(domains=["excluded.example"])
 KEY_PREFIX = "raw/mail/received_date=2026-10-04/"
-COUNT_FIELDS = {"listed", "rejected", "already_stored", "written"}
+COUNT_FIELDS = {"listed", "excluded", "already_stored", "written"}
 
 
 def run(reader: Any, store: Any) -> MailIngestResult:
-    return ingest_mail(reader, store, ALLOWLIST, START, END)
+    return ingest_mail(reader, store, EXCLUSIONS, START, END)
 
 
 def counts(result: MailIngestResult) -> dict[str, int]:
@@ -34,28 +34,28 @@ def expected(**values: int) -> dict[str, int]:
     return {field: values.get(field, 0) for field in COUNT_FIELDS}
 
 
-def test_ingest_writes_allowed_mail_keyed_by_message_id(
+def test_ingest_writes_mail_from_any_other_sender_keyed_by_message_id(
     make_fake_imap: Callable[..., Any],
     make_reader: Callable[[Any], Any],
     message_factory: Callable[..., Any],
     fake_store: Any,
 ) -> None:
-    message = message_factory("hr@allowed.example", "<id@allowed.example>")
+    message = message_factory("hr@company.example", "<id@company.example>")
     result = run(make_reader(make_fake_imap({"1": message})), fake_store)
-    digest = hashlib.sha256(b"<id@allowed.example>").hexdigest()
+    digest = hashlib.sha256(b"<id@company.example>").hexdigest()
     assert counts(result) == expected(listed=1, written=1)
     assert fake_store.objects == {f"{KEY_PREFIX}{digest}.eml": message.raw}
 
 
-def test_ingest_never_downloads_or_stores_mail_from_other_senders(
+def test_ingest_never_downloads_or_stores_mail_from_excluded_senders(
     make_fake_imap: Callable[..., Any],
     make_reader: Callable[[Any], Any],
     message_factory: Callable[..., Any],
     fake_store: Any,
 ) -> None:
-    imap = make_fake_imap({"1": message_factory("someone@other.example", "<x@o>")})
+    imap = make_fake_imap({"1": message_factory("news@excluded.example", "<x@e>")})
     result = run(make_reader(imap), fake_store)
-    assert counts(result) == expected(listed=1, rejected=1)
+    assert counts(result) == expected(listed=1, excluded=1)
     assert fake_store.objects == {}
     assert all("BODY.PEEK[]" not in call[3] for call in imap.fetch_calls())
 
@@ -66,7 +66,7 @@ def test_ingest_skips_already_stored_mail_without_downloading_it(
     message_factory: Callable[..., Any],
     fake_store: Any,
 ) -> None:
-    message = message_factory("hr@allowed.example", "<id@allowed.example>")
+    message = message_factory("hr@company.example", "<id@company.example>")
     run(make_reader(make_fake_imap({"1": message})), fake_store)
     imap = make_fake_imap({"1": message})
     result = run(make_reader(imap), fake_store)
@@ -80,7 +80,7 @@ def test_ingest_keys_mail_without_message_id_by_raw_bytes_and_stays_idempotent(
     message_factory: Callable[..., Any],
     fake_store: Any,
 ) -> None:
-    message = message_factory("hr@allowed.example", None)
+    message = message_factory("hr@company.example", None)
     first = run(make_reader(make_fake_imap({"1": message})), fake_store)
     second = run(make_reader(make_fake_imap({"1": message})), fake_store)
     digest = hashlib.sha256(message.raw).hexdigest()
@@ -95,9 +95,9 @@ def test_ingest_reports_operations_bytes_and_timings(
     message_factory: Callable[..., Any],
     fake_store: Any,
 ) -> None:
-    written = message_factory("hr@allowed.example", "<id@allowed.example>")
-    rejected = message_factory("someone@other.example", "<x@o>")
-    result = run(make_reader(make_fake_imap({"1": written, "2": rejected})), fake_store)
+    written = message_factory("hr@company.example", "<id@company.example>")
+    excluded = message_factory("news@excluded.example", "<x@e>")
+    result = run(make_reader(make_fake_imap({"1": written, "2": excluded})), fake_store)
     # 1 SEARCH + 1 batched header FETCH + 1 body FETCH
     assert result.imap_commands == 3
     assert (result.gcs_lists, result.gcs_writes) == (1, 1)
@@ -120,7 +120,7 @@ def test_ingest_logs_progress_and_final_metrics(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     messages = {
-        str(uid): message_factory("hr@allowed.example", f"<{uid}@allowed.example>")
+        str(uid): message_factory("hr@company.example", f"<{uid}@company.example>")
         for uid in range(1, PROGRESS_LOG_EVERY + 1)
     }
     with caplog.at_level(logging.INFO):
@@ -128,4 +128,4 @@ def test_ingest_logs_progress_and_final_metrics(
     progress = f"Mail ingest progress: {PROGRESS_LOG_EVERY}/{PROGRESS_LOG_EVERY}"
     assert progress in caplog.text
     assert "Mail ingest finished" in caplog.text
-    assert "hr@allowed.example" not in caplog.text
+    assert "hr@company.example" not in caplog.text

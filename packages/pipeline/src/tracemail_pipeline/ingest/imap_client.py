@@ -3,7 +3,7 @@
 The mailbox is opened with ``EXAMINE`` (``select(..., readonly=True)``) and
 messages are fetched with ``BODY.PEEK``, so nothing in the mailbox changes:
 no message is marked as read, and no flag, folder, or message is modified.
-Headers are fetched first so that mail from senders outside the allowlist is
+Headers are fetched first so that mail from excluded senders is
 never downloaded in full.
 """
 

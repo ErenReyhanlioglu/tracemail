@@ -21,8 +21,8 @@ them on a public panel.
 
 ## What the system does
 
-1. Ingests new mail and saved postings into Cloud Storage in raw form; senders
-   not on the allowlist are left out.
+1. Ingests new mail and saved postings into Cloud Storage in raw form; mail from
+   excluded senders (personal accounts, newsletters) is left out.
 2. Extracts information from templated mail with rules; classifies
    non-templated replies with a cheap LLM.
 3. In BigQuery, links posting, application, and reply events to company,
@@ -162,7 +162,7 @@ implementation, the concrete counterparts of these items must not be skipped.
 | CI/CD for ML/LLM | Evaluation runs automatically when a prompt or code changes, and the change is rejected if accuracy drops; successful changes are deployed to the server automatically | GitHub Actions |
 | Live monitoring | Run history, data freshness, parse rates; logging LLM calls with model, prompt version, tokens, duration, and cost; weekly windows suited to small volume | BigQuery table, dbt |
 | Incident management | Noticing that a component broke, fixing it, and documenting it with a short record | Health panel, incident log |
-| Data privacy and access separation | Excluding sensitive sources at the ingestion stage; never sending data to an unauthorized view | Allowlist, FastAPI authentication |
+| Data privacy and access separation | Excluding sensitive sources at the ingestion stage; never sending data to an unauthorized view | Sender exclusion list, FastAPI authentication |
 | API design | Endpoints that receive data and serve data; authentication; caching | FastAPI |
 | Portable deployment | The same definition runs locally and on the server; the environment comes up with a single command | Docker Compose |
 | Going from data to decisions | Turning raw mail events into actionable signals: applications flagged for follow-up, and parse-health rates (LinkedIn per template, other senders combined) that point to a broken template; presenting findings in a readable interface | SQL, Next.js |

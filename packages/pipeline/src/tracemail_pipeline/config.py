@@ -26,7 +26,7 @@ class PipelineSettings(BaseSettings):
     imap_user: str
     imap_password: SecretStr
     imap_mailbox: str
-    sender_allowlist_path: Path
+    sender_exclusions_path: Path
     gcp_project: str
     data_bucket: str
     bq_location: str

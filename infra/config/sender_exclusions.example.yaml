@@ -1,0 +1,14 @@
+# Sender exclusions: mail from these senders never enters the system; every
+# other message in the (job-search-only) mailbox does (ADR-0025).
+#
+# Copy to sender_exclusions.yaml (not committed) and point
+# TRACEMAIL_SENDER_EXCLUSIONS_PATH at it.
+
+# Exact address match.
+exact:
+  - notifications-noreply@linkedin.com # social notifications
+
+# Domain match: the domain itself and its subdomains.
+domains:
+  - bank.example # personal account: bank
+  - newsletter.example # newsletter, not an application channel

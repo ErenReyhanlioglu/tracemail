@@ -17,11 +17,11 @@ import google.cloud.storage as storage
 from google.cloud import bigquery
 
 from tracemail_pipeline.config import PipelineSettings
-from tracemail_pipeline.ingest.allowlist import load_allowlist
 from tracemail_pipeline.ingest.imap_client import open_mailbox
 from tracemail_pipeline.ingest.mail_ingest import ingest_mail
 from tracemail_pipeline.ingest.raw_inventory import raw_inventory
 from tracemail_pipeline.ingest.raw_store import RAW_MAIL_PREFIX, GcsRawStore
+from tracemail_pipeline.ingest.sender_exclusions import load_sender_exclusions
 from tracemail_pipeline.load.landing import (
     LANDING_MODELS,
     landing_fingerprints,
@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 LOG_FORMAT = "%(asctime)s %(levelname)s %(name)s: %(message)s"
 DATE_RANGE_COMMANDS = {
     "ingest-mail": "Ingest mail for a date range",
-    "raw-inventory": "Count stored raw mail per allowlist entry",
+    "raw-inventory": "Count stored raw mail per sender domain",
     "parse-mail": "Parse stored raw mail into the parsed zone",
     "load-landing": "Load the parsed zone into BigQuery landing tables",
     "landing-check": "Row counts and content fingerprints of landing tables",
@@ -125,7 +125,7 @@ def run_list_mailboxes(settings: PipelineSettings) -> None:
 
 def run_ingest_mail(settings: PipelineSettings, start: date, end: date) -> None:
     """Ingest mail whose interval is ``[start, end)`` in UTC."""
-    allowlist = load_allowlist(settings.sender_allowlist_path)
+    exclusions = load_sender_exclusions(settings.sender_exclusions_path)
     store = GcsRawStore(_bucket(settings))
     context = _context(
         settings,
@@ -142,7 +142,7 @@ def run_ingest_mail(settings: PipelineSettings, start: date, end: date) -> None:
             _writer(settings),
             context,
             lambda: ingest_mail(
-                reader, store, allowlist, day_start_utc(start), day_start_utc(end)
+                reader, store, exclusions, day_start_utc(start), day_start_utc(end)
             ),
         )
 
@@ -196,11 +196,11 @@ def run_landing_check(settings: PipelineSettings, start: date, end: date) -> Non
 
 
 def run_raw_inventory(settings: PipelineSettings, start: date, end: date) -> None:
-    """Log how many stored messages each allowlist entry accounts for."""
-    allowlist = load_allowlist(settings.sender_allowlist_path)
-    result = raw_inventory(GcsRawStore(_bucket(settings)), allowlist, start, end)
-    for entry, count in result.by_entry.items():
-        logger.info("%5d  %s", count, entry)
+    """Log how many stored messages each sender domain accounts for."""
+    exclusions = load_sender_exclusions(settings.sender_exclusions_path)
+    result = raw_inventory(GcsRawStore(_bucket(settings)), exclusions, start, end)
+    for domain, count in result.by_domain.items():
+        logger.info("%5d  %s", count, domain)
 
 
 def main(argv: Sequence[str] | None = None) -> None:

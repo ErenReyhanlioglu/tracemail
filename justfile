@@ -41,7 +41,7 @@ list-mailboxes:
 ingest-mail start end:
     uv run --env-file .env python -m tracemail_pipeline.cli ingest-mail --start-date {{start}} --end-date {{end}}
 
-# Count stored raw mail per allowlist entry for [start, end)
+# Count stored raw mail per sender domain for [start, end)
 raw-inventory start end:
     uv run --env-file .env python -m tracemail_pipeline.cli raw-inventory --start-date {{start}} --end-date {{end}}
 
