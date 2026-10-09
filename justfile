@@ -59,6 +59,7 @@ landing-check start end:
 
 dbt_run := "uv run --project dbt --env-file .env dbt"
 dbt_dirs := "--project-dir dbt --profiles-dir dbt"
+dbt_target := justfile_directory() / "dbt" / "target"
 
 # Install dbt packages (dbt_utils)
 dbt-deps:
@@ -72,9 +73,14 @@ dbt-parse:
 dbt-debug:
     {{dbt_run}} debug {{dbt_dirs}}
 
-# Build and test dbt models in dev, e.g. just dbt-build or just dbt-build "--select staging"
+# Build and test dbt models in dev, then record the build in ops (ADR-0023),
+# e.g. just dbt-build or just dbt-build "--select staging". Stale results are
+# removed first so a build that never starts cannot be recorded twice; a
+# failed build is still recorded, and the recipe then fails.
 dbt-build *args:
-    {{dbt_run}} build {{dbt_dirs}} {{args}}
+    uv run python -c "import pathlib, sys; pathlib.Path(sys.argv[1]).unlink(missing_ok=True)" "{{dbt_target}}/run_results.json"
+    -{{dbt_run}} build {{dbt_dirs}} {{args}}
+    uv run --env-file .env python -m tracemail_pipeline.cli record-dbt-build --run-results "{{dbt_target}}/run_results.json" --manifest "{{dbt_target}}/manifest.json"
 
 # Check source freshness in dev
 dbt-freshness:

@@ -12,6 +12,7 @@ import argparse
 import logging
 from collections.abc import Sequence
 from datetime import UTC, date, datetime, time
+from pathlib import Path
 
 import google.cloud.storage as storage
 from google.cloud import bigquery
@@ -22,6 +23,7 @@ from tracemail_pipeline.ingest.mail_ingest import ingest_mail
 from tracemail_pipeline.ingest.raw_inventory import raw_inventory
 from tracemail_pipeline.ingest.raw_store import RAW_MAIL_PREFIX, GcsRawStore
 from tracemail_pipeline.ingest.sender_exclusions import load_sender_exclusions
+from tracemail_pipeline.load.dbt_results import record_dbt_build
 from tracemail_pipeline.load.landing import (
     LANDING_MODELS,
     landing_fingerprints,
@@ -55,6 +57,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="tracemail-pipeline")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("list-mailboxes", help="List mailbox folder names")
+    record = commands.add_parser(
+        "record-dbt-build", help="Record a dbt build's results in ops (ADR-0023)"
+    )
+    record.add_argument("--run-results", type=Path, nargs="+", required=True)
+    record.add_argument("--manifest", type=Path, required=True)
     for name, help_text in DATE_RANGE_COMMANDS.items():
         command = commands.add_parser(name, help=help_text)
         command.add_argument("--start-date", type=date.fromisoformat, required=True)
@@ -203,6 +210,24 @@ def run_raw_inventory(settings: PipelineSettings, start: date, end: date) -> Non
         logger.info("%5d  %s", count, domain)
 
 
+def run_record_dbt_build(
+    settings: PipelineSettings, run_results: list[Path], manifest: Path
+) -> None:
+    """Record a finished dbt build in ops; fails if any dbt node failed."""
+    context = RunContext(
+        job_name="dbt_build",
+        inputs=lineage_names(
+            "bq", [f"{settings.bq_landing_dataset}.{name}" for name in LANDING_MODELS]
+        ),
+        outputs=[],
+        code_version=settings.code_version,
+    )
+    result = record_dbt_build(
+        _warehouse(settings), _writer(settings), context, run_results, manifest
+    )
+    logger.info("dbt build recorded: %s", result.model_dump())
+
+
 def main(argv: Sequence[str] | None = None) -> None:
     """Parse arguments and run the chosen command."""
     args = build_parser().parse_args(argv)
@@ -221,6 +246,8 @@ def main(argv: Sequence[str] | None = None) -> None:
             run_load_landing(settings, args.start_date, args.end_date)
         case "landing-check":
             run_landing_check(settings, args.start_date, args.end_date)
+        case "record-dbt-build":
+            run_record_dbt_build(settings, args.run_results, args.manifest)
 
 
 if __name__ == "__main__":
