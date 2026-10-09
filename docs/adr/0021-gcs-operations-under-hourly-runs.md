@@ -1,7 +1,7 @@
 # ADR-0021: Keeping GCS Operations within the Free Tier under Hourly Runs
 
 **Date:** 2026-10-08
-**Status:** Proposed — decide before step 1.7 is done
+**Status:** Accepted (not yet implemented; step 1.7)
 
 ## Context
 
@@ -101,16 +101,31 @@ unchanged days.
 
 ## Decision
 
-Pending. Before deciding, during step 1.7: measure real hourly runs from run
-records, read the billing report to confirm operation classes and whether
-BigQuery loads add GCS operations, then compare options 1 and 2 by measured
-time and operation counts. Record the choice here and set the status to
-Accepted.
+**Option 1, dirty-partition propagation** (decided 2026-10-09, at the start
+of step 1.7). Ingestion reports the days that received new raw objects;
+parsing and loading handle only those days, and a run without new mail
+skips them. The same signal gates the dbt build (ADR-0022), so one rule
+keeps both the GCS and the BigQuery free tiers in reach. Once a day the full
+window is processed without change detection; manual backfills always run
+in full.
+
+Option 2 (existence checks instead of listings) is not pursued unless
+measured hourly runs under option 1 exceed the Class A free tier. Step 1.7
+verifies the projection with real hourly run records and the billing report
+(including whether BigQuery loads add GCS operations) and records the
+numbers here.
 
 ## Consequences
 
-To be written with the decision. Whichever option is chosen, step 1.7 is not
-done until hourly runs stay within the GCS free tier (roadmap).
+**Positive:** Product behavior is unchanged (new mail visible within an
+hour); most hourly runs do almost nothing; the idempotency guarantee holds
+because partitions are still overwritten whole and backfills run in full.
+
+**Negative / trade-offs:** Each run must pass the dirty-day list from
+ingestion to the later steps, so the DAG carries data between tasks. A run
+that dies between ingestion and parsing loses its list; the daily full run
+repairs that within 24 hours. Step 1.7 is not done until measured hourly
+runs stay within the GCS free tier (roadmap).
 
 ## References
 
