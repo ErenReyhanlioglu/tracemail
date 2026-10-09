@@ -63,6 +63,14 @@ staging views and 29 data tests over 90 days of data, read from
   tier. Intermediate and mart models and their tests add to this; the full
   build is measured when they exist.
 
+**Measured 2026-10-09 (full build: 13 models, 1 seed, 70 tests).** **1.03 GB
+billed per build** (models 115 MB, tests 912 MB — tests are 89% of the cost,
+almost all at the 10 MiB minimum, 20 MiB when a test reads two tables). The
+incremental `MERGE` of `fct_application_events` billed 20 MiB. Under option
+B (about 270 builds a month) this is about 277 GB a month, about 27% of the
+free tier; building every hour (option A) would be about 740 GB, about 72%.
+The estimate of 0.9 GB per build above was close.
+
 ## Decision
 
 Option B, extending the dirty-partition signal proposed in ADR-0021:

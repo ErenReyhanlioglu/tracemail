@@ -1,0 +1,22 @@
+seeds:
+  - name: event_type_statuses
+    description: >
+      Owner-approved mapping from application event type to the status it
+      sets (ADR-0024). An empty status means the event does not change the
+      status. Precedence breaks ties between events on the same day: a
+      rejection outranks progress, progress outranks the application itself.
+      Phase 2's reply classifier outputs these event types.
+    config:
+      column_types:
+        event_type: string
+        sets_status: string
+        status_precedence: int64
+        description: string
+    columns:
+      - name: event_type
+        data_tests: [unique, not_null]
+      - name: sets_status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [applied, in_progress, rejected]

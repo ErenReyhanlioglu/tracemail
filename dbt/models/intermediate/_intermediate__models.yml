@@ -1,0 +1,42 @@
+models:
+  - name: int_posting_mentions_unioned
+    description: Every mention of a posting (card, owner action, employer update).
+    columns:
+      - name: job_id
+        data_tests: [not_null]
+      - name: mention_type
+        data_tests: [not_null]
+
+  - name: int_postings_deduplicated
+    description: One row per posting, from all its mentions.
+    columns:
+      - name: posting_key
+        data_tests: [unique, not_null]
+      - name: title
+        data_tests: [not_null]
+      - name: company
+        description: >
+          Unknown for postings mentioned only by name in a viewed-job
+          reminder's header and never shown as a card.
+
+  - name: int_application_events_unioned
+    description: >
+      Application events from confirmations and employer updates, with
+      submissions inferred from updates when no confirmation exists;
+      deduplicated (one submission per posting, one event per type per day).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [posting_key, event_type, event_date]
+    columns:
+      - name: posting_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('int_postings_deduplicated')
+                field: posting_key
+      - name: event_type
+        data_tests: [not_null]
+      - name: event_date
+        data_tests: [not_null]

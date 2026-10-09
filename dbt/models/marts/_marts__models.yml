@@ -1,0 +1,91 @@
+models:
+  - name: dim_companies
+    description: One row per company that appeared in any posting.
+    columns:
+      - name: company_key
+        data_tests: [unique, not_null]
+      - name: company_name
+        data_tests: [not_null]
+
+  - name: dim_postings
+    description: One row per posting, with a rebuilt (token-free) posting URL.
+    columns:
+      - name: posting_key
+        data_tests: [unique, not_null]
+      - name: job_id
+        data_tests: [not_null]
+      - name: company_key
+        description: Empty when the company is unknown (see int_postings_deduplicated).
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_companies')
+                field: company_key
+      - name: posting_url
+        data_tests: [not_null]
+
+  - name: fct_application_events
+    description: One row per application event (ADR-0024); incremental.
+    columns:
+      - name: event_key
+        data_tests: [unique, not_null]
+      - name: application_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_applications')
+                field: application_key
+      - name: event_type
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('event_type_statuses')
+                field: event_type
+      - name: event_date
+        data_tests: [not_null]
+
+  - name: dim_applications
+    description: >
+      One row per application with its current status (ADR-0024). Every
+      application has exactly one submission, real or inferred.
+    columns:
+      - name: application_key
+        data_tests: [unique, not_null]
+      - name: posting_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_postings')
+                field: posting_key
+      - name: company_key
+        data_tests: [not_null]
+      - name: channel
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [linkedin]
+      - name: applied_on
+        data_tests: [not_null]
+      - name: current_status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [applied, in_progress, rejected]
+
+  - name: dim_application_status
+    description: >
+      Read-time view: days since each application's latest event, the
+      "no reply for N days" indicator, and "closed without reply" after a
+      longer silence (ADR-0022, ADR-0024, ADR-0027).
+    data_tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "not (is_silent and is_closed_without_reply)"
+    columns:
+      - name: application_key
+        data_tests: [unique, not_null]

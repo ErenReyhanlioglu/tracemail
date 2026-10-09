@@ -23,9 +23,34 @@ flags:
 query-comment:
   job-label: true
 
+vars:
+  # Days without any event after which an open application shows "no reply
+  # for N days" (ADR-0024).
+  silence_days: 10
+  # Days without any event after which an open application counts as closed
+  # without reply and stops suggesting a follow-up (ADR-0027).
+  closed_after_days: 30
+  # The owner's local date decides "today" for read-time ages; storage is UTC.
+  display_timezone: "Europe/Istanbul"
+  # Canonical posting URL, rebuilt from the job id (mail links carry tokens).
+  linkedin_job_url_prefix: "https://www.linkedin.com/jobs/view/"
+  # Incremental event loads recompute applications with mail in the last N
+  # loaded days, matching the ingestion window (ADR-0007).
+  event_lookback_days: 3
+
 models:
   tracemail:
     # Views cost nothing to create (ADR-0022); staging only renames and casts.
     staging:
       +schema: staging
       +materialized: view
+    intermediate:
+      +schema: intermediate
+      +materialized: view
+    marts:
+      +schema: marts
+      +materialized: table
+
+seeds:
+  tracemail:
+    +schema: staging
