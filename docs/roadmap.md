@@ -26,7 +26,7 @@ open from any device, running hourly in production. No LLM.
 | 1.5 | `feat/dbt-core-models` | Sources, staging, intermediate dedup, marts: applications, events, companies, channels; application stage, waiting time, follow-up flag; dbt test results to `ops` | `dbt build` passes on dev with tests; an application's stage is correct for a hand-checked sample |
 | 1.6 | `feat/linkedin-history` | LinkedIn export through the same raw → parsed → landing path, merged with mail-derived applications | Historical applications appear once, not duplicated against mail |
 | 1.7 | `feat/airflow-stack` | Airflow image with three environments (ADR-0003), hourly DAG with `external_python` tasks and Cosmos (ADR-0013, ADR-0014), local Compose stack; decide ADR-0021 | Stack runs locally end-to-end; a backfill of past days works; hourly runs stay within the GCS free tier |
-| 1.8 | `feat/more-parsers` | Further LinkedIn templates seen in real mail (for example, application viewed); a parser for another source only where the raw inventory shows enough volume; decide how sent mail (direct applications) enters ingestion | Parse health is recorded per LinkedIn template and for other senders combined; unclaimed mail is counted as "other" |
+| 1.8 | `feat/more-parsers` | Further LinkedIn templates seen in real mail; a parser for another source only where the raw inventory shows enough volume; decide how sent mail (direct applications) enters ingestion | Parse health is recorded per LinkedIn template and for other senders combined; unclaimed mail is counted as "other" |
 | 1.9 | `feat/api-owner-auth` | FastAPI: Google Sign-In (ADR-0015), owner session, read endpoint for applications, `/health`, public/private privacy test | Owner logs in on localhost; any other account is refused; privacy test passes |
 | 1.10 | `feat/web-application-list` | Next.js standalone app: login, minimal read-only application list, design tokens | Owner sees real applications in the browser locally |
 | 1.11 | `ci/deploy` | Prod GCP project, Oracle VM, Tailscale, Cloudflare Tunnel, `arm64` build to GHCR, deploy workflow, GitHub → GCP via WIF (ADR-0009, ADR-0010, ADR-0012, ADR-0016) | A merge to `main` deploys; the site is reachable on the domain with no open inbound ports |
@@ -39,6 +39,10 @@ These are recorded as unverified in ADRs; each is checked at the step named.
 - ~~IMAP `SINCE` / `BEFORE` and `BODY.PEEK` behave as expected on Gmail — 1.2~~
   Verified 2026-10-07: a 2026-10-01..07 run listed 114 messages, wrote 62, and
   unread mail stayed unread in the mail client.
+- ~~LinkedIn sends application-viewed and rejection mails (ADR-0024) — 1.8~~
+  Verified 2026-10-09 and moved ahead of 1.5: in 90 days of raw mail, 6 viewed
+  and 4 rejection mails; both are HTML-only templates, parsed since parser
+  version 3. No "resume downloaded" mail was seen.
 - `external_python` subprocess inherits environment variables — 1.7
 - Cosmos DAG-parsing load is acceptable on the VM — 1.7 / 1.11
 - Oracle web-console emergency access works when Tailscale is down — 1.11

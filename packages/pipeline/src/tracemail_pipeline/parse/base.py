@@ -38,6 +38,13 @@ class ActionType(StrEnum):
     VIEWED = "viewed"
 
 
+class UpdateType(StrEnum):
+    """An employer's reaction to an application; names follow ADR-0024."""
+
+    APPLICATION_VIEWED = "application_viewed"
+    REJECTION = "rejection"
+
+
 class Outcome(StrEnum):
     """What happened when a message was parsed."""
 
@@ -84,6 +91,17 @@ class JobAction(RecordOrigin):
     location: str | None = None
 
 
+class ApplicationUpdate(RecordOrigin):
+    """An employer's reaction to one of the owner's applications."""
+
+    job_id: str
+    update_type: UpdateType
+    applied_on: date | None = None
+    title: str
+    company: str
+    location: str | None = None
+
+
 class MessageParseOutcome(BaseModel):
     """Exactly one row per message: the basis of parse-quality metrics."""
 
@@ -96,6 +114,7 @@ class MessageParseOutcome(BaseModel):
     reason: str | None = None
     sightings: int = 0
     actions: int = 0
+    updates: int = 0
 
 
 class ParsedMessage(BaseModel):
@@ -104,6 +123,7 @@ class ParsedMessage(BaseModel):
     template: str
     sightings: list[JobPostingSighting] = []
     actions: list[JobAction] = []
+    updates: list[ApplicationUpdate] = []
 
 
 class SourceMessage(BaseModel):
@@ -114,6 +134,7 @@ class SourceMessage(BaseModel):
     from_header: str
     sent_at: datetime | None
     plain_text: str | None
+    html: str | None = None
 
 
 class Parser(Protocol):

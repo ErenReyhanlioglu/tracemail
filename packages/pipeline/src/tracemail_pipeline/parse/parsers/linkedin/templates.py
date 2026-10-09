@@ -87,13 +87,18 @@ def _require_cards(cards: list[Card]) -> None:
 
 
 def interpret_alert(origin: RecordOrigin, cards: list[Card]) -> Records:
-    """Job alert: every card is a posting matching a saved search."""
+    """Job alert: every card is a posting matching a saved search. Cards in the
+    "from your other alerts" section belong to another search, which the mail
+    does not name, so their query is left empty."""
     _require_cards(cards)
-    query = _header_match(cards[:1], phrases.ALERT_HEADER)["query"]
-    sightings = [
-        _sighting(origin, i, card, SightingContext.ALERT, context_value=query)
-        for i, card in enumerate(cards)
-    ]
+    query: str | None = _header_match(cards[:1], phrases.ALERT_HEADER)["query"]
+    sightings = []
+    for i, card in enumerate(cards):
+        if any(phrases.OTHER_ALERTS.match(header) for header in card.headers):
+            query = None
+        sightings.append(
+            _sighting(origin, i, card, SightingContext.ALERT, context_value=query)
+        )
     return sightings, []
 
 
@@ -155,7 +160,8 @@ def interpret_saved_reminder(origin: RecordOrigin, cards: list[Card]) -> Records
 
 def interpret_facet_suggestions(origin: RecordOrigin, cards: list[Card]) -> Records:
     """Suggestions grouped by facet ("Remote", "AI/ML"); a facet header applies
-    to every following card until the next one."""
+    to every following card until the next one. Some variants open with a
+    featured posting before the first facet; it has no facet."""
     _require_cards(cards)
     sightings = []
     facet: str | None = None
@@ -163,8 +169,6 @@ def interpret_facet_suggestions(origin: RecordOrigin, cards: list[Card]) -> Reco
         for header in card.headers:
             match = phrases.FACET_SECTION.match(header)
             facet = match["facet"] if match is not None else facet
-        if facet is None:
-            raise ParseError("Suggestion card appears before any facet header")
         sightings.append(
             _sighting(origin, i, card, SightingContext.SUGGESTED, context_value=facet)
         )
@@ -180,7 +184,12 @@ def _parse_turkish_date(match: re.Match[str]) -> date:
 
 TEMPLATES: dict[str, TemplateSpec] = {
     "email_email_job_alert_digest_01": TemplateSpec(
-        headers=(phrases.ALERT_HEADER, phrases.ALERT_INTRO),
+        headers=(
+            phrases.ALERT_HEADER,
+            phrases.ALERT_INTRO,
+            phrases.OTHER_ALERTS,
+            phrases.OTHER_ALERT_HIGHLIGHT,
+        ),
         interpret=interpret_alert,
     ),
     "email_email_application_confirmation_with_nba_01": TemplateSpec(
@@ -197,7 +206,13 @@ TEMPLATES: dict[str, TemplateSpec] = {
         interpret=interpret_viewed_reminder,
     ),
     "email_email_jobs_saved_job_reminder_01": TemplateSpec(
-        headers=(phrases.SAVED_HEADER, phrases.APPLY_NOW, phrases.OTHER_SAVED),
+        headers=(
+            phrases.SAVED_HEADER,
+            phrases.APPLY_NOW,
+            phrases.OTHER_SAVED,
+            phrases.CONTACTS_AT_COMPANY,
+            phrases.ASK_ABOUT_JOB,
+        ),
         interpret=interpret_saved_reminder,
     ),
     "email_email_jobs_facet_suggestions": TemplateSpec(
@@ -205,3 +220,12 @@ TEMPLATES: dict[str, TemplateSpec] = {
         interpret=interpret_facet_suggestions,
     ),
 }
+
+# Templates that are recognized but carry nothing to record: confirmation that
+# a job alert was created, and a "looking for a job?" promotion.
+IGNORED_TEMPLATES = frozenset(
+    {
+        "email_email_job_alert_confirmation_01",
+        "email_email_jobs_first_time_job_seeker_01",
+    }
+)

@@ -20,6 +20,7 @@ from pydantic import BaseModel
 from tracemail_pipeline.ingest.raw_store import RawStore, mail_partition_prefix
 from tracemail_pipeline.load.run_records import RunVolume
 from tracemail_pipeline.parse.base import (
+    ApplicationUpdate,
     JobAction,
     JobPostingSighting,
     MessageParseOutcome,
@@ -39,6 +40,7 @@ READ_CONCURRENCY = 8
 SIGHTINGS = "job_posting_sightings"
 ACTIONS = "job_actions"
 OUTCOMES = "message_parse_outcomes"
+UPDATES = "application_updates"
 
 
 class ParseMailResult(BaseModel):
@@ -51,6 +53,7 @@ class ParseMailResult(BaseModel):
     unclaimed: int = 0
     sightings: int = 0
     actions: int = 0
+    updates: int = 0
     bytes_read: int = 0
     bytes_written: int = 0
     gcs_lists: int = 0
@@ -65,7 +68,7 @@ class ParseMailResult(BaseModel):
         """Common volume fields for the run record (ADR-0020)."""
         return RunVolume(
             records_in=self.messages,
-            records_out=self.sightings + self.actions,
+            records_out=self.sightings + self.actions + self.updates,
             records_failed=self.failed,
             bytes_in=self.bytes_read,
             bytes_out=self.bytes_written,
@@ -75,6 +78,7 @@ class ParseMailResult(BaseModel):
 class _DayRecords(BaseModel):
     sightings: list[JobPostingSighting] = []
     actions: list[JobAction] = []
+    updates: list[ApplicationUpdate] = []
     outcomes: list[MessageParseOutcome] = []
 
 
@@ -119,6 +123,7 @@ def _parse_day(
         if parsed is not None:
             records.sightings.extend(parsed.sightings)
             records.actions.extend(parsed.actions)
+            records.updates.extend(parsed.updates)
         _count(outcome, result)
     return records
 
@@ -130,6 +135,7 @@ def _count(outcome: MessageParseOutcome, result: ParseMailResult) -> None:
     result.unclaimed += outcome.outcome == Outcome.UNCLAIMED
     result.sightings += outcome.sightings
     result.actions += outcome.actions
+    result.updates += outcome.updates
     if outcome.outcome == Outcome.FAILED:
         logger.warning("Parse failed for %s: %s", outcome.source_key, outcome.reason)
 
@@ -141,6 +147,7 @@ def _write_day(
     for record_type, rows in (
         (SIGHTINGS, records.sightings),
         (ACTIONS, records.actions),
+        (UPDATES, records.updates),
         (OUTCOMES, records.outcomes),
     ):
         result.bytes_written += parsed_store.write_partition(record_type, day, rows)
@@ -154,12 +161,14 @@ def source_message(key: str, received_date: date, raw: bytes) -> SourceMessage:
     if not isinstance(message, EmailMessage):
         raise TypeError("Expected an EmailMessage with the default policy")
     body = message.get_body(preferencelist=("plain",))
+    html = message.get_body(preferencelist=("html",))
     return SourceMessage(
         source_key=key,
         received_date=received_date,
         from_header=str(message.get("From", "")),
         sent_at=_sent_at(message.get("Date")),
         plain_text=body.get_content() if body is not None else None,
+        html=html.get_content() if html is not None else None,
     )
 
 

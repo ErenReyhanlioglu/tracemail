@@ -21,11 +21,12 @@ from tracemail_pipeline.load.bq_schema import schema_for, schema_version
 from tracemail_pipeline.load.run_records import RunVolume
 from tracemail_pipeline.load.warehouse import LoadStats, Warehouse
 from tracemail_pipeline.parse.base import (
+    ApplicationUpdate,
     JobAction,
     JobPostingSighting,
     MessageParseOutcome,
 )
-from tracemail_pipeline.parse.parse_mail import ACTIONS, OUTCOMES, SIGHTINGS
+from tracemail_pipeline.parse.parse_mail import ACTIONS, OUTCOMES, SIGHTINGS, UPDATES
 from tracemail_pipeline.parse.parsed_store import parsed_object_key
 
 logger = logging.getLogger(__name__)
@@ -34,6 +35,7 @@ LANDING_MODELS: dict[str, type[BaseModel]] = {
     SIGHTINGS: JobPostingSighting,
     ACTIONS: JobAction,
     OUTCOMES: MessageParseOutcome,
+    UPDATES: ApplicationUpdate,
 }
 PARTITION_FIELD = "received_date"
 ONE_DAY = timedelta(days=1)

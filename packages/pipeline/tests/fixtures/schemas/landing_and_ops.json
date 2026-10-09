@@ -1,4 +1,61 @@
 {
+  "application_updates": [
+    {
+      "name": "source_key",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "received_date",
+      "type": "DATE",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "parser_name",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "parser_version",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "template",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "job_id",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "update_type",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "applied_on",
+      "type": "DATE",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "title",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "company",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "location",
+      "type": "STRING",
+      "mode": "NULLABLE"
+    }
+  ],
   "job_actions": [
     {
       "name": "source_key",
@@ -186,6 +243,11 @@
     },
     {
       "name": "actions",
+      "type": "INT64",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "updates",
       "type": "INT64",
       "mode": "NULLABLE"
     }

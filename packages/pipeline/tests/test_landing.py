@@ -88,21 +88,21 @@ def test_load_landing_ensures_every_table_partitioned_by_received_date() -> None
 def test_load_landing_loads_one_partition_per_day_and_record_type() -> None:
     warehouse = FakeWarehouse()
     result = load_landing(warehouse, "landing", "bucket", DAY, date(2026, 10, 3))
-    assert len(warehouse.loads) == result.bq_load_jobs == 6
+    assert len(warehouse.loads) == result.bq_load_jobs == 8
     assert (
         "gs://bucket/parsed/job_posting_sightings/received_date=2026-10-01/data.jsonl",
         "job_posting_sightings",
         DAY,
     ) in warehouse.loads
-    assert (result.days, result.rows_loaded, result.bytes_loaded) == (2, 18, 1800)
-    assert result.volume().records_out == 18
+    assert (result.days, result.rows_loaded, result.bytes_loaded) == (2, 24, 2400)
+    assert result.volume().records_out == 24
 
 
 def test_load_landing_explicitly_empties_partitions_of_empty_days() -> None:
     warehouse = FakeWarehouse(rows_per_load=0)
     result = load_landing(warehouse, "landing", "bucket", DAY, date(2026, 10, 2))
     assert sorted(warehouse.deleted) == sorted((table, DAY) for table in LANDING_MODELS)
-    assert result.partitions_emptied == 3
+    assert result.partitions_emptied == len(LANDING_MODELS)
 
 
 def test_load_landing_does_not_delete_partitions_that_received_rows() -> None:

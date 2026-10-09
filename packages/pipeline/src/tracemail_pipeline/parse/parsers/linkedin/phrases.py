@@ -20,6 +20,10 @@ ALUMNI = re.compile(r"^(?P<count>\d+) okul mezunu$")
 
 # Section headers, per template.
 ALERT_HEADER = re.compile(r"^(?P<query>.+?)\s+için iş ilanı uyarınız$")
+# Digest section with postings from the owner's other alerts; its first line
+# is followed by one highlight line that names a posting in HTML.
+OTHER_ALERTS = re.compile(r"^Diğer uyarılarınızdan yeni iş ilanları$")
+OTHER_ALERT_HIGHLIGHT = re.compile(r"^.+ konumunda <strong[^>]*>.+</strong> iş ilanı$")
 # Seen variants: "yeni iş ilanları var.", "yeni bir iş ilanı var.",
 # "11 yeni iş ilanı var."
 ALERT_INTRO = re.compile(r"^Tercihlerinizle eşleşen .*iş ilan\w* var\.$")
@@ -36,8 +40,16 @@ VIEWED_HEADER = re.compile(
 SAVED_HEADER = re.compile(r"^.+ şirketinden kaydettiğiniz iş ilanı hâlâ açık\.$")
 APPLY_NOW = re.compile(r"^Hemen başvurun$")
 OTHER_SAVED = re.compile(r"^Kaydedilen diğer iş ilanlarınız$")
+# Contacts block in saved-job reminders: each contact (name, headline) ends
+# with a "send message" link line, which is never card content.
+CONTACTS_AT_COMPANY = re.compile(r"^.+ şirketinde bağlantılarınız var$")
+ASK_ABOUT_JOB = re.compile(r"^İş ilanı hakkında soru sorun$")
+SEND_MESSAGE = re.compile(r"^Mesaj gönder")
 FACET_INTRO = re.compile(r"^(Aramanızı genişletin|Faaliyetlerinize göre öneriler\.)$")
 FACET_SECTION = re.compile(r"^(?P<facet>.+) iş ilanları$")
+
+# Application updates (HTML part): "2 Eyl tarihinde başvuruldu" (no year).
+APPLIED_ON_SHORT = re.compile(r"^(?P<day>\d{1,2}) (?P<month>\w+) tarihinde başvuruldu$")
 
 MONTHS = {
     "Ocak": 1,
@@ -52,4 +64,19 @@ MONTHS = {
     "Ekim": 10,
     "Kasım": 11,
     "Aralık": 12,
+}
+
+MONTH_ABBREVIATIONS = {
+    "Oca": 1,
+    "Şub": 2,
+    "Mar": 3,
+    "Nis": 4,
+    "May": 5,
+    "Haz": 6,
+    "Tem": 7,
+    "Ağu": 8,
+    "Eyl": 9,
+    "Eki": 10,
+    "Kas": 11,
+    "Ara": 12,
 }
