@@ -57,6 +57,29 @@ load-landing start end:
 landing-check start end:
     uv run --env-file .env python -m tracemail_pipeline.cli landing-check --start-date {{start}} --end-date {{end}}
 
+dbt_run := "uv run --project dbt --env-file .env dbt"
+dbt_dirs := "--project-dir dbt --profiles-dir dbt"
+
+# Install dbt packages (dbt_utils)
+dbt-deps:
+    {{dbt_run}} deps {{dbt_dirs}}
+
+# Parse the dbt project without querying BigQuery
+dbt-parse:
+    {{dbt_run}} parse {{dbt_dirs}}
+
+# Check the dbt connection to the dev project
+dbt-debug:
+    {{dbt_run}} debug {{dbt_dirs}}
+
+# Build and test dbt models in dev, e.g. just dbt-build or just dbt-build "--select staging"
+dbt-build *args:
+    {{dbt_run}} build {{dbt_dirs}} {{args}}
+
+# Check source freshness in dev
+dbt-freshness:
+    {{dbt_run}} source freshness {{dbt_dirs}}
+
 # Start the local Compose stack
 up:
     docker compose -f {{compose_file}} up -d

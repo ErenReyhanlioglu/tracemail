@@ -1,10 +1,31 @@
-# dbt project (ADR-0014). Models are implemented in Phase 1, step 1.5.
+# dbt project (ADR-0014). One BigQuery dataset per layer (CLAUDE.md, BigQuery
+# and dbt); dataset names are used as written, without a target prefix
+# (macros/generate_schema_name.sql), because dev and prod are separate GCP
+# projects (ADR-0010).
 name: tracemail
-version: "0.0.0"
+version: "0.1.0"
 config-version: 2
 profile: tracemail
+require-dbt-version: [">=1.12.0", "<2.0.0"]
 
 model-paths: ["models"]
 macro-paths: ["macros"]
 test-paths: ["tests"]
+seed-paths: ["seeds"]
 clean-targets: ["target", "dbt_packages"]
+
+flags:
+  # No usage telemetry to dbt Labs.
+  send_anonymous_usage_stats: false
+
+# Every BigQuery job carries its dbt node as job labels, so the billed bytes
+# of each model and test can be read from job metadata (ADR-0023).
+query-comment:
+  job-label: true
+
+models:
+  tracemail:
+    # Views cost nothing to create (ADR-0022); staging only renames and casts.
+    staging:
+      +schema: staging
+      +materialized: view

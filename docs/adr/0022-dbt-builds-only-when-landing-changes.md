@@ -50,6 +50,19 @@ arrive a day and roughly two thirds of hourly runs find no new mail.
 Health-panel queries, LLM call logs (Phase 2), and the monitoring models of
 ADR-0023 come on top of these numbers.
 
+**Measured 2026-10-09 (first build, staging layer only).** `dbt build` of 4
+staging views and 29 data tests over 90 days of data, read from
+`run_results.json` and confirmed against BigQuery job metadata:
+
+- `CREATE VIEW` billed **0 bytes**: the 10 MB minimum does not apply to it.
+- 25 tests billed **10 MiB** each (the minimum; the data is far smaller).
+- 4 `not_null` tests on the partition column `received_date` billed **0
+  bytes**: BigQuery answered them from metadata.
+- Total **262 MB per build** (0.26 GB). Under option B (about 270 builds a
+  month) that is about 71 GB a month for staging alone, about 7% of the free
+  tier. Intermediate and mart models and their tests add to this; the full
+  build is measured when they exist.
+
 ## Decision
 
 Option B, extending the dirty-partition signal proposed in ADR-0021:

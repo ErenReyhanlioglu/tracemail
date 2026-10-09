@@ -77,6 +77,17 @@ Build count from ADR-0022.
 tests; whether reading job metadata through the API is free of query charges;
 the measured bytes billed per build.
 
+**Measured 2026-10-09 (first build, staging layer only).** With dbt-bigquery
+1.12.1, `adapter_response` **does** carry `bytes_billed` for data tests,
+contrary to the general dbt documentation [1]: all 33 nodes (4 views, 29
+tests) reported it, and the per-node values summed to the same 262.1 MB as
+the 34 jobs found in BigQuery job metadata by their `dbt_invocation_id` label
+(the extra job created the dataset, 0 bytes). Item 2 of the Decision is
+therefore redundant for cost: `run_results.json` alone is complete. Job
+labels stay enabled — they cost nothing and attribute every job in the
+BigQuery console — but the step does not need to read job metadata. Item 2
+is to be removed when this ADR is accepted.
+
 ## Rationale
 
 Alternatives considered:

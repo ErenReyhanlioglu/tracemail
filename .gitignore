@@ -34,6 +34,7 @@ infra/config/sender_exclusions.yaml
 dbt/target/
 dbt/dbt_packages/
 dbt/logs/
+dbt/.user.yml
 
 # Node / Next.js
 node_modules/

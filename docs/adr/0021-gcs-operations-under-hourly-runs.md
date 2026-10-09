@@ -38,6 +38,19 @@ rewriting whole partitions (ADR-0018).
 operations to the bill; the per-run counts above include only operations made
 by our code.
 
+**Update 2026-10-09: four record types.** Parser version 3 added a fourth
+record type (`application_updates`), so parsing now rewrites four `parsed/`
+files per day instead of three. Measured in the 90-day backfill: 120 parsed
+writes per 30 days parsed, 4 per day. The hourly projection above becomes 12
+parsed writes per run (8,640 a month) and about 18 Class A operations per run,
+about 13,000 a month — roughly 2.6 times the free tier instead of 2.2. The
+same backfill measured about 7.8 stored mails a day (701 in 90 days, after
+ADR-0025's exclusion list), close to the 8 assumed above. The option
+estimates below assumed three record types; their parsed-write share grows by
+a third and is recomputed when the decision is made in step 1.7. Every new
+record type adds one write per parsed day, which favors options that skip
+unchanged days.
+
 ## Findings from the literature
 
 1. **Dirty-partition tracking** is the established pattern: each run processes
