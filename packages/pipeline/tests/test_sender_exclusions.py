@@ -74,3 +74,30 @@ def test_load_sender_exclusions_rejects_a_non_mapping_file(tmp_path: Path) -> No
     path.write_text("- a@example.com\n")
     with pytest.raises(SenderExclusionsError):
         load_sender_exclusions(path)
+
+
+SUBJECT_EXCLUSIONS = SenderExclusions(
+    subjects=["Tek Kullanımlık Şifre", "one-time passcode", "adresi doğrulama"]
+)
+
+
+@pytest.mark.parametrize(
+    "subject",
+    [
+        "TUSAŞ TEK KULLANIMLIK ŞİFRE",
+        "Tek kullanımlık şifreniz: 123456",
+        "One-Time Passcode",
+        "E-posta adresi doğrulama isteği",
+        "E-POSTA ADRESİ DOĞRULAMA İSTEĞİ",
+    ],
+)
+def test_subject_patterns_exclude_security_mail_from_any_sender(subject: str) -> None:
+    assert SUBJECT_EXCLUSIONS.excludes("Talent <noreply@ats.example>", subject)
+
+
+@pytest.mark.parametrize(
+    "subject",
+    ["Your application at Example Company", "Başvurunuz alındı", ""],
+)
+def test_subject_patterns_keep_application_mail(subject: str) -> None:
+    assert not SUBJECT_EXCLUSIONS.excludes("Talent <noreply@ats.example>", subject)

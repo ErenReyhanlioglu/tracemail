@@ -17,7 +17,9 @@ from tracemail_pipeline.ingest.sender_exclusions import SenderExclusions
 
 START = datetime(2026, 10, 4, 13, tzinfo=UTC)
 END = datetime(2026, 10, 4, 14, tzinfo=UTC)
-EXCLUSIONS = SenderExclusions(domains=["excluded.example"])
+EXCLUSIONS = SenderExclusions(
+    domains=["excluded.example"], subjects=["one-time passcode"]
+)
 KEY_PREFIX = "raw/mail/received_date=2026-10-04/"
 COUNT_FIELDS = {"listed", "excluded", "already_stored", "written"}
 
@@ -54,6 +56,22 @@ def test_ingest_never_downloads_or_stores_mail_from_excluded_senders(
     fake_store: Any,
 ) -> None:
     imap = make_fake_imap({"1": message_factory("news@excluded.example", "<x@e>")})
+    result = run(make_reader(imap), fake_store)
+    assert counts(result) == expected(listed=1, excluded=1)
+    assert fake_store.objects == {}
+    assert all("BODY.PEEK[]" not in call[3] for call in imap.fetch_calls())
+
+
+def test_ingest_never_downloads_security_mail_from_a_kept_sender(
+    make_fake_imap: Callable[..., Any],
+    make_reader: Callable[[Any], Any],
+    message_factory: Callable[..., Any],
+    fake_store: Any,
+) -> None:
+    passcode = message_factory(
+        "talent@company.example", "<otp@company.example>", subject="One-Time Passcode"
+    )
+    imap = make_fake_imap({"1": passcode})
     result = run(make_reader(imap), fake_store)
     assert counts(result) == expected(listed=1, excluded=1)
     assert fake_store.objects == {}

@@ -12,3 +12,10 @@ exact:
 domains:
   - bank.example # personal account: bank
   - newsletter.example # newsletter, not an application channel
+
+# Subject patterns: account-security mail (one-time codes, address
+# verification) from senders whose other mail is kept. Matched anywhere in the
+# subject, ignoring case (Turkish i variants included).
+subjects:
+  - one-time passcode
+  - tek kullanımlık şifre

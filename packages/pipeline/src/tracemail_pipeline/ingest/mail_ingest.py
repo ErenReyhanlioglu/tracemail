@@ -95,7 +95,7 @@ def _kept_headers(
     started = time.perf_counter()
     headers = reader.fetch_headers(uids)
     result.seconds_imap_headers += time.perf_counter() - started
-    kept = [h for h in headers if not exclusions.excludes(h.from_header)]
+    kept = [h for h in headers if not exclusions.excludes(h.from_header, h.subject)]
     result.excluded = len(headers) - len(kept)
     return kept
 

@@ -227,8 +227,10 @@ company correspondence). This section overrides convenience.
 
 - **Exclusion list at ingestion.** The mailbox is dedicated to the job
   search (ADR-0025): every message is stored except mail from senders on the
-  exclusion list (personal accounts, newsletters), which is never written to
-  GCS and never logged beyond a count. Filtering those later is not
+  exclusion list (personal accounts, newsletters) and account-security mail
+  matched by subject (one-time codes, verification; ADR-0028), which is never
+  written to GCS and never logged beyond a count. Subjects are read from
+  headers only and never logged. Filtering those later is not
   acceptable — what is not stored cannot leak. Mail later judged irrelevant
   stays in `raw/` and is filtered in the analytic layer; removing stored mail
   is the manual purge procedure of ADR-0025, never automatic.

@@ -4,8 +4,8 @@ accounts for.
 Used to decide which parsers matter most and which senders to exclude, by
 measurement rather than guess (ADR-0017, ADR-0025). Counts are keyed by the
 sender's domain, never by the full address, so the report names no person.
-Stored mail from a sender that has since been excluded is counted under one
-shared label.
+Stored mail that has since been excluded (by sender or subject) is counted
+under one shared label.
 """
 
 import logging
@@ -64,8 +64,9 @@ def raw_inventory(
 
 
 def _label_for(raw: bytes, exclusions: SenderExclusions) -> str:
-    from_header = str(message_from_bytes(raw, policy=default_policy).get("From", ""))
-    if exclusions.excludes(from_header):
+    headers = message_from_bytes(raw, policy=default_policy)
+    from_header = str(headers.get("From", ""))
+    if exclusions.excludes(from_header, str(headers.get("Subject", ""))):
         return NOW_EXCLUDED
     address = parseaddr(from_header)[1].strip().lower()
     if "@" not in address:
