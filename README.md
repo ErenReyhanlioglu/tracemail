@@ -32,7 +32,7 @@ pipeline step measures its own time, volume, operations, and cost
 
 ```mermaid
 flowchart LR
-    M[Gmail<br/>read-only IMAP] -->|allowlist| R[(GCS raw/<br/>write-once .eml)]
+    M[Gmail<br/>read-only IMAP] -->|sender exclusions| R[(GCS raw/<br/>write-once .eml)]
     C[Capture button<br/>Phase 2] -.-> R
     L[LinkedIn export] -.-> R
     R -->|rule-based parsers| P[(GCS parsed/<br/>JSONL per day)]
@@ -61,8 +61,8 @@ The whole analytic layer can be rebuilt from `raw/` after a parser change.
   replace exactly one date partition. Loading the same eight days three times
   produced identical tables, verified with order-independent content
   fingerprints.
-- **Privacy at the door.** Senders outside an allowlist are never stored and
-  never logged beyond a count. The mailbox is opened read-only and fetched with
+- **Privacy at the door.** Personal-account and newsletter senders on an
+  exclusion list are never stored and never logged beyond a count. The mailbox is opened read-only and fetched with
   `BODY.PEEK`, so nothing is ever marked as read; a test enforces both. Run
   error messages are scrubbed of addresses and quoted values before they are
   written.
@@ -128,7 +128,7 @@ Phase 1 has no LLM by design: the data foundation comes first.
 ## Repository layout
 
 ```
-packages/pipeline/   IMAP fetch, allowlist, raw writes, parsers, loads
+packages/pipeline/   IMAP fetch, sender exclusions, raw writes, parsers, loads
 packages/llm/        Phase 2: provider interface, prompts, call logging, budget
 packages/evals/      Phase 2: golden set, evaluation runner
 apps/airflow/        DAGs (wiring only) and image
@@ -150,7 +150,7 @@ just --list      # every available command
 ```
 
 Running the pipeline needs a GCP project, a mailbox app password, and a sender
-allowlist; see [.env.example](.env.example) for the settings it reads.
+exclusion list; see [.env.example](.env.example) for the settings it reads.
 
 ## Documentation
 

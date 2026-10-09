@@ -1,0 +1,37 @@
+models:
+  - name: fct_pipeline_runs
+    description: Run history, one row per pipeline step execution; no error messages.
+    columns:
+      - name: run_id
+        data_tests: [unique, not_null]
+
+  - name: fct_job_freshness
+    description: Last run, its status, and hours since the last success, per step.
+    columns:
+      - name: job_name
+        data_tests: [unique, not_null]
+
+  - name: fct_mail_freshness
+    description: Newest stored message's received date and age in days (one row).
+    columns:
+      - name: newest_received_date
+        data_tests: [not_null]
+
+  - name: fct_parse_quality_weekly
+    description: Messages parsed, failed, and unclaimed per week and parse group.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [week_start, parse_group]
+
+  - name: fct_mail_volume_weekly
+    description: Messages per complete week against the trailing weeks' mean.
+    columns:
+      - name: week_start
+        data_tests: [unique, not_null]
+
+  - name: fct_dbt_builds
+    description: One row per recorded dbt build with tests, cost, and coverage.
+    columns:
+      - name: run_id
+        data_tests: [unique, not_null]

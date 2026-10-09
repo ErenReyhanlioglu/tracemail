@@ -1,7 +1,7 @@
 """Mail ingestion for one data interval: list, filter, and store raw messages.
 
-For the interval's date window: fetch all headers in batches, drop senders
-outside the allowlist, list what is already stored once per received date,
+For the interval's date window: fetch all headers in batches, drop excluded
+senders (ADR-0025), list what is already stored once per received date,
 and write the rest to the raw zone exactly once. Running the same interval
 twice leaves the same end state (CLAUDE.md, Airflow).
 
@@ -15,7 +15,6 @@ from datetime import date, datetime
 
 from pydantic import BaseModel
 
-from tracemail_pipeline.ingest.allowlist import SenderAllowlist
 from tracemail_pipeline.ingest.imap_client import MailboxReader, MailHeader
 from tracemail_pipeline.ingest.imap_codec import date_window
 from tracemail_pipeline.ingest.raw_store import (
@@ -24,6 +23,7 @@ from tracemail_pipeline.ingest.raw_store import (
     mail_partition_prefix,
     message_digest,
 )
+from tracemail_pipeline.ingest.sender_exclusions import SenderExclusions
 from tracemail_pipeline.load.run_records import RunVolume
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ class MailIngestResult(BaseModel):
     """Volume, operations, and timings for one run; the only thing logged."""
 
     listed: int = 0
-    rejected: int = 0
+    excluded: int = 0
     already_stored: int = 0
     written: int = 0
     bytes_fetched: int = 0
@@ -61,43 +61,43 @@ class MailIngestResult(BaseModel):
 def ingest_mail(
     reader: MailboxReader,
     store: RawStore,
-    allowlist: SenderAllowlist,
+    exclusions: SenderExclusions,
     interval_start: datetime,
     interval_end: datetime,
 ) -> MailIngestResult:
-    """Ingest every allowed message in the interval's date window."""
+    """Ingest every message in the interval's date window except excluded ones."""
     started = time.perf_counter()
     commands_before = reader.commands_sent
     since, before = date_window(interval_start, interval_end)
     uids = reader.search_uids(since, before)
     result = MailIngestResult(listed=len(uids))
-    allowed = _allowed_headers(reader, allowlist, uids, result)
-    existing = _existing_keys(store, allowed, result)
-    for position, header in enumerate(allowed, start=1):
+    kept = _kept_headers(reader, exclusions, uids, result)
+    existing = _existing_keys(store, kept, result)
+    for position, header in enumerate(kept, start=1):
         if _store_message(reader, store, header, existing, result):
             result.written += 1
         else:
             result.already_stored += 1
         if position % PROGRESS_LOG_EVERY == 0:
-            logger.info("Mail ingest progress: %d/%d", position, len(allowed))
+            logger.info("Mail ingest progress: %d/%d", position, len(kept))
     result.imap_commands = reader.commands_sent - commands_before
     result.seconds_total = time.perf_counter() - started
     logger.info("Mail ingest finished: %s", result.model_dump())
     return result
 
 
-def _allowed_headers(
+def _kept_headers(
     reader: MailboxReader,
-    allowlist: SenderAllowlist,
+    exclusions: SenderExclusions,
     uids: list[str],
     result: MailIngestResult,
 ) -> list[MailHeader]:
     started = time.perf_counter()
     headers = reader.fetch_headers(uids)
     result.seconds_imap_headers += time.perf_counter() - started
-    allowed = [header for header in headers if allowlist.allows(header.from_header)]
-    result.rejected = len(headers) - len(allowed)
-    return allowed
+    kept = [h for h in headers if not exclusions.excludes(h.from_header, h.subject)]
+    result.excluded = len(headers) - len(kept)
+    return kept
 
 
 def _existing_keys(
@@ -121,7 +121,7 @@ def _store_message(
     existing: set[str],
     result: MailIngestResult,
 ) -> bool:
-    """Store one allowed message; return ``False`` if it was already stored."""
+    """Store one kept message; return ``False`` if it was already stored."""
     received = header.internal_date.date()
     if header.message_id:
         key = mail_object_key(received, message_digest(header.message_id, None))

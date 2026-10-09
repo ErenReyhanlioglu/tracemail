@@ -41,4 +41,5 @@ def parse_message(
     outcome.outcome = Outcome.PARSED
     outcome.template = parsed.template
     outcome.sightings, outcome.actions = len(parsed.sightings), len(parsed.actions)
+    outcome.updates = len(parsed.updates)
     return outcome, parsed

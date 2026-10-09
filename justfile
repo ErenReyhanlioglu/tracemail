@@ -41,7 +41,7 @@ list-mailboxes:
 ingest-mail start end:
     uv run --env-file .env python -m tracemail_pipeline.cli ingest-mail --start-date {{start}} --end-date {{end}}
 
-# Count stored raw mail per allowlist entry for [start, end)
+# Count stored raw mail per sender domain for [start, end)
 raw-inventory start end:
     uv run --env-file .env python -m tracemail_pipeline.cli raw-inventory --start-date {{start}} --end-date {{end}}
 
@@ -56,6 +56,35 @@ load-landing start end:
 # Row counts and content fingerprints of landing tables for [start, end)
 landing-check start end:
     uv run --env-file .env python -m tracemail_pipeline.cli landing-check --start-date {{start}} --end-date {{end}}
+
+dbt_run := "uv run --project dbt --env-file .env dbt"
+dbt_dirs := "--project-dir dbt --profiles-dir dbt"
+dbt_target := justfile_directory() / "dbt" / "target"
+
+# Install dbt packages (dbt_utils)
+dbt-deps:
+    {{dbt_run}} deps {{dbt_dirs}}
+
+# Parse the dbt project without querying BigQuery
+dbt-parse:
+    {{dbt_run}} parse {{dbt_dirs}}
+
+# Check the dbt connection to the dev project
+dbt-debug:
+    {{dbt_run}} debug {{dbt_dirs}}
+
+# Build and test dbt models in dev, then record the build in ops (ADR-0023),
+# e.g. just dbt-build or just dbt-build "--select staging". Stale results are
+# removed first so a build that never starts cannot be recorded twice; a
+# failed build is still recorded, and the recipe then fails.
+dbt-build *args:
+    uv run python -c "import pathlib, sys; pathlib.Path(sys.argv[1]).unlink(missing_ok=True)" "{{dbt_target}}/run_results.json"
+    -{{dbt_run}} build {{dbt_dirs}} {{args}}
+    uv run --env-file .env python -m tracemail_pipeline.cli record-dbt-build --run-results "{{dbt_target}}/run_results.json" --manifest "{{dbt_target}}/manifest.json"
+
+# Check source freshness in dev
+dbt-freshness:
+    {{dbt_run}} source freshness {{dbt_dirs}}
 
 # Start the local Compose stack
 up:

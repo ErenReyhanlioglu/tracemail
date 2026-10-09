@@ -95,9 +95,11 @@ def make_message(
     sender: str,
     message_id: str | None,
     internal_date: str = "04-Oct-2026 09:15:00 +0300",
+    subject: str = "Synthetic subject",
 ) -> FakeMessage:
-    """Build a synthetic message with the given sender and Message-ID."""
-    header_lines = [f"From: Sender <{sender}>"]
+    """Build a synthetic message with the given sender, Message-ID, and
+    subject."""
+    header_lines = [f"From: Sender <{sender}>", f"Subject: {subject}"]
     if message_id is not None:
         header_lines.append(f"Message-ID: {message_id}")
     headers = ("\r\n".join(header_lines) + "\r\n\r\n").encode()

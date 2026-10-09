@@ -1,0 +1,26 @@
+sources:
+  - name: mail
+    description: >
+      Parser output for the application mailbox, loaded from the parsed zone
+      into `landing` with one partition per received date (ADR-0019). Every
+      record carries its source object key and parser version.
+    database: "{{ env_var('TRACEMAIL_GCP_PROJECT') }}"
+    schema: "{{ env_var('TRACEMAIL_BQ_LANDING_DATASET') }}"
+    tables:
+      - name: job_posting_sightings
+        description: One posting card seen in one message.
+      - name: job_actions
+        description: An owner action on a posting (applied, saved, viewed).
+      - name: application_updates
+        description: An employer's reaction to an application (viewed, rejection).
+      - name: message_parse_outcomes
+        description: >
+          Exactly one row per stored message (parsed, failed, or unclaimed);
+          the newest received date is the data's freshness.
+        config:
+          loaded_at_field: "timestamp(received_date)"
+          freshness:
+            # About 8 mails arrive a day (ADR-0021); two silent days are
+            # unusual, four mean ingestion has stopped.
+            warn_after: {count: 2, period: day}
+            error_after: {count: 4, period: day}

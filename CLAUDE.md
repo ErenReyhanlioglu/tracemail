@@ -90,7 +90,9 @@ rejected.
 - Work belongs to the current phase in `docs/roadmap.md`. Do not build
   features from a later phase "while we're here".
 - Phase 1 has **no LLM**. No LLM SDK dependency, prompt file, or LLM call
-  enters the codebase before Phase 2.
+  enters the codebase before Phase 2. One exception: `dbt-bigquery` requires
+  the Vertex AI SDK, so it sits unused in `dbt/uv.lock` (ADR-0026); project
+  code never imports it.
 - Anything in SUMMARY.md's out-of-scope list (Kubernetes, lakehouse formats,
   model training, model registry, endpoint deployment, a separate
   observability stack, AWS, Azure, fake-data demo) is not proposed as a
@@ -107,7 +109,7 @@ rejected.
 Monorepo, per ADR-0004. Keep the boundaries: each directory owns one concern.
 
 ```
-packages/pipeline/   IMAP fetch, allowlist, raw writes, parsers, loads
+packages/pipeline/   IMAP fetch, sender exclusions, raw writes, parsers, loads
 packages/llm/        Phase 2: provider interface, prompts, call logging, budget
 packages/evals/      Phase 2: golden set, evaluation runner, MLflow logging
 apps/airflow/        Dockerfile + dags/ (wiring only — no business logic)
@@ -139,7 +141,7 @@ docs/                ADRs, roadmap
 - Pydantic for every structure that crosses a boundary (parsed mail, API
   schemas, LLM output, config). No TypedDict, no dataclass for those.
 - No magic numbers or strings — named constants. Thresholds that define
-  product behaviour (follow-up silence window, budget cap, allowlist) live in
+  product behaviour (follow-up silence window, budget cap, sender exclusions) live in
   config, not in code.
 - Every module has a docstring explaining what it does.
 - f-strings only (except in logging calls — see Logging).
@@ -223,9 +225,15 @@ docs/                ADRs, roadmap
 The mailbox contains third-party personal data (recruiter names, addresses,
 company correspondence). This section overrides convenience.
 
-- **Allowlist at ingestion.** A mail from a sender that is not on the
-  allowlist is never written to GCS, never logged beyond a count. Filtering
-  later is not acceptable — what is not stored cannot leak.
+- **Exclusion list at ingestion.** The mailbox is dedicated to the job
+  search (ADR-0025): every message is stored except mail from senders on the
+  exclusion list (personal accounts, newsletters) and account-security mail
+  matched by subject (one-time codes, verification; ADR-0028), which is never
+  written to GCS and never logged beyond a count. Subjects are read from
+  headers only and never logged. Filtering those later is not
+  acceptable — what is not stored cannot leak. Mail later judged irrelevant
+  stays in `raw/` and is filtered in the analytic layer; removing stored mail
+  is the manual purge procedure of ADR-0025, never automatic.
 - **Logs:** never log mail bodies, subjects, sender addresses, or posting
   text. Log internal ids (hashed Message-ID, GCS object key) and counts.
 - **Test fixtures** derived from real mail are redacted by hand before they
@@ -303,8 +311,10 @@ company correspondence). This section overrides convenience.
   uses `PEEK` and the mailbox is opened read-only.
 - **Dedup key** for mail is the Message-ID. Mail without one gets a sha256 of
   the raw bytes.
-- **Parsers are rule-based.** One parser per source (LinkedIn, Workable,
-  Lever, hrpanda, ...), each with a `PARSER_VERSION` constant. A source with
+- **Parsers are rule-based.** One parser per source, each with a
+  `PARSER_VERSION` constant. LinkedIn carries most of the volume; another
+  source gets a parser only when its real mail volume justifies one (see the
+  raw inventory), and until then its mail is "other". A source with
   several templates shares one structure reader and describes each template
   as a small spec (LinkedIn: `parse/parsers/linkedin/templates.py`); adding a
   template is a spec, a redacted fixture, and a test — no new reader.
@@ -361,7 +371,7 @@ company correspondence). This section overrides convenience.
 
 - Datasets per layer: `landing` (parser output loaded from `parsed/`, one
   table per record type: `job_posting_sightings`, `job_actions`,
-  `message_parse_outcomes`), `staging`, `intermediate`,
+  `application_updates`, `message_parse_outcomes`), `staging`, `intermediate`,
   `marts`, plus `ops` for run records, test results, and LLM call logs.
   There is no BigQuery `raw` dataset — raw data lives only in GCS.
 - Load data with **batch load jobs from GCS**, not streaming inserts.

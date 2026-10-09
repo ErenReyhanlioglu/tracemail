@@ -1,0 +1,10 @@
+event_type,sets_status,status_precedence,description
+application_submitted,applied,1,The owner applied (LinkedIn confirmation; later the export and sent mail)
+application_received,,,Automatic acknowledgement from an application system
+application_viewed,in_progress,2,The employer viewed the application
+resume_downloaded,in_progress,2,The employer downloaded the resume
+assessment_invite,in_progress,2,Invitation to a test or case study
+interview_invite,in_progress,2,Invitation to an interview
+offer,in_progress,2,An offer
+information,,,Process update or request that does not change the status
+rejection,rejected,3,The employer declined the application

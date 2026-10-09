@@ -4,7 +4,8 @@ In the plain-text part, cards are separated by lines of dashes. Within a
 segment, a template's section headers come first, then the card: title,
 company, location, optional descriptive lines, and a "view job" line whose URL
 carries the job id. Header lines are recognized by the template's patterns;
-lines containing a URL are never card content. Descriptive lines that match no
+lines containing a URL are never card content, and contact lines (a name and
+headline ending in a "send message" link) are dropped. Descriptive lines that match no
 known phrase are kept as ``unrecognized_lines`` instead of being dropped, so a
 new LinkedIn badge cannot shift the title/company/location fields.
 """
@@ -19,6 +20,7 @@ from tracemail_pipeline.parse.parsers.linkedin.phrases import (
     ALUMNI,
     CONNECTIONS,
     FLAG_PHRASES,
+    SEND_MESSAGE,
 )
 
 SEPARATOR = re.compile(r"^-{20,}$")
@@ -74,6 +76,9 @@ def _card_from_segment(
             return _build_card(view["job_id"], content, headers)
         if any(pattern.match(line) for pattern in header_patterns):
             headers.append(line)
+        elif SEND_MESSAGE.match(line):
+            # A contact (name, headline) ends here; it is not card content.
+            content.clear()
         elif "http" not in line:
             content.append(line)
     return None

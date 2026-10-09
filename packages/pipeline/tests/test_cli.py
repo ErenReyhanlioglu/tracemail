@@ -15,7 +15,7 @@ ENV = {
     "TRACEMAIL_IMAP_USER": "user@example.com",
     "TRACEMAIL_IMAP_PASSWORD": "not-a-real-password",
     "TRACEMAIL_IMAP_MAILBOX": "INBOX",
-    "TRACEMAIL_SENDER_ALLOWLIST_PATH": "allowlist.yaml",
+    "TRACEMAIL_SENDER_EXCLUSIONS_PATH": "exclusions.yaml",
     "TRACEMAIL_GCP_PROJECT": "test-project",
     "TRACEMAIL_DATA_BUCKET": "test-bucket",
     "TRACEMAIL_BQ_LOCATION": "us-central1",

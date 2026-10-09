@@ -128,7 +128,7 @@ def test_facet_suggestions_carry_each_facet_to_the_cards_below_it() -> None:
 def test_every_record_carries_parser_provenance() -> None:
     parsed = parse_fixture("linkedin_saved_job_reminder")
     records = [*parsed.sightings, *parsed.actions]
-    assert {(r.parser_name, r.parser_version) for r in records} == {("linkedin", "2")}
+    assert {(r.parser_name, r.parser_version) for r in records} == {("linkedin", "3")}
 
 
 @pytest.mark.parametrize(

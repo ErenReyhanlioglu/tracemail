@@ -1,9 +1,11 @@
-"""Inventory of the raw mail zone: how many stored messages each allowlist
-entry accounts for.
+"""Inventory of the raw mail zone: how many stored messages each sender domain
+accounts for.
 
-Used to decide which parsers matter most, by measurement rather than guess
-(ADR-0017). Counts are keyed by the configured allowlist entry, never by the
-actual sender address, so the report contains no personal data.
+Used to decide which parsers matter most and which senders to exclude, by
+measurement rather than guess (ADR-0017, ADR-0025). Counts are keyed by the
+sender's domain, never by the full address, so the report names no person.
+Stored mail that has since been excluded (by sender or subject) is counted
+under one shared label.
 """
 
 import logging
@@ -12,23 +14,25 @@ from collections import Counter
 from datetime import date, timedelta
 from email import message_from_bytes
 from email.policy import default as default_policy
+from email.utils import parseaddr
 
 from pydantic import BaseModel
 
-from tracemail_pipeline.ingest.allowlist import SenderAllowlist
 from tracemail_pipeline.ingest.raw_store import RawStore, mail_partition_prefix
+from tracemail_pipeline.ingest.sender_exclusions import SenderExclusions
 
 logger = logging.getLogger(__name__)
 
-UNMATCHED = "(no longer on allowlist)"
+NOW_EXCLUDED = "(now excluded)"
+NO_ADDRESS = "(no sender address)"
 ONE_DAY = timedelta(days=1)
 
 
 class RawInventoryResult(BaseModel):
-    """Counts per allowlist entry, plus the run's operations and timing."""
+    """Counts per sender domain, plus the run's operations and timing."""
 
     messages: int = 0
-    by_entry: dict[str, int] = {}
+    by_domain: dict[str, int] = {}
     bytes_read: int = 0
     gcs_lists: int = 0
     gcs_reads: int = 0
@@ -36,9 +40,9 @@ class RawInventoryResult(BaseModel):
 
 
 def raw_inventory(
-    store: RawStore, allowlist: SenderAllowlist, start: date, end: date
+    store: RawStore, exclusions: SenderExclusions, start: date, end: date
 ) -> RawInventoryResult:
-    """Count stored messages received in ``[start, end)`` by allowlist entry."""
+    """Count stored messages received in ``[start, end)`` by sender domain."""
     started = time.perf_counter()
     result = RawInventoryResult()
     counts: Counter[str] = Counter()
@@ -50,16 +54,21 @@ def raw_inventory(
             raw = store.read(key)
             result.gcs_reads += 1
             result.bytes_read += len(raw)
-            counts[_entry_for(raw, allowlist)] += 1
+            counts[_label_for(raw, exclusions)] += 1
         day += ONE_DAY
     result.messages = sum(counts.values())
-    result.by_entry = dict(counts.most_common())
+    result.by_domain = dict(counts.most_common())
     result.seconds_total = time.perf_counter() - started
     logger.info("Raw inventory finished: %s", result.model_dump())
     return result
 
 
-def _entry_for(raw: bytes, allowlist: SenderAllowlist) -> str:
+def _label_for(raw: bytes, exclusions: SenderExclusions) -> str:
     headers = message_from_bytes(raw, policy=default_policy)
-    entry = allowlist.matching_entry(str(headers.get("From", "")))
-    return entry if entry is not None else UNMATCHED
+    from_header = str(headers.get("From", ""))
+    if exclusions.excludes(from_header, str(headers.get("Subject", ""))):
+        return NOW_EXCLUDED
+    address = parseaddr(from_header)[1].strip().lower()
+    if "@" not in address:
+        return NO_ADDRESS
+    return address.rsplit("@", maxsplit=1)[1]

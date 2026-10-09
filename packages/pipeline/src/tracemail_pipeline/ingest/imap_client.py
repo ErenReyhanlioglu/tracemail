@@ -3,7 +3,7 @@
 The mailbox is opened with ``EXAMINE`` (``select(..., readonly=True)``) and
 messages are fetched with ``BODY.PEEK``, so nothing in the mailbox changes:
 no message is marked as read, and no flag, folder, or message is modified.
-Headers are fetched first so that mail from senders outside the allowlist is
+Headers are fetched first so that mail from excluded senders is
 never downloaded in full.
 """
 
@@ -30,7 +30,7 @@ from tracemail_pipeline.ingest.imap_codec import (
 
 OK = "OK"
 IMAP_TIMEOUT_SECONDS = 60
-HEADER_FETCH_ITEMS = "(INTERNALDATE BODY.PEEK[HEADER.FIELDS (FROM MESSAGE-ID)])"
+HEADER_FETCH_ITEMS = "(INTERNALDATE BODY.PEEK[HEADER.FIELDS (FROM SUBJECT MESSAGE-ID)])"
 BODY_FETCH_ITEMS = "(BODY.PEEK[])"
 # Headers are fetched for many UIDs per command; the batch bounds command length.
 HEADER_FETCH_BATCH_SIZE = 100
@@ -57,6 +57,7 @@ class MailHeader(BaseModel):
     uid: str
     internal_date: datetime
     from_header: str
+    subject: str = ""
     message_id: str | None
 
 
@@ -89,7 +90,8 @@ class MailboxReader:
     def fetch_headers(
         self, uids: Sequence[str], batch_size: int = HEADER_FETCH_BATCH_SIZE
     ) -> list[MailHeader]:
-        """Fetch internal date, ``From``, and ``Message-ID`` for many messages.
+        """Fetch internal date, ``From``, ``Subject``, and ``Message-ID`` for many
+        messages.
 
         One command per batch instead of one per message. Messages deleted
         between SEARCH and FETCH are simply absent from the result.
@@ -168,6 +170,7 @@ def _parse_header_item(item: tuple[bytes, bytes]) -> MailHeader:
         uid=uid_match.group(1).decode("ascii"),
         internal_date=parse_internaldate(response_line),
         from_header=str(headers.get("From", "")),
+        subject=str(headers.get("Subject", "")),
         message_id=str(message_id).strip() if message_id else None,
     )
 

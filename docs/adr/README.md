@@ -36,3 +36,10 @@ written at the moment the decision is made — not drafted ahead of time.
 | [0019](0019-landing-load-schema-from-models-and-partition-replace.md) | Landing Load — Schema from Models, Tables Created by the Loader, Partition Replace | Accepted |
 | [0020](0020-run-records-follow-observability-frameworks.md) | Run Records Follow Established Observability Frameworks | Accepted |
 | [0021](0021-gcs-operations-under-hourly-runs.md) | Keeping GCS Operations within the Free Tier under Hourly Runs | Proposed |
+| [0022](0022-dbt-builds-only-when-landing-changes.md) | dbt Builds Only When Landing Changes | Accepted (not yet implemented) |
+| [0023](0023-dbt-run-metrics-from-artifacts-and-job-labels.md) | dbt Run Metrics from Artifacts and Job Labels, without Monitoring Packages | Accepted |
+| [0024](0024-application-status-model.md) | Application Status Model — Events, Three Statuses, and a Silence Indicator | Accepted (not yet implemented) |
+| [0025](0025-sender-exclusion-list-instead-of-allowlist.md) | A Sender Exclusion List Instead of an Allowlist | Accepted |
+| [0026](0026-dbt-bigquery-transitive-vertex-ai-sdk.md) | Accept the Vertex AI SDK as a Transitive Dependency of dbt-bigquery | Accepted |
+| [0027](0027-close-silent-applications-after-30-days.md) | Open Applications Close without Reply after 30 Silent Days | Accepted |
+| [0028](0028-exclude-account-security-mail-by-subject.md) | Exclude Account-Security Mail by Subject | Accepted |

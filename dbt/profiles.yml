@@ -1,0 +1,22 @@
+# dbt connection profile. Contains no secrets: every value comes from the
+# environment (.env locally, the VM's env file in production).
+#
+# dev: local runs authenticate with `gcloud auth application-default login`
+# (oauth). The VM target, with the transform service account key (ADR-0009),
+# is added with the production project in step 1.11.
+tracemail:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('TRACEMAIL_GCP_PROJECT') }}"
+      location: "{{ env_var('TRACEMAIL_BQ_LOCATION') }}"
+      # Default dataset for objects without a layer; every model sets its own.
+      dataset: staging
+      threads: 4
+      priority: interactive
+      job_execution_timeout_seconds: 300
+      job_retries: 1
+      # Cost guardrail: a query that would bill more fails instead (CLAUDE.md).
+      maximum_bytes_billed: "{{ env_var('TRACEMAIL_BQ_MAX_BYTES_BILLED') | int }}"

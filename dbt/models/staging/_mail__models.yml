@@ -1,0 +1,95 @@
+models:
+  - name: stg_mail__job_posting_sightings
+    description: One posting card seen in one message.
+    columns:
+      - name: sighting_key
+        description: Hash of the source object key and the card's position.
+        data_tests: [unique, not_null]
+      - name: source_key
+        data_tests: [not_null]
+      - name: received_date
+        data_tests: [not_null]
+      - name: job_id
+        data_tests: [not_null]
+      - name: title
+        data_tests: [not_null]
+      - name: company
+        data_tests: [not_null]
+      - name: sighting_context
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - alert
+                  - applied
+                  - similar_to_applied
+                  - similar_to_viewed
+                  - saved
+                  - suggested
+
+  - name: stg_mail__job_actions
+    description: An owner action on a posting, as reported by one message.
+    columns:
+      - name: action_key
+        description: Hash of the source object key, job id, and action type.
+        data_tests: [unique, not_null]
+      - name: received_date
+        data_tests: [not_null]
+      - name: job_id
+        data_tests: [not_null]
+      - name: action_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [applied, saved, viewed]
+      - name: action_date
+        description: Present for applications (the confirmation states it).
+        data_tests:
+          - not_null:
+              config:
+                where: "action_type = 'applied'"
+
+  - name: stg_mail__application_updates
+    description: An employer's reaction to an application, from one message.
+    data_tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "applied_on <= received_date"
+          config:
+            where: "applied_on is not null"
+    columns:
+      - name: update_key
+        description: Hash of the source object key, job id, and update type.
+        data_tests: [unique, not_null]
+      - name: received_date
+        data_tests: [not_null]
+      - name: job_id
+        data_tests: [not_null]
+      - name: update_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [application_viewed, rejection]
+
+  - name: stg_mail__parse_outcomes
+    description: Exactly one row per stored message.
+    columns:
+      - name: source_key
+        data_tests: [unique, not_null]
+      - name: received_date
+        data_tests: [not_null]
+      - name: parse_outcome
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [parsed, failed, unclaimed]
+      - name: failure_reason
+        description: Present exactly when parsing failed.
+        data_tests:
+          - not_null:
+              config:
+                where: "parse_outcome = 'failed'"

@@ -12,16 +12,18 @@ import argparse
 import logging
 from collections.abc import Sequence
 from datetime import UTC, date, datetime, time
+from pathlib import Path
 
 import google.cloud.storage as storage
 from google.cloud import bigquery
 
 from tracemail_pipeline.config import PipelineSettings
-from tracemail_pipeline.ingest.allowlist import load_allowlist
 from tracemail_pipeline.ingest.imap_client import open_mailbox
 from tracemail_pipeline.ingest.mail_ingest import ingest_mail
 from tracemail_pipeline.ingest.raw_inventory import raw_inventory
 from tracemail_pipeline.ingest.raw_store import RAW_MAIL_PREFIX, GcsRawStore
+from tracemail_pipeline.ingest.sender_exclusions import load_sender_exclusions
+from tracemail_pipeline.load.dbt_results import record_dbt_build
 from tracemail_pipeline.load.landing import (
     LANDING_MODELS,
     landing_fingerprints,
@@ -43,7 +45,7 @@ logger = logging.getLogger(__name__)
 LOG_FORMAT = "%(asctime)s %(levelname)s %(name)s: %(message)s"
 DATE_RANGE_COMMANDS = {
     "ingest-mail": "Ingest mail for a date range",
-    "raw-inventory": "Count stored raw mail per allowlist entry",
+    "raw-inventory": "Count stored raw mail per sender domain",
     "parse-mail": "Parse stored raw mail into the parsed zone",
     "load-landing": "Load the parsed zone into BigQuery landing tables",
     "landing-check": "Row counts and content fingerprints of landing tables",
@@ -55,6 +57,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="tracemail-pipeline")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("list-mailboxes", help="List mailbox folder names")
+    record = commands.add_parser(
+        "record-dbt-build", help="Record a dbt build's results in ops (ADR-0023)"
+    )
+    record.add_argument("--run-results", type=Path, nargs="+", required=True)
+    record.add_argument("--manifest", type=Path, required=True)
     for name, help_text in DATE_RANGE_COMMANDS.items():
         command = commands.add_parser(name, help=help_text)
         command.add_argument("--start-date", type=date.fromisoformat, required=True)
@@ -125,7 +132,7 @@ def run_list_mailboxes(settings: PipelineSettings) -> None:
 
 def run_ingest_mail(settings: PipelineSettings, start: date, end: date) -> None:
     """Ingest mail whose interval is ``[start, end)`` in UTC."""
-    allowlist = load_allowlist(settings.sender_allowlist_path)
+    exclusions = load_sender_exclusions(settings.sender_exclusions_path)
     store = GcsRawStore(_bucket(settings))
     context = _context(
         settings,
@@ -142,7 +149,7 @@ def run_ingest_mail(settings: PipelineSettings, start: date, end: date) -> None:
             _writer(settings),
             context,
             lambda: ingest_mail(
-                reader, store, allowlist, day_start_utc(start), day_start_utc(end)
+                reader, store, exclusions, day_start_utc(start), day_start_utc(end)
             ),
         )
 
@@ -196,11 +203,29 @@ def run_landing_check(settings: PipelineSettings, start: date, end: date) -> Non
 
 
 def run_raw_inventory(settings: PipelineSettings, start: date, end: date) -> None:
-    """Log how many stored messages each allowlist entry accounts for."""
-    allowlist = load_allowlist(settings.sender_allowlist_path)
-    result = raw_inventory(GcsRawStore(_bucket(settings)), allowlist, start, end)
-    for entry, count in result.by_entry.items():
-        logger.info("%5d  %s", count, entry)
+    """Log how many stored messages each sender domain accounts for."""
+    exclusions = load_sender_exclusions(settings.sender_exclusions_path)
+    result = raw_inventory(GcsRawStore(_bucket(settings)), exclusions, start, end)
+    for domain, count in result.by_domain.items():
+        logger.info("%5d  %s", count, domain)
+
+
+def run_record_dbt_build(
+    settings: PipelineSettings, run_results: list[Path], manifest: Path
+) -> None:
+    """Record a finished dbt build in ops; fails if any dbt node failed."""
+    context = RunContext(
+        job_name="dbt_build",
+        inputs=lineage_names(
+            "bq", [f"{settings.bq_landing_dataset}.{name}" for name in LANDING_MODELS]
+        ),
+        outputs=[],
+        code_version=settings.code_version,
+    )
+    result = record_dbt_build(
+        _warehouse(settings), _writer(settings), context, run_results, manifest
+    )
+    logger.info("dbt build recorded: %s", result.model_dump())
 
 
 def main(argv: Sequence[str] | None = None) -> None:
@@ -221,6 +246,8 @@ def main(argv: Sequence[str] | None = None) -> None:
             run_load_landing(settings, args.start_date, args.end_date)
         case "landing-check":
             run_landing_check(settings, args.start_date, args.end_date)
+        case "record-dbt-build":
+            run_record_dbt_build(settings, args.run_results, args.manifest)
 
 
 if __name__ == "__main__":

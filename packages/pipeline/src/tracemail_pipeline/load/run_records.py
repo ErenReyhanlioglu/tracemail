@@ -105,6 +105,16 @@ class WarehouseRunRecordWriter:
         self._retention_days = retention_days
         self._table_ready = False
 
+    @property
+    def dataset(self) -> str:
+        """The ops dataset that run records are written to."""
+        return self._dataset
+
+    @property
+    def retention_days(self) -> int:
+        """Days an ops partition is kept before it expires."""
+        return self._retention_days
+
     def write(self, run: PipelineRun) -> None:
         """Append one run record with a batch load job (not a streaming
         insert), creating the table on first use. Partitions older than the

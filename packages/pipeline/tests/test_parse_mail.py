@@ -13,6 +13,7 @@ from tracemail_pipeline.parse.parse_mail import (
     ACTIONS,
     OUTCOMES,
     SIGHTINGS,
+    UPDATES,
     parse_mail,
     source_message,
 )
@@ -49,16 +50,35 @@ def store_fixtures(raw_store: Any, names: list[str], day: date = DAY) -> None:
         raw_store.write_once(mail_object_key(day, name), raw)
 
 
-def test_parse_mail_writes_three_partitions_per_day(fake_store: Any) -> None:
+def test_parse_mail_writes_one_partition_per_record_type_per_day(
+    fake_store: Any,
+) -> None:
     store_fixtures(
         fake_store, ["linkedin_job_alert", "linkedin_application_confirmation"]
     )
     parsed = FakeParsedStore()
     result = parse_mail(fake_store, parsed, DAY, NEXT_DAY)
-    assert set(parsed.files) == {(SIGHTINGS, DAY), (ACTIONS, DAY), (OUTCOMES, DAY)}
+    assert set(parsed.files) == {
+        (SIGHTINGS, DAY),
+        (ACTIONS, DAY),
+        (UPDATES, DAY),
+        (OUTCOMES, DAY),
+    }
     assert len(parsed.rows(SIGHTINGS)) == result.sightings == 8
     assert len(parsed.rows(ACTIONS)) == result.actions == 1
     assert [row["outcome"] for row in parsed.rows(OUTCOMES)] == ["parsed", "parsed"]
+
+
+def test_parse_mail_writes_application_updates_to_their_own_partition(
+    fake_store: Any,
+) -> None:
+    store_fixtures(fake_store, ["linkedin_application_rejected"])
+    parsed = FakeParsedStore()
+    result = parse_mail(fake_store, parsed, DAY, NEXT_DAY)
+    [row] = parsed.rows(UPDATES)
+    assert (row["job_id"], row["update_type"]) == ("1000000005", "rejection")
+    assert result.updates == 1
+    assert result.volume().records_out == 1
 
 
 def test_parse_mail_records_unclaimed_and_failed_messages_without_stopping(
@@ -89,6 +109,7 @@ def test_parse_mail_writes_empty_partitions_for_a_day_without_mail(
     assert parsed.files == {
         (SIGHTINGS, DAY): b"",
         (ACTIONS, DAY): b"",
+        (UPDATES, DAY): b"",
         (OUTCOMES, DAY): b"",
     }
     assert (result.days, result.messages) == (1, 0)
@@ -98,7 +119,7 @@ def test_parse_mail_reports_operations_and_timings(fake_store: Any) -> None:
     store_fixtures(fake_store, ["linkedin_job_alert"], DAY)
     store_fixtures(fake_store, ["linkedin_facet_suggestions"], NEXT_DAY)
     result = parse_mail(fake_store, FakeParsedStore(), DAY, date(2026, 10, 3))
-    assert (result.gcs_lists, result.gcs_reads, result.gcs_writes) == (2, 2, 6)
+    assert (result.gcs_lists, result.gcs_reads, result.gcs_writes) == (2, 2, 8)
     assert result.bytes_read > 0 and result.bytes_written > 0
     parts = (result.seconds_gcs_read, result.seconds_parse, result.seconds_gcs_write)
     assert all(0 <= part <= result.seconds_total for part in parts)

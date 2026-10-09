@@ -1,10 +1,66 @@
-# dbt project (ADR-0014). Models are implemented in Phase 1, step 1.5.
+# dbt project (ADR-0014). One BigQuery dataset per layer (CLAUDE.md, BigQuery
+# and dbt); dataset names are used as written, without a target prefix
+# (macros/generate_schema_name.sql), because dev and prod are separate GCP
+# projects (ADR-0010).
 name: tracemail
-version: "0.0.0"
+version: "0.1.0"
 config-version: 2
 profile: tracemail
+require-dbt-version: [">=1.12.0", "<2.0.0"]
 
 model-paths: ["models"]
 macro-paths: ["macros"]
 test-paths: ["tests"]
+seed-paths: ["seeds"]
 clean-targets: ["target", "dbt_packages"]
+
+flags:
+  # No usage telemetry to dbt Labs.
+  send_anonymous_usage_stats: false
+
+# Every BigQuery job carries its dbt node as job labels, so the billed bytes
+# of each model and test can be read from job metadata (ADR-0023).
+query-comment:
+  job-label: true
+
+vars:
+  # Days without any event after which an open application shows "no reply
+  # for N days" (ADR-0024).
+  silence_days: 10
+  # Days without any event after which an open application counts as closed
+  # without reply and stops suggesting a follow-up (ADR-0027).
+  closed_after_days: 30
+  # The owner's local date decides "today" for read-time ages; storage is UTC.
+  display_timezone: "Europe/Istanbul"
+  # Canonical posting URL, rebuilt from the job id (mail links carry tokens).
+  linkedin_job_url_prefix: "https://www.linkedin.com/jobs/view/"
+  # Incremental event loads recompute applications with mail in the last N
+  # loaded days, matching the ingestion window (ADR-0007).
+  event_lookback_days: 3
+  # Weekly volume anomaly (ADR-0020): a complete week below this share of the
+  # trailing weeks' mean is flagged.
+  volume_trailing_weeks: 4
+  volume_drop_ratio: 0.5
+  # Job name of dbt builds in ops.pipeline_runs (set by record-dbt-build).
+  dbt_build_job: "dbt_build"
+
+models:
+  tracemail:
+    # Views cost nothing to create (ADR-0022); staging only renames and casts.
+    staging:
+      +schema: staging
+      +materialized: view
+    intermediate:
+      +schema: intermediate
+      +materialized: view
+    marts:
+      +schema: marts
+      +materialized: table
+      # Health summaries are small and read through the API's cache; views
+      # cost nothing to build (ADR-0022) and are always current.
+      health:
+        +materialized: view
+
+seeds:
+  tracemail:
+    +schema: staging

@@ -1,0 +1,12 @@
+sources:
+  - name: ops
+    description: >
+      Run records written by the pipeline itself (ADR-0020, ADR-0023):
+      append-only, one row per step execution or per dbt node.
+    database: "{{ env_var('TRACEMAIL_GCP_PROJECT') }}"
+    schema: "{{ env_var('TRACEMAIL_BQ_OPS_DATASET') }}"
+    tables:
+      - name: pipeline_runs
+        description: One row per execution of a pipeline step, including dbt builds.
+      - name: dbt_node_runs
+        description: One row per dbt node executed in a build.
