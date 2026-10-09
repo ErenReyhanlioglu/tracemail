@@ -1,0 +1,23 @@
+models:
+  - name: stg_ops__pipeline_runs
+    description: One row per pipeline step execution, without error messages.
+    columns:
+      - name: run_id
+        data_tests: [unique, not_null]
+      - name: job_name
+        data_tests: [not_null]
+      - name: run_status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [COMPLETE, FAIL]
+
+  - name: stg_ops__dbt_node_runs
+    description: One row per dbt node executed in a build.
+    columns:
+      - name: node_run_key
+        description: Hash of the dbt invocation id and the node id.
+        data_tests: [unique, not_null]
+      - name: run_id
+        data_tests: [not_null]

@@ -1,7 +1,7 @@
 # ADR-0023: dbt Run Metrics from Artifacts and Job Labels, without Monitoring Packages
 
 **Date:** 2026-10-09
-**Status:** Proposed — accept with measured numbers during step 1.5
+**Status:** Accepted
 
 ## Context
 
@@ -51,9 +51,10 @@ other steps:
    duration, node counts by status, total bytes billed. The reader accepts
    several result files for one build, because Cosmos produces one per task;
    how Cosmos hands them over is settled in step 1.7.
-2. **Job labels on.** `query-comment.job-label` is enabled, and the step's
-   total bytes billed — tests included — is read from BigQuery job metadata
-   filtered by the build's labels.
+2. **Job labels on, for attribution only.** `query-comment.job-label` is
+   enabled so every job in the BigQuery console names its dbt node. Billed
+   bytes come from `run_results.json`, which carries them for tests too
+   (measured below); job metadata is not read.
 3. **Coverage from `manifest.json`.** Test and documentation coverage are
    computed from the manifest and reported with the dbt step's result.
 4. **Monitoring as our own dbt models** over `ops` and `landing`: freshness,
@@ -67,7 +68,7 @@ other steps:
 | Item | BigQuery query cost |
 |---|---|
 | 1. Artifacts → `ops` | None: reading a local file, free load job |
-| 2. Job metadata | None if read through the jobs API (expected free, not verified); otherwise one `INFORMATION_SCHEMA` query per build, about 10 MB × 270 builds ≈ 3 GB a month |
+| 2. Job labels | None: labels are set on jobs, never queried |
 | 3. Coverage | None: reading a local file |
 | 4. Monitoring models | About 10 queries per build × 10 MB × 270 builds ≈ 27 GB a month (about 2.6% of the free tier) |
 
@@ -85,8 +86,22 @@ the 34 jobs found in BigQuery job metadata by their `dbt_invocation_id` label
 (the extra job created the dataset, 0 bytes). Item 2 of the Decision is
 therefore redundant for cost: `run_results.json` alone is complete. Job
 labels stay enabled — they cost nothing and attribute every job in the
-BigQuery console — but the step does not need to read job metadata. Item 2
-is to be removed when this ADR is accepted.
+BigQuery console — but the step does not need to read job metadata; item 2
+was revised accordingly.
+
+**Implemented and measured 2026-10-09 (items 1–3).** `record-dbt-build`
+(run by `just dbt-build` after every build) wrote 84 rows to
+`ops.dbt_node_runs` and one `dbt_build` run record (COMPLETE, 84 nodes, 0
+failed, 66 s, 1.04 GB billed; coverage 12 of 12 models tested and
+documented). Recording took 11 s and bills nothing: it reads local files and
+appends with load jobs.
+
+**Implemented 2026-10-09 (item 4).** Health models in `marts` as views
+(free to build): run history, freshness per step, newest-mail age, parse
+quality per week and group, weekly volume against the trailing four weeks,
+and dbt builds. The full build grew to 110 nodes (20 models, 89 tests) and
+1.23 GB billed. Missed runs need an hourly schedule to compare against and
+are added with it in step 1.7.
 
 ## Rationale
 

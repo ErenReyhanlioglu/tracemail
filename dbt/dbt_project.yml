@@ -37,6 +37,12 @@ vars:
   # Incremental event loads recompute applications with mail in the last N
   # loaded days, matching the ingestion window (ADR-0007).
   event_lookback_days: 3
+  # Weekly volume anomaly (ADR-0020): a complete week below this share of the
+  # trailing weeks' mean is flagged.
+  volume_trailing_weeks: 4
+  volume_drop_ratio: 0.5
+  # Job name of dbt builds in ops.pipeline_runs (set by record-dbt-build).
+  dbt_build_job: "dbt_build"
 
 models:
   tracemail:
@@ -50,6 +56,10 @@ models:
     marts:
       +schema: marts
       +materialized: table
+      # Health summaries are small and read through the API's cache; views
+      # cost nothing to build (ADR-0022) and are always current.
+      health:
+        +materialized: view
 
 seeds:
   tracemail:

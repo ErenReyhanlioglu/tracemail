@@ -1,7 +1,7 @@
 # ADR-0022: dbt Builds Only When Landing Changes
 
 **Date:** 2026-10-09
-**Status:** Proposed — accept with measured numbers during step 1.5
+**Status:** Accepted (gate not yet implemented; step 1.7)
 
 ## Context
 
