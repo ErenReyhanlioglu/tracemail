@@ -44,7 +44,9 @@ These are recorded as unverified in ADRs; each is checked at the step named.
   Verified 2026-10-09 and moved ahead of 1.5: in 90 days of raw mail, 6 viewed
   and 4 rejection mails; both are HTML-only templates, parsed since parser
   version 3. No "resume downloaded" mail was seen.
-- `external_python` subprocess inherits environment variables — 1.7
+- ~~`external_python` subprocess inherits environment variables — 1.7~~
+  Verified 2026-10-09: a `dags test` run of the hourly DAG read IMAP, GCS, and
+  BigQuery settings from the scheduler's environment inside `pipeline_venv`.
 - Cosmos DAG-parsing load is acceptable on the VM — 1.7 / 1.11
 - Oracle web-console emergency access works when Tailscale is down — 1.11
 - Free Ampere capacity in `eu-frankfurt-1` — 1.11
