@@ -3,7 +3,10 @@ name = "tracemail-dbt"
 version = "0.0.0"
 description = "dbt environment for TraceMail (dbt_venv, ADR-0003)."
 requires-python = ">=3.12,<3.13"
-dependencies = []
+dependencies = [
+    "dbt-bigquery>=1.12.1,<2",
+    "dbt-core>=1.12.5,<2",
+]
 
 [tool.uv]
 package = false

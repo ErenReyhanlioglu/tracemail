@@ -90,7 +90,9 @@ rejected.
 - Work belongs to the current phase in `docs/roadmap.md`. Do not build
   features from a later phase "while we're here".
 - Phase 1 has **no LLM**. No LLM SDK dependency, prompt file, or LLM call
-  enters the codebase before Phase 2.
+  enters the codebase before Phase 2. One exception: `dbt-bigquery` requires
+  the Vertex AI SDK, so it sits unused in `dbt/uv.lock` (ADR-0026); project
+  code never imports it.
 - Anything in SUMMARY.md's out-of-scope list (Kubernetes, lakehouse formats,
   model training, model registry, endpoint deployment, a separate
   observability stack, AWS, Azure, fake-data demo) is not proposed as a
