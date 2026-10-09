@@ -103,6 +103,12 @@ dag-check:
     docker compose -f {{compose_file}} --env-file .env run --rm airflow-cli dags list-import-errors
     docker compose -f {{compose_file}} --env-file .env run --rm airflow-cli tasks list tracemail_hourly
 
+# Run the whole DAG once for a logical date, e.g. just dag-test 2026-10-09T12:00:00+00:00.
+# --use-executor is required: in watcher mode (ADR-0029) the dbt producer and its
+# sensors must run in parallel, which the default serial test mode cannot do.
+dag-test logical_date:
+    docker compose -f {{compose_file}} --env-file .env run --rm airflow-cli dags test tracemail_hourly {{logical_date}} --use-executor
+
 # Show the generated Airflow login password for the user "owner"
 airflow-password:
     docker compose -f {{compose_file}} --env-file .env exec airflow-apiserver cat /opt/airflow/state/passwords.json

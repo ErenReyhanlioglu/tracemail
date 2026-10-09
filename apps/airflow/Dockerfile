@@ -39,7 +39,18 @@ WORKDIR /opt/tracemail
 COPY dbt/pyproject.toml dbt/uv.lock ./dbt/
 RUN UV_PROJECT_ENVIRONMENT=/opt/venvs/dbt uv sync --frozen --project ./dbt
 COPY dbt /opt/airflow/dbt
-RUN /opt/venvs/dbt/bin/dbt deps --project-dir /opt/airflow/dbt     && chown -R airflow:root /opt/airflow/dbt
+# The manifest lets Cosmos render the DAG without running dbt at parse time
+# (LoadMode.DBT_MANIFEST). Parsing needs no warehouse access, only values for
+# the profile's env_var() calls, so placeholders are used here; real values
+# come from the environment when dbt runs.
+RUN /opt/venvs/dbt/bin/dbt deps --project-dir /opt/airflow/dbt \
+    && TRACEMAIL_GCP_PROJECT=build-placeholder \
+       TRACEMAIL_BQ_LOCATION=build-placeholder \
+       TRACEMAIL_BQ_MAX_BYTES_BILLED=0 \
+       TRACEMAIL_BQ_LANDING_DATASET=build-placeholder \
+       TRACEMAIL_BQ_OPS_DATASET=build-placeholder \
+       /opt/venvs/dbt/bin/dbt parse --project-dir /opt/airflow/dbt --profiles-dir /opt/airflow/dbt \
+    && chown -R airflow:root /opt/airflow/dbt
 
 # Owned by the airflow user so the named state volume inherits it.
 RUN mkdir -p /opt/airflow/state && chown airflow:root /opt/airflow/state
@@ -48,7 +59,8 @@ RUN mkdir -p /opt/airflow/state && chown airflow:root /opt/airflow/state
 COPY pyproject.toml uv.lock ./
 COPY packages ./packages
 COPY apps/api/pyproject.toml ./apps/api/pyproject.toml
-RUN UV_PROJECT_ENVIRONMENT=/opt/venvs/pipeline     uv sync --frozen --no-dev --no-editable --package tracemail-pipeline
+RUN UV_PROJECT_ENVIRONMENT=/opt/venvs/pipeline \
+    uv sync --frozen --no-dev --no-editable --package tracemail-pipeline
 
 WORKDIR /opt/airflow
 USER airflow

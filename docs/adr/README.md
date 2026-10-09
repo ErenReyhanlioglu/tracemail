@@ -43,4 +43,4 @@ written at the moment the decision is made — not drafted ahead of time.
 | [0026](0026-dbt-bigquery-transitive-vertex-ai-sdk.md) | Accept the Vertex AI SDK as a Transitive Dependency of dbt-bigquery | Accepted |
 | [0027](0027-close-silent-applications-after-30-days.md) | Open Applications Close without Reply after 30 Silent Days | Accepted |
 | [0028](0028-exclude-account-security-mail-by-subject.md) | Exclude Account-Security Mail by Subject | Accepted |
-| [0029](0029-cosmos-watcher-execution-mode.md) | Run dbt through Cosmos in Watcher Execution Mode | Accepted (not yet implemented) |
+| [0029](0029-cosmos-watcher-execution-mode.md) | Run dbt through Cosmos in Watcher Execution Mode | Accepted |

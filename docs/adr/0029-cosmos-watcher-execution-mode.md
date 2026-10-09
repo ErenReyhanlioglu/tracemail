@@ -1,7 +1,7 @@
 # ADR-0029: Run dbt through Cosmos in Watcher Execution Mode
 
 **Date:** 2026-10-09
-**Status:** Accepted (not yet implemented); supersedes the execution mode in ADR-0014
+**Status:** Accepted; supersedes the execution mode in ADR-0014
 
 ## Context
 
@@ -42,6 +42,21 @@ build's `run_results.json` and `manifest.json` to the recording step
 (ADR-0023). The Compose stack includes the triggerer. Everything else in
 ADR-0014 stands: dbt 1.x below 2.0, Cosmos in the Airflow environment, dbt
 only in `dbt_venv`.
+
+**Implemented and verified 2026-10-09 (step 1.7, local stack).** The DAG's
+`dbt` task group renders 110 nodes from the manifest compiled into the image
+(`LoadMode.DBT_MANIFEST`), so parsing the DAG never runs dbt. A full run
+(ingest, parse, load, then the watcher build) succeeded: the producer's
+`dbt build` passed 110 of 110 nodes in 60 s, the sensors reported each node,
+and the callback recorded the build in `ops` (1.23 GB billed, 20 of 20
+models tested). The callback runs before Cosmos raises a dbt failure, so
+failed builds are recorded too (read in Cosmos's `operators/local.py`).
+`ExecutionMode.LOCAL` was not run here, so Cosmos's reported speed-up is not
+measured for this project.
+
+Testing note: `airflow dags test` must use `--use-executor` (`just dag-test`).
+Its default serial mode starts a sensor before the producer, and the sensor
+then waits for a build that never starts.
 
 ## Rationale
 
