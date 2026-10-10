@@ -4,8 +4,8 @@ Build order and current position. Scope per phase is defined in
 [SUMMARY.md](../SUMMARY.md); decisions in [adr/](adr/README.md).
 
 **Current phase:** Phase 1 — Core
-**Current step:** 1.8 (`feat/more-parsers`) — 1.0 to 1.5 and 1.7 done; 1.6
-waits for the LinkedIn data export (checklist F)
+**Current step:** 1.9 (`feat/api-owner-auth`) — 1.0 to 1.5, 1.7, and 1.8
+done; 1.6 waits for the LinkedIn data export (checklist F)
 
 Each step is one branch and one or more pull requests. A step is done when its
 "Done when" line is true on `main`.

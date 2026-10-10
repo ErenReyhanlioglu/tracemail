@@ -70,6 +70,7 @@ mypy_path = [
     "packages/llm/src",
     "packages/evals/src",
     "apps/api/src",
+    "apps/api/tests",
 ]
 files = [
     "packages/pipeline/src",
@@ -87,6 +88,11 @@ files = [
 module = ["google.cloud.storage", "google.cloud.storage.*"]
 ignore_missing_imports = true
 
+# Authlib ships no type information (no py.typed marker).
+[[tool.mypy.overrides]]
+module = ["authlib", "authlib.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = [
     "packages/pipeline/tests",
@@ -94,6 +100,8 @@ testpaths = [
     "packages/evals/tests",
     "apps/api/tests",
 ]
+# Shared API test helpers (api_fakes) are imported by module name.
+pythonpath = ["apps/api/tests"]
 addopts = "--import-mode=importlib --strict-markers -m 'not integration' --cov --cov-report=term-missing"
 markers = ["integration: touches real cloud services; run separately"]
 

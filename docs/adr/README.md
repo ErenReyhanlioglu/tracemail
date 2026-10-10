@@ -46,3 +46,4 @@ written at the moment the decision is made — not drafted ahead of time.
 | [0029](0029-cosmos-watcher-execution-mode.md) | Run dbt through Cosmos in Watcher Execution Mode | Accepted |
 | [0030](0030-gcs-class-a-headroom.md) | Keeping Class A Headroom as Mail Volume Grows | Proposed |
 | [0031](0031-sent-mail-is-a-phase-4-option.md) | Sent Mail Is Not Ingested; Direct Applications Are a Phase 4 Option | Accepted |
+| [0032](0032-owner-login-implementation.md) | Owner Login Implementation — Authlib, a Signed Session Cookie, and Fixed Routes | Accepted (not yet implemented) |
