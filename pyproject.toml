@@ -87,6 +87,11 @@ files = [
 module = ["google.cloud.storage", "google.cloud.storage.*"]
 ignore_missing_imports = true
 
+# Authlib ships no type information (no py.typed marker).
+[[tool.mypy.overrides]]
+module = ["authlib", "authlib.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = [
     "packages/pipeline/tests",

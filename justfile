@@ -33,6 +33,10 @@ test-integration:
 # Everything CI runs: lint, typecheck, test
 check: lint typecheck test
 
+# Run the API locally with reload; must match TRACEMAIL_API_PUBLIC_URL's port
+api port="8000":
+    uv run --env-file .env uvicorn tracemail_api.main:create_app --factory --reload --port {{port}}
+
 # List mailbox folder names (to set TRACEMAIL_IMAP_MAILBOX)
 list-mailboxes:
     uv run --env-file .env python -m tracemail_pipeline.cli list-mailboxes
