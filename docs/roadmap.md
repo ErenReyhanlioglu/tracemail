@@ -29,7 +29,7 @@ open from any device, running hourly in production. No LLM.
 | 1.7 | `feat/airflow-stack` | Airflow image with three environments (ADR-0003), hourly DAG with `external_python` tasks and Cosmos (ADR-0013, ADR-0014), local Compose stack; dirty-day gating of parse, load, and dbt (ADR-0021, ADR-0022); missed-runs metric (ADR-0020) | Stack runs locally end-to-end; a backfill of past days works; hourly runs stay within the GCS free tier |
 | 1.8 | `feat/more-parsers` | Further LinkedIn templates seen in real mail; a parser for another source only where the raw inventory shows enough volume; sent mail (direct applications) deferred to Phase 4 ([ADR-0031](adr/0031-sent-mail-is-a-phase-4-option.md)) | Parse health is recorded per LinkedIn template and for other senders combined; unclaimed mail is counted as "other" |
 | 1.9 | `feat/api-owner-auth` | FastAPI: Google Sign-In (ADR-0015), owner session, read endpoint for applications, `/health`, public/private privacy test | Owner logs in on localhost; any other account is refused; privacy test passes |
-| 1.10 | `feat/web-application-list` | Next.js standalone app: login, minimal read-only application list, design tokens | Owner sees real applications in the browser locally |
+| 1.10 | `feat/web-application-list` | Next.js standalone app: login, read-only application list, design tokens (ADR-0034); incoming postings list moved forward from Phase 3 without its later-phase columns (role type, rough fit, match report) | Owner sees real applications and incoming postings in the browser locally |
 | 1.11 | `ci/deploy` | Prod GCP project, Oracle VM, Tailscale, Cloudflare Tunnel, `arm64` build to GHCR, deploy workflow, GitHub → GCP via WIF (ADR-0009, ADR-0010, ADR-0012, ADR-0016) | A merge to `main` deploys; the site is reachable on the domain with no open inbound ports |
 | 1.12 | — | Phase exit | Hourly runs succeed in production for a sustained period; owner cuts `v0.1.0` (ADR-0002) |
 
@@ -62,6 +62,15 @@ These are recorded as unverified in ADRs; each is checked at the step named.
   optimize later.
 - Alert yield metric (which alerts lead to saved / applied postings) — after
   1.5, not urgent.
+- Web polish (owner-requested, nice-to-have, after the core works):
+  - **Error handling.** Tell failures apart instead of one "data
+    unavailable" message: session expired (to login), API down (retry
+    message), unknown route (not-found page), unexpected error (error
+    boundary). Pages answer with the matching HTTP status, not 200 with a
+    message. Seen 2026-10-11: an API 404 after a half-applied reload showed
+    as "data unavailable".
+  - **Loading states.** Skeleton rows while a list loads (Next.js
+    `loading.tsx`), in the table's own layout so nothing jumps.
 
 ### Decisions still needed in Phase 1
 
@@ -131,8 +140,9 @@ Open decision: which models to compare. Ends with `v0.2.0`.
 ## Phase 3 — Interface (outline)
 
 Public health panel (24-hour and 30-day run views, parse quality, tests, LLM
-section, incident log); the full four private sections; share links for
-guests; visitor skeletons. Ends with `v0.3.0`.
+section, incident log); the remaining private sections (the application
+and incoming-posting lists exist since step 1.10); share links for guests;
+visitor skeletons. Ends with `v0.3.0`.
 
 ## Phase 4 — Optional (outline)
 
