@@ -5,24 +5,24 @@ ID-token checks are not re-tested here; what is tested is what the API does
 with their result.
 """
 
+import logging
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
-from authlib.integrations.starlette_client import OAuthError
-from fastapi.testclient import TestClient
-from pydantic import SecretStr
-from starlette.requests import Request
-from starlette.responses import RedirectResponse, Response
-
-from tracemail_api.auth.google import (
-    CALLBACK_PATH,
-    PKCE_METHOD,
-    SCOPE,
-    callback_url,
-    google_client,
+from api_fakes import (
+    CALLBACK,
+    GOOGLE_AUTHORIZE,
+    OTHER_SUB,
+    FakeGoogle,
+    api_client,
+    make_settings,
+    sign_in,
 )
+from fastapi.testclient import TestClient
+
+from tracemail_api.auth.google import CALLBACK_PATH, callback_url, google_client
 from tracemail_api.auth.sessions import (
     EXPIRES_KEY,
     ROLE_KEY,
@@ -30,70 +30,30 @@ from tracemail_api.auth.sessions import (
     current_role,
     start_session,
 )
-from tracemail_api.config import ApiSettings
-from tracemail_api.main import SESSION_COOKIE, create_app
-from tracemail_api.routes.auth import get_google
-
-OWNER_SUB = "100000000000000000001"
-OTHER_SUB = "100000000000000000002"
-GOOGLE_AUTHORIZE = "https://accounts.google.test/authorize"
-# TestClient talks plain HTTP; the cookie is Secure, so use an https base URL.
-BASE_URL = "https://testserver"
-
-
-def settings() -> ApiSettings:
-    return ApiSettings(
-        google_client_id="client-id",
-        google_client_secret=SecretStr("client-secret"),
-        owner_sub=OWNER_SUB,
-        session_secret=SecretStr("session-secret"),
-        public_url="http://localhost:8000/",
-    )
-
-
-class FakeGoogle:
-    """Returns a fixed identity, or raises like Authlib on a bad callback."""
-
-    def __init__(self, sub: str | None = OWNER_SUB, error: str | None = None) -> None:
-        self.sub = sub
-        self.error = error
-        self.redirect_uri: str | None = None
-
-    async def authorize_redirect(self, request: Request, redirect_uri: str) -> Response:
-        self.redirect_uri = redirect_uri
-        return RedirectResponse(GOOGLE_AUTHORIZE, status_code=302)
-
-    async def authorize_access_token(self, request: Request) -> dict[str, Any]:
-        if self.error is not None:
-            raise OAuthError(error=self.error)
-        return {} if self.sub is None else {"userinfo": {"sub": self.sub}}
-
-
-def client_with(google: FakeGoogle) -> Iterator[TestClient]:
-    app = create_app(settings())
-    app.dependency_overrides[get_google] = lambda: google
-    with TestClient(app, base_url=BASE_URL, follow_redirects=False) as client:
-        yield client
+from tracemail_api.main import ACCESS_LOGGER, SESSION_COOKIE
 
 
 @pytest.fixture
 def owner_client() -> Iterator[TestClient]:
-    yield from client_with(FakeGoogle())
+    with api_client() as client:
+        yield client
 
 
 def test_login_redirects_to_google_with_the_configured_callback_url() -> None:
     google = FakeGoogle()
-    for client in client_with(google):
+    with api_client(google) as client:
         response = client.get("/api/v1/auth/google/login")
-        assert response.status_code == 302
-        assert response.headers["location"] == GOOGLE_AUTHORIZE
+    assert (response.status_code, response.headers["location"]) == (
+        302,
+        GOOGLE_AUTHORIZE,
+    )
     assert google.redirect_uri == f"http://localhost:8000{CALLBACK_PATH}"
 
 
 def test_owner_callback_sets_a_secure_httponly_lax_cookie_and_redirects(
     owner_client: TestClient,
 ) -> None:
-    response = owner_client.get("/api/v1/auth/google/callback")
+    response = owner_client.get(CALLBACK)
     assert (response.status_code, response.headers["location"]) == (303, "/")
     cookie = response.headers["set-cookie"].lower()
     assert cookie.startswith(f"{SESSION_COOKIE}=")
@@ -103,8 +63,8 @@ def test_owner_callback_sets_a_secure_httponly_lax_cookie_and_redirects(
 
 
 def test_other_account_gets_403_with_its_own_id_and_no_session() -> None:
-    for client in client_with(FakeGoogle(sub=OTHER_SUB)):
-        response = client.get("/api/v1/auth/google/callback")
+    with api_client(FakeGoogle(sub=OTHER_SUB)) as client:
+        response = client.get(CALLBACK)
         assert response.status_code == 403
         assert response.json() == {
             "detail": "This account is not authorized",
@@ -120,8 +80,8 @@ def test_other_account_gets_403_with_its_own_id_and_no_session() -> None:
 def test_failed_callback_returns_400_without_details_or_session(
     google: FakeGoogle,
 ) -> None:
-    for client in client_with(google):
-        response = client.get("/api/v1/auth/google/callback")
+    with api_client(google) as client:
+        response = client.get(CALLBACK)
         assert response.status_code == 400
         assert response.json() == {"detail": "Login failed"}
         assert client.get("/api/v1/auth/me").status_code == 401
@@ -132,13 +92,13 @@ def test_me_without_a_session_is_401(owner_client: TestClient) -> None:
 
 
 def test_logout_ends_the_session(owner_client: TestClient) -> None:
-    owner_client.get("/api/v1/auth/google/callback")
+    sign_in(owner_client)
     assert owner_client.post("/api/v1/auth/logout").status_code == 204
     assert owner_client.get("/api/v1/auth/me").status_code == 401
 
 
 def test_tampered_cookie_is_ignored(owner_client: TestClient) -> None:
-    owner_client.get("/api/v1/auth/google/callback")
+    sign_in(owner_client)
     value = owner_client.cookies[SESSION_COOKIE]
     owner_client.cookies.set(SESSION_COOKIE, value[:-2] + "xx")
     assert owner_client.get("/api/v1/auth/me").status_code == 401
@@ -170,12 +130,27 @@ def test_session_without_a_known_role_and_expiry_has_no_role(
 
 
 def test_google_client_requests_identity_scopes_with_pkce() -> None:
-    client: Any = google_client(settings())
-    assert client.client_kwargs == {"scope": SCOPE, "code_challenge_method": "S256"}
-    assert (SCOPE, PKCE_METHOD) == ("openid email", "S256")
+    client: Any = google_client(make_settings())
+    assert client.client_kwargs == {
+        "scope": "openid email",
+        "code_challenge_method": "S256",
+    }
 
 
 def test_callback_url_joins_base_url_and_fixed_path() -> None:
-    assert (
-        callback_url(settings()) == "http://localhost:8000/api/v1/auth/google/callback"
-    )
+    assert callback_url(make_settings()) == f"http://localhost:8000{CALLBACK}"
+
+
+def test_access_log_lines_never_contain_the_query_string(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    with api_client(), caplog.at_level(logging.INFO, logger=ACCESS_LOGGER):
+        logging.getLogger(ACCESS_LOGGER).info(
+            '%s - "%s %s HTTP/%s" %d',
+            "127.0.0.1:1",
+            "GET",
+            f"{CALLBACK}?code=secret&state=s",
+            "1.1",
+            303,
+        )
+    assert caplog.messages == [f'127.0.0.1:1 - "GET {CALLBACK} HTTP/1.1" 303']
