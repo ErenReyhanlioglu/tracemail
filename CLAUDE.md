@@ -496,8 +496,10 @@ alert postings that have only a title.
 - Clients via `Depends()`, created once in `lifespan` and closed on shutdown.
   No module-level client instances.
 - List endpoints are paginated.
-- Read endpoints serve data that changes once a day: cache in process with a
-  TTL keyed to the latest run id. No Redis.
+- Read endpoints serve data that changes only when dbt rebuilds the marts:
+  cache in process, keyed to the source table's last-modified time (a free
+  metadata call) and, for date-dependent values, the owner's local date.
+  No Redis.
 - The capture endpoint authenticates the button with a secret token, validates
   size and content type, and writes to the raw bucket first (same rules as the
   raw layer), then returns.
