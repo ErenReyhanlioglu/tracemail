@@ -1,0 +1,98 @@
+/*
+ * A pill switch: knob on the left with a sun in light, on the right with a
+ * moon in dark. Which one applies follows the same rule as the tokens:
+ * data-theme if set, otherwise the system setting.
+ */
+.toggle {
+  position: relative;
+  width: var(--toggle-width);
+  height: var(--toggle-height);
+  padding: 0;
+  border: 1px solid var(--color-sidebar-rule);
+  border-radius: var(--radius-pill);
+  background: var(--color-sidebar-track);
+  cursor: pointer;
+}
+
+.knob {
+  position: absolute;
+  top: var(--toggle-inset);
+  left: var(--toggle-inset);
+  display: grid;
+  place-items: center;
+  width: var(--toggle-knob);
+  height: var(--toggle-knob);
+  border-radius: 50%;
+  background: var(--color-sidebar-knob);
+  color: var(--color-sidebar);
+  transition: transform 160ms ease;
+}
+
+.icon {
+  width: 0.875rem;
+  height: 0.875rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.moon .icon {
+  fill: currentColor;
+  stroke: none;
+}
+
+.moon,
+.labelForDark {
+  display: none;
+}
+
+.sun,
+.moon {
+  line-height: 0;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Dark: by stored choice, or by the system when nothing is stored. */
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme="light"])) .knob {
+    transform: translateX(var(--toggle-travel));
+  }
+  :global(:root:not([data-theme="light"])) .sun,
+  :global(:root:not([data-theme="light"])) .labelForLight {
+    display: none;
+  }
+  :global(:root:not([data-theme="light"])) .moon,
+  :global(:root:not([data-theme="light"])) .labelForDark {
+    display: inline;
+  }
+}
+
+:global(:root[data-theme="dark"]) .knob {
+  transform: translateX(var(--toggle-travel));
+}
+
+:global(:root[data-theme="dark"]) .sun,
+:global(:root[data-theme="dark"]) .labelForLight {
+  display: none;
+}
+
+:global(:root[data-theme="dark"]) .moon,
+:global(:root[data-theme="dark"]) .labelForDark {
+  display: inline;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .knob {
+    transition: none;
+  }
+}
