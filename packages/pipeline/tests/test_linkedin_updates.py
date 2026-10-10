@@ -162,3 +162,13 @@ def test_html_reader_lists_job_ids_once_in_document_order() -> None:
         '<a href="https://www.linkedin.com/redacted">d</a><a>e</a>'
     )
     assert read_html(html).job_ids == ["2", "1"]
+
+
+def test_html_reader_keeps_nested_job_link_texts_apart() -> None:
+    href = "https://www.linkedin.com/comm/jobs/view/7/"
+    html = (
+        f'<a href="{href}"><img></a>'
+        f'<a href="{href}"><div><a href="{href}"> Long\n title </a></div>'
+        f'<p>Company · City</p></a><a href="https://example.test/">Other</a>'
+    )
+    assert read_html(html).link_texts == {"7": ["Long title", "Company · City"]}
