@@ -1,0 +1,140 @@
+/* The bar sits inside the table panel, under the last row. */
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: var(--pagination-height);
+  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-6);
+  border-top: var(--border);
+  background: var(--color-page);
+}
+
+.side {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.range {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+/* Rows per page */
+.sizeLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.selectWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.selectWrap::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: var(--space-3);
+  width: 0.375rem;
+  height: 0.375rem;
+  border-right: 1.5px solid var(--color-text-muted);
+  border-bottom: 1.5px solid var(--color-text-muted);
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+
+.select {
+  height: var(--pagination-control);
+  padding: 0 var(--space-8) 0 var(--space-3);
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  appearance: none;
+  cursor: pointer;
+}
+
+.select:hover {
+  border-color: var(--color-text-muted);
+}
+
+/* Page links */
+.pages {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step,
+.number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--pagination-control);
+  height: var(--pagination-control);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  text-decoration: none;
+}
+
+.step {
+  border-color: var(--color-border);
+  background: var(--color-surface);
+}
+
+.number {
+  padding: 0 var(--space-2);
+  font-family: var(--font-mono);
+}
+
+.step:hover,
+.number:hover {
+  background: var(--color-surface);
+  border-color: var(--color-text-muted);
+}
+
+.current,
+.current:hover {
+  background: var(--color-chip-active);
+  border-color: var(--color-chip-active);
+  color: var(--color-on-chip-active);
+}
+
+.disabled,
+.disabled:hover {
+  border-color: var(--color-border);
+  background: transparent;
+  color: var(--color-text-muted);
+  opacity: 0.6;
+  cursor: default;
+}
+
+.gap {
+  min-width: var(--pagination-control);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.chevron {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

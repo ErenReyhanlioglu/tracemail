@@ -17,7 +17,7 @@ from google.api_core.exceptions import GoogleAPIError
 from google.auth.exceptions import GoogleAuthError
 from pydantic import BaseModel
 
-from tracemail_api.routes.applications import get_marts
+from tracemail_api.routes.deps import get_marts
 from tracemail_api.warehouse import MartsReader
 
 logger = logging.getLogger(__name__)

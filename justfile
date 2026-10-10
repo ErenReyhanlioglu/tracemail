@@ -37,6 +37,17 @@ check: lint typecheck test
 api port="8000":
     uv run --env-file .env uvicorn tracemail_api.main:create_app --factory --reload --port {{port}}
 
+# Run the web app locally on port 3000 (reads TRACEMAIL_API_URL from .env).
+# uv loads .env; node is called directly because npm is a .cmd on Windows.
+web:
+    uv run --env-file .env node apps/web/node_modules/next/dist/bin/next dev apps/web --port 3000
+
+# Lint, typecheck, and build the web app (what CI runs)
+web-check:
+    npm --prefix apps/web run lint
+    npm --prefix apps/web run typecheck
+    uv run --env-file .env node apps/web/node_modules/next/dist/bin/next build apps/web
+
 # List mailbox folder names (to set TRACEMAIL_IMAP_MAILBOX)
 list-mailboxes:
     uv run --env-file .env python -m tracemail_pipeline.cli list-mailboxes

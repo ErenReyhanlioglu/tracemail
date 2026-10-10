@@ -80,8 +80,8 @@ rejected.
 - Everything written to a file is in English: code, identifiers, comments,
   docstrings, Markdown, ADRs, commit messages, log messages, error messages.
 - Conversation with the owner happens in Turkish. That never leaks into files.
-- **Exception, undecided:** the language of user-facing UI copy (the mockups are
-  in Turkish). Ask before writing UI strings until an ADR settles it.
+- **Exception:** user-facing UI copy in the web app is Turkish (ADR-0033),
+  kept in one strings module, never scattered through components.
 
 ---
 

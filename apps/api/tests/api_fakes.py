@@ -18,7 +18,7 @@ from starlette.responses import RedirectResponse, Response
 from tracemail_api.config import ApiSettings
 from tracemail_api.main import create_app
 from tracemail_api.routes.auth import get_google
-from tracemail_api.warehouse import ApplicationRow, MartsReader
+from tracemail_api.warehouse import ApplicationRow, MartsReader, PostingRow
 
 OWNER_SUB = "100000000000000000001"
 OTHER_SUB = "100000000000000000002"
@@ -78,15 +78,41 @@ class FakeGoogle:
         return {} if self.sub is None else {"userinfo": {"sub": self.sub}}
 
 
+def posting(
+    key: str,
+    first_seen: date,
+    *,
+    saved: bool = False,
+    applied_on: date | None = None,
+) -> PostingRow:
+    return PostingRow(
+        posting_key=key,
+        title="Example Role",
+        company="Example Company",
+        location="Istanbul",
+        posting_url=None,
+        first_seen_date=first_seen,
+        last_seen_date=first_seen,
+        mention_count=1,
+        is_saved=saved,
+        has_application=applied_on is not None,
+        applied_on=applied_on,
+    )
+
+
 class FakeMarts(MartsReader):
     """Serves fixed rows and counts queries; can simulate an outage."""
 
     def __init__(
-        self, rows: list[ApplicationRow] | None = None, error: Exception | None = None
+        self,
+        rows: list[ApplicationRow] | None = None,
+        error: Exception | None = None,
+        postings: list[PostingRow] | None = None,
     ) -> None:
         self.rows = rows or []
+        self.posting_rows = postings or []
         self.error = error
-        self.modified = datetime(2026, 10, 1, tzinfo=UTC)
+        self.last_modified = datetime(2026, 10, 1, tzinfo=UTC)
         self.queries = 0
         self.closed = False
 
@@ -97,12 +123,16 @@ class FakeMarts(MartsReader):
         if self.error is not None:
             raise self.error
 
-    async def applications_modified(self) -> datetime | None:
-        return self.modified
+    async def modified(self, table: str) -> datetime | None:
+        return self.last_modified
 
     async def applications(self) -> list[ApplicationRow]:
         self.queries += 1
         return self.rows
+
+    async def postings(self) -> list[PostingRow]:
+        self.queries += 1
+        return self.posting_rows
 
 
 @contextmanager
