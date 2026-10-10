@@ -75,16 +75,21 @@
   --sidebar-width: 16rem;
   /* Wide enough to use a large screen, narrow enough to keep rows readable. */
   --content-max-width: 100rem;
-  /* Application table: owner-chosen fixed columns; the first column takes
-     the rest. Fixed heights, so rows never shift. Below the minimum width
-     the table scrolls sideways (first column at least ~15rem). */
+  /* List tables: fixed columns (the first takes the rest), fixed heights so
+     rows never shift; below the minimum width a table scrolls sideways. */
   --col-channel: 11rem;
   --col-location: 11rem;
   --col-date: 10.75rem;
   --col-last-event: 11.75rem;
   --col-status: 20.75rem;
   --col-link: 3.5rem;
-  --table-min-width: 84rem;
+  --applications-min-width: 84rem;
+  --col-posting-location: 13rem;
+  --col-first-seen: 9rem;
+  --col-last-seen: 11rem;
+  --col-posting-status: 14rem;
+  --postings-min-width: 72rem;
+  --chip-label-width: 4rem;
   --table-header-height: 2.75rem;
   --table-row-height: 4.75rem;
   --pagination-height: 3.25rem;

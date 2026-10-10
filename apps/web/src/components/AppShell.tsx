@@ -2,12 +2,12 @@
 import type { ReactNode } from "react";
 
 import styles from "./AppShell.module.css";
-import { Sidebar } from "./Sidebar";
+import { type Section, Sidebar } from "./Sidebar";
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({ active, children }: { active: Section; children: ReactNode }) {
   return (
     <div className={styles.shell}>
-      <Sidebar />
+      <Sidebar active={active} />
       <main className={styles.main}>{children}</main>
     </div>
   );

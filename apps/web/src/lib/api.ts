@@ -6,6 +6,7 @@ import "server-only";
 import { cookies } from "next/headers";
 
 import type { Application, ApplicationPage } from "@/lib/applications";
+import type { PostingPage } from "@/lib/postings";
 
 const SESSION_COOKIE = "tracemail_session";
 const PAGE_SIZE = 100;
@@ -52,4 +53,23 @@ export async function fetchAllApplications(): Promise<Application[]> {
       return items;
     }
   }
+}
+
+export interface PostingsRequest {
+  status: string;
+  days: number | null;
+  page: number;
+  pageSize: number;
+}
+
+export async function fetchPostings(request: PostingsRequest): Promise<PostingPage> {
+  const params = new URLSearchParams({
+    status: request.status,
+    page: String(request.page),
+    page_size: String(request.pageSize),
+  });
+  if (request.days !== null) {
+    params.set("days", String(request.days));
+  }
+  return getJson<PostingPage>(`/api/v1/postings?${params.toString()}`);
 }

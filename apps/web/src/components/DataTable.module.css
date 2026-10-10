@@ -1,8 +1,9 @@
 /*
- * Fixed-column table: the first column takes the remaining width, the others
- * have fixed widths (owner-chosen, step 1.10). Cells never wrap, so every row
- * has the same height. Below the minimum width the frame scrolls sideways
- * instead of squeezing a column; the pagination bar stays below it.
+ * Shared style of the list tables (ADR-0034). Fixed columns: the first takes
+ * the remaining width, the others get fixed widths from their table. Cells
+ * never wrap, so every row has the same height. Below the table's minimum
+ * width the panel scrolls sideways instead of squeezing a column; the
+ * pagination bar stays below it.
  */
 .panel {
   margin-top: var(--space-6);
@@ -18,33 +19,8 @@
 
 .table {
   width: 100%;
-  min-width: var(--table-min-width);
   border-collapse: collapse;
   table-layout: fixed;
-}
-
-.colChannel {
-  width: var(--col-channel);
-}
-
-.colLocation {
-  width: var(--col-location);
-}
-
-.colDate {
-  width: var(--col-date);
-}
-
-.colLastEvent {
-  width: var(--col-last-event);
-}
-
-.colStatus {
-  width: var(--col-status);
-}
-
-.colLink {
-  width: var(--col-link);
 }
 
 .table th,

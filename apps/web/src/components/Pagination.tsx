@@ -5,14 +5,13 @@
 // side of the current one, an ellipsis for longer gaps).
 import Link from "next/link";
 
-import type { Filter } from "@/lib/applications";
-import { listUrl, pageCount, pageItems, type PageSize } from "@/lib/paging";
+import { type ListLocation, listUrl, pageCount, pageItems, type PageSize } from "@/lib/paging";
 import { strings } from "@/lib/strings";
 
 import { PageSizeSelect } from "./PageSizeSelect";
 import styles from "./Pagination.module.css";
 
-const text = strings.applications.pagination;
+const text = strings.pagination;
 
 function Chevron({ direction }: { direction: "left" | "right" }) {
   const path = direction === "left" ? "M15 6l-6 6 6 6" : "M9 6l6 6-6 6";
@@ -53,25 +52,27 @@ function Step({
 }
 
 export function Pagination({
-  filter,
+  location,
   page,
   size,
   total,
+  noun,
 }: {
-  filter: Filter;
+  location: ListLocation;
   page: number;
   size: PageSize;
   total: number;
+  noun: string;
 }) {
   const pages = pageCount(total, size);
   const from = total === 0 ? 0 : (page - 1) * size + 1;
   const to = Math.min(page * size, total);
-  const at = (target: number) => listUrl({ filter, page: target, size });
+  const at = (target: number) => listUrl(location, target, size);
   return (
     <nav className={styles.bar} aria-label={text.label}>
       <div className={styles.side}>
-        <PageSizeSelect filter={filter} size={size} />
-        <span className={styles.range}>{text.range(from, to, total)}</span>
+        <PageSizeSelect location={location} size={size} />
+        <span className={styles.range}>{text.range(from, to, total, noun)}</span>
       </div>
       <div className={styles.side}>
         <Step href={page > 1 ? at(page - 1) : null} direction="left" label={text.previous} />

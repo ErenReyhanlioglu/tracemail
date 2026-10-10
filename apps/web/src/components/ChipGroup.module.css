@@ -36,3 +36,15 @@
   font-family: var(--font-mono);
   font-weight: var(--weight-regular);
 }
+
+.group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.groupLabel {
+  min-width: var(--chip-label-width);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}

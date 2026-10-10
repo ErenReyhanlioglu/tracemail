@@ -25,6 +25,7 @@ export const strings = {
   },
   applications: {
     title: "Başvurularım",
+    noun: "başvuru",
     sortNote: "son gelişmeye göre sıralı",
     filters: {
       all: "Tümü",
@@ -44,16 +45,58 @@ export const strings = {
     noTitle: "Pozisyon adı bilinmiyor",
     noCompany: "Şirket bilinmiyor",
     empty: "Bu filtrede başvuru yok.",
-    pagination: {
-      label: "Sayfalar",
-      previous: "Önceki",
-      next: "Sonraki",
-      range: (from: number, to: number, total: number) => `${from}–${to} / ${total} başvuru`,
-      perPage: "Sayfa başına",
-      goToPage: (page: number) => `${page}. sayfa`,
-      gap: "Aradaki sayfalar",
-    },
     openPosting: (company: string) => `${company} ilanını aç`,
+  },
+  pagination: {
+    label: "Sayfalar",
+    previous: "Önceki",
+    next: "Sonraki",
+    range: (from: number, to: number, total: number, noun: string) =>
+      `${from}–${to} / ${total} ${noun}`,
+    perPage: "Sayfa başına",
+    goToPage: (page: number) => `${page}. sayfa`,
+    gap: "Aradaki sayfalar",
+  },
+  postings: {
+    title: "Gelen ilanlar",
+    noun: "ilan",
+    summary: (count: number, period: string) => `${count} ilan · ${period}`,
+    periodLabel: "Dönem",
+    // Chip labels, and the same periods inside the summary sentence.
+    periods: {
+      week: "Son 7 gün",
+      month: "Son 30 gün",
+      all: "Tümü",
+    },
+    periodsInSummary: {
+      week: "son 7 gün",
+      month: "son 30 gün",
+      all: "tüm zamanlar",
+    },
+    statusLabel: "Durum",
+    filters: {
+      all: "Tümü",
+      new: "Yeni",
+      saved: "Kaydedilen",
+      applied: "Başvurulan",
+    },
+    columns: {
+      posting: "Pozisyon ve şirket",
+      location: "Konum",
+      firstSeen: "Geliş",
+      lastSeen: "Son görülme",
+      status: "Durum",
+    },
+    mentions: (count: number) => `${count} uyarıda`,
+    status: {
+      new: "Yeni",
+      saved: "Kaydedildi",
+      applied: (date: string) => `Başvuruldu · ${date}`,
+      appliedNoDate: "Başvuruldu",
+    },
+    empty: "Bu filtrede ilan yok.",
+    laterNote:
+      "Rol türü, kaba uygunluk ve eşleşme raporu sonraki aşamalarda bu tabloya eklenecek.",
   },
   status: {
     applied: "Yanıt bekleniyor",

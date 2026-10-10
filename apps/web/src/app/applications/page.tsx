@@ -1,13 +1,11 @@
 // The owner's application list (step 1.10). Data is fetched on the server
 // with the session cookie; without a session the visitor is sent to login
 // and receives no data.
-import { redirect } from "next/navigation";
-
 import { AppShell } from "@/components/AppShell";
 import { ApplicationTable } from "@/components/ApplicationTable";
-import { FilterChips } from "@/components/FilterChips";
+import { ChipGroup } from "@/components/ChipGroup";
 import { Pagination } from "@/components/Pagination";
-import { ApiUnavailableError, fetchAllApplications, NotSignedInError } from "@/lib/api";
+import { fetchAllApplications } from "@/lib/api";
 import {
   type Application,
   FILTERS,
@@ -15,32 +13,32 @@ import {
   isFilter,
   matchesFilter,
 } from "@/lib/applications";
-import { pageCount, type PageSize, pageSlice, parsePage, parsePageSize } from "@/lib/paging";
+import { loadPrivate } from "@/lib/load";
+import {
+  type ListLocation,
+  listUrl,
+  pageCount,
+  type PageSize,
+  pageSlice,
+  parsePage,
+  parsePageSize,
+} from "@/lib/paging";
 import { strings } from "@/lib/strings";
 
-import styles from "./page.module.css";
+import styles from "../list.module.css";
 
 export const dynamic = "force-dynamic";
 
-async function loadApplications(): Promise<Application[] | null> {
-  try {
-    return await fetchAllApplications();
-  } catch (error) {
-    if (error instanceof NotSignedInError) {
-      redirect("/login");
-    }
-    if (error instanceof ApiUnavailableError) {
-      return null;
-    }
-    throw error;
-  }
-}
+const PATH = "/applications";
+const FILTER_LABELS: Record<Filter, string> = {
+  all: strings.applications.filters.all,
+  in_progress: strings.applications.filters.inProgress,
+  silent: strings.applications.filters.silent,
+  rejected: strings.applications.filters.rejected,
+};
 
-function countByFilter(applications: Application[]): Record<Filter, number> {
-  const entries = FILTERS.map(
-    (filter) => [filter, applications.filter((a) => matchesFilter(a, filter)).length] as const,
-  );
-  return Object.fromEntries(entries) as Record<Filter, number>;
+function location(filter: Filter): ListLocation {
+  return { path: PATH, query: filter === "all" ? {} : { filter } };
 }
 
 export default async function ApplicationsPage({
@@ -50,12 +48,12 @@ export default async function ApplicationsPage({
 }) {
   const params = await searchParams;
   const filter: Filter = isFilter(params.filter) ? params.filter : "all";
-  const applications = await loadApplications();
+  const applications = await loadPrivate(fetchAllApplications);
   return (
-    <AppShell>
+    <AppShell active="applications">
       <header className={styles.header}>
         <h1 className={styles.title}>{strings.applications.title}</h1>
-        <span className={styles.sortNote}>{strings.applications.sortNote}</span>
+        <span className={styles.summary}>{strings.applications.sortNote}</span>
       </header>
       {applications === null ? (
         <p className={styles.message}>{strings.errors.unavailable}</p>
@@ -84,16 +82,32 @@ function ApplicationList({
 }) {
   const matching = applications.filter((a) => matchesFilter(a, filter));
   const page = parsePage(pageParam, pageCount(matching.length, size));
-  const visible = pageSlice(matching, page, size);
+  const chips = FILTERS.map((option) => ({
+    key: option,
+    label: FILTER_LABELS[option],
+    count: applications.filter((a) => matchesFilter(a, option)).length,
+    href: listUrl(location(option), 1, size),
+    active: option === filter,
+  }));
   return (
     <>
-      <FilterChips active={filter} size={size} counts={countByFilter(applications)} />
-      {visible.length === 0 ? (
+      <div className={styles.filters}>
+        <ChipGroup chips={chips} />
+      </div>
+      {matching.length === 0 ? (
         <p className={styles.message}>{strings.applications.empty}</p>
       ) : (
         <ApplicationTable
-          applications={visible}
-          footer={<Pagination filter={filter} page={page} size={size} total={matching.length} />}
+          applications={pageSlice(matching, page, size)}
+          footer={
+            <Pagination
+              location={location(filter)}
+              page={page}
+              size={size}
+              total={matching.length}
+              noun={strings.applications.noun}
+            />
+          }
         />
       )}
     </>

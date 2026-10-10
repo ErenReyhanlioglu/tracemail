@@ -1,6 +1,6 @@
-// Splitting the application list into pages, choosing which page links to
-// show, and building list URLs that keep the filter and page size.
-import type { Filter } from "@/lib/applications";
+// Paging shared by the list pages: page sizes, which page links to show,
+// and list URLs that keep a page's own query (filter, period) alongside the
+// page number and page size.
 
 export const PAGE_SIZES = [10, 20, 50] as const;
 export type PageSize = (typeof PAGE_SIZES)[number];
@@ -12,10 +12,10 @@ export const SURROUNDING_PAGES = 2;
 
 export type PageItem = { kind: "page"; page: number } | { kind: "gap"; after: number };
 
-export interface ListView {
-  filter: Filter;
-  page: number;
-  size: PageSize;
+// A list page's address: its path and the query that selects its rows.
+export interface ListLocation {
+  path: string;
+  query: Record<string, string>;
 }
 
 export function parsePageSize(value: string | undefined): PageSize {
@@ -64,11 +64,8 @@ export function pageItems(current: number, pages: number): PageItem[] {
   return items;
 }
 
-export function listUrl({ filter, page, size }: ListView): string {
-  const params = new URLSearchParams();
-  if (filter !== "all") {
-    params.set("filter", filter);
-  }
+export function listUrl(location: ListLocation, page: number, size: PageSize): string {
+  const params = new URLSearchParams(location.query);
   if (page > 1) {
     params.set("page", String(page));
   }
@@ -76,5 +73,5 @@ export function listUrl({ filter, page, size }: ListView): string {
     params.set("size", String(size));
   }
   const query = params.toString();
-  return query ? `/applications?${query}` : "/applications";
+  return query ? `${location.path}?${query}` : location.path;
 }

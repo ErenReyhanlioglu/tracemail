@@ -1,7 +1,5 @@
-// The application list as a table with fixed columns (ADR-0034): every
-// application has the same fields, so each field gets one column. Columns
-// have fixed widths, cells never wrap (long text is cut with an ellipsis and
-// shown whole on hover), so every row has the same height.
+// The application list (ADR-0034): one column per field, fixed widths, one
+// line per cell, so every row has the same height.
 import type { ReactNode } from "react";
 
 import type { Application } from "@/lib/applications";
@@ -9,21 +7,23 @@ import { formatDayMonth } from "@/lib/format";
 import { badgesFor, daysAgo } from "@/lib/status";
 import { strings } from "@/lib/strings";
 
-import styles from "./ApplicationTable.module.css";
+import styles from "./DataTable.module.css";
 import { StatusBadge } from "./StatusBadge";
+import { Clipped, columnStyle, ExternalLink } from "./TableParts";
 
 const text = strings.applications;
 
+const COLUMNS: readonly { label: string; width: string | null }[] = [
+  { label: text.columns.application, width: null },
+  { label: text.columns.channel, width: "--col-channel" },
+  { label: text.columns.location, width: "--col-location" },
+  { label: text.columns.appliedOn, width: "--col-date" },
+  { label: text.columns.lastEvent, width: "--col-last-event" },
+  { label: text.columns.status, width: "--col-status" },
+];
+
 function channelLabel(channel: string | null): string {
   return channel ? (strings.channels[channel] ?? channel) : text.unknown;
-}
-
-function Clipped({ value, className }: { value: string; className?: string }) {
-  return (
-    <span className={className ? `${styles.clip} ${className}` : styles.clip} title={value}>
-      {value}
-    </span>
-  );
 }
 
 function StatusCell({ application }: { application: Application }) {
@@ -40,39 +40,13 @@ function StatusCell({ application }: { application: Application }) {
   );
 }
 
-function ExternalIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className={styles.icon}>
-      <path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />
-    </svg>
-  );
-}
-
-function PostingLink({ application }: { application: Application }) {
-  if (!application.posting_url) {
-    return null;
-  }
-  const label = text.openPosting(application.company ?? text.noCompany);
-  return (
-    <a
-      className={styles.link}
-      href={application.posting_url}
-      target="_blank"
-      rel="noreferrer noopener"
-      aria-label={label}
-      title={label}
-    >
-      <ExternalIcon />
-    </a>
-  );
-}
-
 function Row({ application }: { application: Application }) {
+  const company = application.company ?? text.noCompany;
   const rowClass = application.is_closed_without_reply ? styles.closed : undefined;
   return (
     <tr className={rowClass}>
       <td>
-        <Clipped value={application.company ?? text.noCompany} className={styles.company} />
+        <Clipped value={company} className={styles.company} />
         <Clipped value={application.title ?? text.noTitle} className={styles.title} />
       </td>
       <td>
@@ -95,7 +69,7 @@ function Row({ application }: { application: Application }) {
         <StatusCell application={application} />
       </td>
       <td className={styles.linkCell}>
-        <PostingLink application={application} />
+        <ExternalLink href={application.posting_url} label={text.openPosting(company)} />
       </td>
     </tr>
   );
@@ -108,28 +82,23 @@ export function ApplicationTable({
   applications: Application[];
   footer: ReactNode;
 }) {
-  const columns = text.columns;
   return (
     <div className={styles.panel}>
       <div className={styles.scroll}>
-        <table className={styles.table}>
+        <table className={styles.table} style={{ minWidth: "var(--applications-min-width)" }}>
           <colgroup>
-            <col />
-            <col className={styles.colChannel} />
-            <col className={styles.colLocation} />
-            <col className={styles.colDate} />
-            <col className={styles.colLastEvent} />
-            <col className={styles.colStatus} />
-            <col className={styles.colLink} />
+            {COLUMNS.map((column) => (
+              <col key={column.label} style={columnStyle(column.width)} />
+            ))}
+            <col style={columnStyle("--col-link")} />
           </colgroup>
           <thead>
             <tr>
-              <th scope="col">{columns.application}</th>
-              <th scope="col">{columns.channel}</th>
-              <th scope="col">{columns.location}</th>
-              <th scope="col">{columns.appliedOn}</th>
-              <th scope="col">{columns.lastEvent}</th>
-              <th scope="col">{columns.status}</th>
+              {COLUMNS.map((column) => (
+                <th key={column.label} scope="col">
+                  {column.label}
+                </th>
+              ))}
               <td aria-hidden="true" />
             </tr>
           </thead>

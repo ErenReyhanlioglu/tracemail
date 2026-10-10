@@ -1,5 +1,5 @@
-// Navigation as in the mockups. Only the application list exists in step
-// 1.10; the other sections are shown but not yet reachable.
+// Navigation as in the mockups. The application and incoming-posting lists
+// exist since step 1.10; the other sections are shown but not yet reachable.
 import Link from "next/link";
 
 import { strings } from "@/lib/strings";
@@ -8,20 +8,23 @@ import { SignOutButton } from "./SignOutButton";
 import styles from "./Sidebar.module.css";
 import { ThemeToggle } from "./ThemeToggle";
 
+export type Section = "postings" | "applications";
+
 interface NavItem {
   label: string;
+  section?: Section;
   href?: string;
 }
 
 const NAV: readonly NavItem[] = [
   { label: strings.nav.overview },
-  { label: strings.nav.postings },
-  { label: strings.nav.applications, href: "/applications" },
+  { label: strings.nav.postings, section: "postings", href: "/postings" },
+  { label: strings.nav.applications, section: "applications", href: "/applications" },
   { label: strings.nav.reports },
   { label: strings.nav.health },
 ];
 
-export function Sidebar() {
+export function Sidebar({ active }: { active: Section }) {
   return (
     <nav className={styles.sidebar} aria-label={strings.appName}>
       <div className={styles.brand}>
@@ -32,7 +35,11 @@ export function Sidebar() {
         {NAV.map((item) => (
           <li key={item.label}>
             {item.href ? (
-              <Link href={item.href} className={styles.itemActive} aria-current="page">
+              <Link
+                href={item.href}
+                className={item.section === active ? styles.itemActive : styles.item}
+                aria-current={item.section === active ? "page" : undefined}
+              >
                 {item.label}
               </Link>
             ) : (
