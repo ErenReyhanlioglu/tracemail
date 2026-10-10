@@ -48,6 +48,11 @@ These are recorded as unverified in ADRs; each is checked at the step named.
   Verified 2026-10-09: a `dags test` run of the hourly DAG read IMAP, GCS, and
   BigQuery settings from the scheduler's environment inside `pipeline_venv`.
 - Cosmos DAG-parsing load is acceptable on the VM — 1.7 / 1.11
+  Measured locally 2026-10-10 (amd64): the DAG file (52 tasks, manifest
+  rendering) parses in 6.6 s, and the DAG processor re-parses it every 30 s by
+  default. Measure on the VM; if the load is too high, lengthen
+  `[dag_processor] min_file_process_interval`, since the file only changes on
+  deploy.
 - Oracle web-console emergency access works when Tailscale is down — 1.11
 - Free Ampere capacity in `eu-frankfurt-1` — 1.11
 

@@ -85,6 +85,17 @@ every step's operation counts. The expected order of work is option 2 (no
 behavior change, largest saving per line of code), then option 1, then
 option 3.
 
+**2026-10-10: deferred by the owner while clean data is collected.** The
+`fct_free_tier_usage` view projected October above 85%, but the month so far
+includes about 1,730 Class A operations from one-off 90-day backfills on
+2026-10-09, and its 24-hour rate window still contains development test runs.
+Carrying the measured steady-state rate (about 127 Class A a day, ADR-0021)
+over the rest of the month gives about 4,590 for October (about 92%, under
+the 100% free tier) and about 3,800 for a month without backfills (76%). The
+owner chose to keep the hourly schedule running unchanged for several days
+and decide on scheduled-run data only; the 85% rule applies once that
+projection is clean.
+
 ## Consequences
 
 To be written with the decision. Any option must keep ADR-0021's guarantees:
