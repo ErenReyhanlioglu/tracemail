@@ -61,6 +61,9 @@ These are recorded as unverified in ADRs; each is checked at the step named.
 ### Decisions still needed in Phase 1
 
 - **UI copy language** (Turkish or English) — before 1.10.
+- **GCS Class A headroom** — [ADR-0030](adr/0030-gcs-class-a-headroom.md)
+  (Proposed) — mandatory when projected monthly Class A use exceeds 85%
+  (CLAUDE.md, 85% rule).
 
 ---
 

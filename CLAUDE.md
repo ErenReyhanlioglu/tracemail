@@ -562,6 +562,11 @@ alert postings that have only a title.
 - Cost is estimated from operation counts × unit prices kept in one config
   file, each price with its source URL and check date — researched, never
   from memory. Free-tier usage is reported alongside cost.
+- **85% rule.** When the measured or projected monthly use of any free-tier
+  allowance (GCS Class A / Class B operations, GCS storage, BigQuery query
+  bytes, BigQuery storage, and later the LLM budget) exceeds 85%, an
+  optimization is mandatory, not optional: record the options in an ADR and
+  implement one before adding work that uses the same allowance.
 - **Optimizations are measured before and after.** Never claim a change is
   faster or cheaper without both numbers; until measured, call it an
   expectation.

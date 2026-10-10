@@ -1,7 +1,7 @@
 # ADR-0021: Keeping GCS Operations within the Free Tier under Hourly Runs
 
 **Date:** 2026-10-08
-**Status:** Accepted (not yet implemented; step 1.7)
+**Status:** Accepted
 
 ## Context
 
@@ -114,6 +114,28 @@ measured hourly runs under option 1 exceed the Class A free tier. Step 1.7
 verifies the projection with real hourly run records and the billing report
 (including whether BigQuery loads add GCS operations) and records the
 numbers here.
+
+## Measured (2026-10-09 to 2026-10-10, local stack, 20 hourly runs)
+
+Scheduled hourly runs of the Airflow DAG (step 1.7), read from
+`ops.pipeline_runs`; GCS counts are the operations made by our code.
+
+| Run kind | Runs | Class A per run | Class B per run | dbt |
+|---|---|---|---|---|
+| No new mail (skipped after ingestion) | 12 | 2–3 (listings only) | 0 | skipped |
+| New mail on one day (that day only) | 7 | 9 (2–3 listings, 1 raw write, 1 parsed listing, 4 parsed writes) | 1–7 | 1 build |
+| Daily full window (interval 00:00 UTC) | 1 | 17 (2 listings, 3 parsed listings, 12 parsed writes) | 9 | 1 build |
+
+- All 20 runs completed; no hour was missed.
+- Totals over 20 hours: 106 Class A, 37 Class B. If every day looked like
+  this one (about 9 hours with new mail), a month would use about **3,800
+  Class A (76% of the 5,000 free operations)** and about 1,300 Class B (3%
+  of 50,000). Without the gate every run would cost about 17 Class A, about
+  12,000 a month.
+- The headroom left is small and shrinks as mail volume grows; options for
+  that case are recorded in ADR-0030.
+- Still not verified: whether BigQuery load jobs reading `parsed/` add GCS
+  operations of their own (the billing report shows it).
 
 ## Consequences
 
