@@ -1,7 +1,7 @@
 # ADR-0032: Owner Login Implementation — Authlib, a Signed Session Cookie, and Fixed Routes
 
 **Date:** 2026-10-10
-**Status:** Accepted (not yet implemented)
+**Status:** Accepted
 
 ## Context
 

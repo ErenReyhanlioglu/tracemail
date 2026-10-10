@@ -4,7 +4,7 @@ Build order and current position. Scope per phase is defined in
 [SUMMARY.md](../SUMMARY.md); decisions in [adr/](adr/README.md).
 
 **Current phase:** Phase 1 — Core
-**Current step:** 1.9 (`feat/api-owner-auth`) — 1.0 to 1.5, 1.7, and 1.8
+**Current step:** 1.10 (`feat/web-application-list`) — 1.0 to 1.5 and 1.7 to 1.9
 done; 1.6 waits for the LinkedIn data export (checklist F)
 
 Each step is one branch and one or more pull requests. A step is done when its
@@ -65,7 +65,6 @@ These are recorded as unverified in ADRs; each is checked at the step named.
 
 ### Decisions still needed in Phase 1
 
-- **UI copy language** (Turkish or English) — before 1.10.
 - **GCS Class A headroom** — [ADR-0030](adr/0030-gcs-class-a-headroom.md)
   (Proposed) — mandatory when projected monthly Class A use exceeds 85%
   (CLAUDE.md, 85% rule).
