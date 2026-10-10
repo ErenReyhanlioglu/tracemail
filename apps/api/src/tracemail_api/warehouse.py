@@ -10,16 +10,20 @@ so every call runs in a worker thread.
 import asyncio
 from datetime import date, datetime
 from pathlib import Path
+from typing import Any
 
 from google.cloud import bigquery
 from pydantic import BaseModel
 
 from tracemail_api.config import ApiSettings
 
-APPLICATIONS_SQL = Path(__file__).parent / "sql" / "applications.sql"
-# The table whose rebuild marks new application data (dbt rebuilds it only
-# when landing changed, ADR-0022).
+SQL_DIR = Path(__file__).parent / "sql"
+APPLICATIONS_SQL = SQL_DIR / "applications.sql"
+POSTINGS_SQL = SQL_DIR / "postings.sql"
+# Tables whose rebuild marks new data (dbt rebuilds them only when landing
+# changed, ADR-0022).
 APPLICATIONS_TABLE = "dim_applications"
+POSTINGS_TABLE = "dim_postings"
 
 
 class ApplicationRow(BaseModel):
@@ -40,6 +44,22 @@ class ApplicationRow(BaseModel):
     event_count: int
 
 
+class PostingRow(BaseModel):
+    """One posting as the incoming-postings list shows it."""
+
+    posting_key: str
+    title: str | None
+    company: str | None
+    location: str | None
+    posting_url: str | None
+    first_seen_date: date
+    last_seen_date: date
+    mention_count: int
+    is_saved: bool
+    has_application: bool
+    applied_on: date | None
+
+
 class MartsReader:
     """Queries and metadata calls against the marts dataset."""
 
@@ -58,30 +78,33 @@ class MartsReader:
         """Reach the marts dataset (a metadata call, not billed)."""
         await asyncio.to_thread(self._client.get_dataset, self._dataset)
 
-    async def applications_modified(self) -> datetime | None:
-        """When the applications table was last rebuilt (not billed)."""
-        table = f"{self._dataset}.{APPLICATIONS_TABLE}"
-        result = await asyncio.to_thread(self._client.get_table, table)
+    async def modified(self, table: str) -> datetime | None:
+        """When a marts table was last rebuilt (not billed)."""
+        result = await asyncio.to_thread(
+            self._client.get_table, f"{self._dataset}.{table}"
+        )
         modified: datetime | None = result.modified
         return modified
 
     async def applications(self) -> list[ApplicationRow]:
         """Every application, most recent activity first."""
-        return await asyncio.to_thread(self._applications)
+        rows = await asyncio.to_thread(self._query, APPLICATIONS_SQL)
+        return [ApplicationRow.model_validate(row) for row in rows]
 
-    def _applications(self) -> list[ApplicationRow]:
+    async def postings(self) -> list[PostingRow]:
+        """Every posting, newest first."""
+        rows = await asyncio.to_thread(self._query, POSTINGS_SQL)
+        return [PostingRow.model_validate(row) for row in rows]
+
+    def _query(self, sql: Path) -> list[dict[str, Any]]:
         config = bigquery.QueryJobConfig(
             default_dataset=self._dataset,
             maximum_bytes_billed=self._max_bytes_billed,
         )
         job = self._client.query(
-            APPLICATIONS_SQL.read_text(encoding="utf-8"),
-            job_config=config,
-            location=self._location,
+            sql.read_text(encoding="utf-8"), job_config=config, location=self._location
         )
-        return [
-            ApplicationRow.model_validate(dict(row.items())) for row in job.result()
-        ]
+        return [dict(row.items()) for row in job.result()]
 
 
 def marts_reader(settings: ApiSettings) -> MartsReader:

@@ -15,10 +15,15 @@ from fastapi.middleware.gzip import GZipMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from tracemail_api.auth.google import google_client
+from tracemail_api.cache import MartCache
 from tracemail_api.config import ApiSettings
-from tracemail_api.routes import applications, auth, health
-from tracemail_api.routes.applications import ApplicationCache
-from tracemail_api.warehouse import MartsReader, marts_reader
+from tracemail_api.routes import applications, auth, health, postings
+from tracemail_api.warehouse import (
+    ApplicationRow,
+    MartsReader,
+    PostingRow,
+    marts_reader,
+)
 
 SESSION_COOKIE = "tracemail_session"
 SAME_SITE: Literal["lax"] = "lax"
@@ -55,7 +60,8 @@ def create_app(
         app.state.settings = resolved
         app.state.google = google_client(resolved)
         app.state.marts = marts or marts_reader(resolved)
-        app.state.application_cache = ApplicationCache()
+        app.state.application_cache = MartCache[ApplicationRow]()
+        app.state.posting_cache = MartCache[PostingRow]()
         try:
             yield
         finally:
@@ -76,6 +82,7 @@ def create_app(
     app.include_router(auth.router)
     app.include_router(health.router)
     app.include_router(applications.router)
+    app.include_router(postings.router)
     return app
 
 

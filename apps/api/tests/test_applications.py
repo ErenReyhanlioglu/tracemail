@@ -5,7 +5,9 @@ from datetime import UTC, date, datetime
 
 from api_fakes import FakeMarts, api_client, application, sign_in
 
-from tracemail_api.routes.applications import MAX_PAGE_SIZE, ApplicationCache
+from tracemail_api.cache import MartCache
+from tracemail_api.routes.deps import MAX_PAGE_SIZE
+from tracemail_api.warehouse import ApplicationRow
 
 URL = "/api/v1/applications"
 ROWS = [application(f"app-{n}", date(2026, 10, 10 - n)) for n in range(5)]
@@ -50,16 +52,17 @@ def test_repeated_requests_reuse_the_cache_until_the_table_changes() -> None:
         client.get(URL)
         client.get(URL)
         assert marts.queries == 1
-        marts.modified = datetime(2026, 10, 2, tzinfo=UTC)
+        marts.last_modified = datetime(2026, 10, 2, tzinfo=UTC)
         client.get(URL)
     assert marts.queries == 2
 
 
-def test_cache_rereads_when_the_local_date_changes() -> None:
+def test_cache_rereads_only_when_its_key_changes() -> None:
     marts = FakeMarts(ROWS)
-    cache = ApplicationCache()
+    cache: MartCache[ApplicationRow] = MartCache()
+    modified = marts.last_modified
     for day in (10, 10, 11):
-        asyncio.run(cache.rows(marts, date(2026, 10, day)))
+        asyncio.run(cache.rows((modified, date(2026, 10, day)), marts.applications))
     assert marts.queries == 2
 
 

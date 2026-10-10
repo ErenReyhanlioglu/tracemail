@@ -57,11 +57,35 @@ def test_check_and_modified_are_metadata_calls_on_marts() -> None:
     client.get_table.return_value.modified = datetime(2026, 10, 1, tzinfo=UTC)
     reader = reader_with(client)
     asyncio.run(reader.check())
-    modified = asyncio.run(reader.applications_modified())
+    modified = asyncio.run(reader.modified("dim_applications"))
     client.get_dataset.assert_called_once_with("test-project.marts")
     client.get_table.assert_called_once_with("test-project.marts.dim_applications")
     assert modified == datetime(2026, 10, 1, tzinfo=UTC)
     client.query.assert_not_called()
+
+
+def test_postings_query_maps_rows_with_the_same_guardrails() -> None:
+    client = MagicMock()
+    row = {
+        "posting_key": "p-1",
+        "title": "Example Role",
+        "company": None,
+        "location": None,
+        "posting_url": None,
+        "first_seen_date": date(2026, 10, 1),
+        "last_seen_date": date(2026, 10, 2),
+        "mention_count": 2,
+        "is_saved": True,
+        "has_application": False,
+        "applied_on": None,
+    }
+    client.query.return_value.result.return_value = [MagicMock(items=row.items)]
+    rows = asyncio.run(reader_with(client).postings())
+    assert [(r.posting_key, r.is_saved) for r in rows] == [("p-1", True)]
+    sql: str = client.query.call_args.args[0]
+    assert "from dim_postings" in sql and "marts." not in sql
+    config: bigquery.QueryJobConfig = client.query.call_args.kwargs["job_config"]
+    assert config.maximum_bytes_billed == 1_000_000
 
 
 def test_close_closes_the_client() -> None:
