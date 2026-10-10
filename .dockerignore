@@ -1,0 +1,23 @@
+# Build context for apps/airflow/Dockerfile is the repository root. Only
+# what the image needs goes in; secrets and private config never do.
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+.git
+.github
+.env
+.env.*
+!.env.example
+**/*.json.key
+**/*-key.json
+infra/config/*.yaml
+!infra/config/*.example.yaml
+dbt/target
+dbt/dbt_packages
+dbt/logs
+dbt/.user.yml
+docs
+apps/web
+packages/*/tests

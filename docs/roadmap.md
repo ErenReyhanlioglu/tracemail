@@ -4,7 +4,8 @@ Build order and current position. Scope per phase is defined in
 [SUMMARY.md](../SUMMARY.md); decisions in [adr/](adr/README.md).
 
 **Current phase:** Phase 1 — Core
-**Current step:** 1.5 (`feat/dbt-core-models`) — 1.0 to 1.4 done
+**Current step:** 1.7 (`feat/airflow-stack`) — 1.0 to 1.5 done; 1.6 waits for
+the LinkedIn data export (checklist F)
 
 Each step is one branch and one or more pull requests. A step is done when its
 "Done when" line is true on `main`.
@@ -25,7 +26,7 @@ open from any device, running hourly in production. No LLM.
 | 1.4 | `feat/landing-load` | BigQuery load jobs into `landing` (partition replace), run-record rows in `ops` | Loading the same interval twice leaves identical tables |
 | 1.5 | `feat/dbt-core-models` | Sources, staging, intermediate dedup, marts: applications (with a channel column), events, postings, companies; application status, waiting time, silence indicator (ADR-0024); dbt test results to `ops` (ADR-0023) | `dbt build` passes on dev with tests; an application's stage is correct for a hand-checked sample |
 | 1.6 | `feat/linkedin-history` | LinkedIn export through the same raw → parsed → landing path, merged with mail-derived applications | Historical applications appear once, not duplicated against mail |
-| 1.7 | `feat/airflow-stack` | Airflow image with three environments (ADR-0003), hourly DAG with `external_python` tasks and Cosmos (ADR-0013, ADR-0014), local Compose stack; decide ADR-0021; dbt build gate (ADR-0022); missed-runs metric (ADR-0020) | Stack runs locally end-to-end; a backfill of past days works; hourly runs stay within the GCS free tier |
+| 1.7 | `feat/airflow-stack` | Airflow image with three environments (ADR-0003), hourly DAG with `external_python` tasks and Cosmos (ADR-0013, ADR-0014), local Compose stack; dirty-day gating of parse, load, and dbt (ADR-0021, ADR-0022); missed-runs metric (ADR-0020) | Stack runs locally end-to-end; a backfill of past days works; hourly runs stay within the GCS free tier |
 | 1.8 | `feat/more-parsers` | Further LinkedIn templates seen in real mail; a parser for another source only where the raw inventory shows enough volume; decide how sent mail (direct applications) enters ingestion | Parse health is recorded per LinkedIn template and for other senders combined; unclaimed mail is counted as "other" |
 | 1.9 | `feat/api-owner-auth` | FastAPI: Google Sign-In (ADR-0015), owner session, read endpoint for applications, `/health`, public/private privacy test | Owner logs in on localhost; any other account is refused; privacy test passes |
 | 1.10 | `feat/web-application-list` | Next.js standalone app: login, minimal read-only application list, design tokens | Owner sees real applications in the browser locally |
@@ -43,8 +44,15 @@ These are recorded as unverified in ADRs; each is checked at the step named.
   Verified 2026-10-09 and moved ahead of 1.5: in 90 days of raw mail, 6 viewed
   and 4 rejection mails; both are HTML-only templates, parsed since parser
   version 3. No "resume downloaded" mail was seen.
-- `external_python` subprocess inherits environment variables — 1.7
+- ~~`external_python` subprocess inherits environment variables — 1.7~~
+  Verified 2026-10-09: a `dags test` run of the hourly DAG read IMAP, GCS, and
+  BigQuery settings from the scheduler's environment inside `pipeline_venv`.
 - Cosmos DAG-parsing load is acceptable on the VM — 1.7 / 1.11
+  Measured locally 2026-10-10 (amd64): the DAG file (52 tasks, manifest
+  rendering) parses in 6.6 s, and the DAG processor re-parses it every 30 s by
+  default. Measure on the VM; if the load is too high, lengthen
+  `[dag_processor] min_file_process_interval`, since the file only changes on
+  deploy.
 - Oracle web-console emergency access works when Tailscale is down — 1.11
 - Free Ampere capacity in `eu-frankfurt-1` — 1.11
 
@@ -57,9 +65,10 @@ These are recorded as unverified in ADRs; each is checked at the step named.
 
 ### Decisions still needed in Phase 1
 
-- **GCS operations under hourly runs** — [ADR-0021](adr/0021-gcs-operations-under-hourly-runs.md)
-  (Proposed) — before 1.7 is done.
 - **UI copy language** (Turkish or English) — before 1.10.
+- **GCS Class A headroom** — [ADR-0030](adr/0030-gcs-class-a-headroom.md)
+  (Proposed) — mandatory when projected monthly Class A use exceeds 85%
+  (CLAUDE.md, 85% rule).
 
 ---
 
@@ -88,6 +97,13 @@ Things only the owner can do. Each lists the first step that needs it.
 
 - [x] A few real sample mails per template, redacted together before they
       enter the repository
+
+### F. Before 1.6
+
+- [ ] LinkedIn full data archive (Settings → Data privacy → Get a copy of
+      your data → the full archive; job applications are not offered as a
+      separate file). Download it outside the repository; only the job
+      application file will be ingested.
 
 ### D. Before 1.9
 

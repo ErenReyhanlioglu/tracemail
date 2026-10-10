@@ -358,9 +358,10 @@ company correspondence). This section overrides convenience.
   The stack must fit the Always Free ARM VM.
 - Airflow 3.3.x on Python 3.12, pinned to an exact patch version and installed
   with its constraint file (ADR-0013). Python 3.12 everywhere.
-- dbt runs through Cosmos (`ExecutionMode.LOCAL`, `dbt_executable_path` →
-  `dbt_venv`), one Airflow task per model and test (ADR-0014). Cosmos lives in
-  the Airflow environment; dbt never does.
+- dbt runs through Cosmos (`ExecutionMode.WATCHER`, `dbt_executable_path` →
+  `dbt_venv`): one `dbt build` per run, with one Airflow sensor task per model
+  and test (ADR-0014, ADR-0029). Cosmos lives in the Airflow environment; dbt
+  never does. The stack includes the triggerer for the deferrable sensors.
 - Each run writes a run-record row (start, end, status, counts per stage) to
   BigQuery. The health panel is built from these rows, not from Airflow's
   metadata DB.
@@ -561,6 +562,11 @@ alert postings that have only a title.
 - Cost is estimated from operation counts × unit prices kept in one config
   file, each price with its source URL and check date — researched, never
   from memory. Free-tier usage is reported alongside cost.
+- **85% rule.** When the measured or projected monthly use of any free-tier
+  allowance (GCS Class A / Class B operations, GCS storage, BigQuery query
+  bytes, BigQuery storage, and later the LLM budget) exceeds 85%, an
+  optimization is mandatory, not optional: record the options in an ADR and
+  implement one before adding work that uses the same allowance.
 - **Optimizations are measured before and after.** Never claim a change is
   faster or cheaper without both numbers; until measured, call it an
   expectation.

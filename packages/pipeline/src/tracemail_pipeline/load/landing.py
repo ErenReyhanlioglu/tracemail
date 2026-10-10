@@ -11,6 +11,7 @@ any range leaves identical tables; ``landing_fingerprints`` checks exactly that.
 import hashlib
 import logging
 import time
+from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date, timedelta
 
@@ -86,15 +87,14 @@ def landing_schema_version() -> str:
 
 
 def load_landing(
-    warehouse: Warehouse, dataset: str, bucket: str, start: date, end: date
+    warehouse: Warehouse, dataset: str, bucket: str, days: Sequence[date]
 ) -> LoadLandingResult:
-    """Replace the ``[start, end)`` partitions of every landing table."""
+    """Replace the given days' partitions of every landing table."""
     started = time.perf_counter()
     result = LoadLandingResult()
     for record_type, model in LANDING_MODELS.items():
         warehouse.ensure_table(dataset, record_type, schema_for(model), PARTITION_FIELD)
     result.seconds_ensure_tables = time.perf_counter() - started
-    days = [start + ONE_DAY * offset for offset in range((end - start).days)]
     partitions = [(record_type, day) for day in days for record_type in LANDING_MODELS]
     started_load = time.perf_counter()
     with ThreadPoolExecutor(max_workers=LOAD_CONCURRENCY) as pool:

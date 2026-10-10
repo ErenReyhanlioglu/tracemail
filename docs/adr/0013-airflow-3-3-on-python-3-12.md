@@ -1,7 +1,7 @@
 # ADR-0013: Airflow 3.3 on Python 3.12
 
 **Date:** 2026-10-04
-**Status:** Accepted (not yet implemented)
+**Status:** Accepted
 
 ## Context
 
@@ -28,6 +28,37 @@ same Python version as Airflow.
 
 Upgrades within 3.3 (patch releases) are routine. Moving to a new minor line
 is a deliberate change: tried in dev first, then released.
+
+## Implementation findings (step 1.7, 2026-10-09 to 2026-10-10)
+
+Airflow 3.3.2 (`apache/airflow:3.3.2-python3.12`, Cosmos 1.15.1) behaves
+differently from Airflow 2 in three ways that affected this DAG. Each was
+found by a real run and verified in the image:
+
+1. **Cron strings have no data interval.** `[scheduler]
+   create_cron_data_intervals` defaults to `False`, so `schedule="@hourly"`
+   gives runs whose `data_interval_start` equals `data_interval_end`. The DAG
+   uses `CronDataIntervalTimetable("0 * * * *", timezone="UTC")` so each run
+   covers its hour and starts when the hour ends.
+2. **`dag_run.run_type` renders as `DagRunType.SCHEDULED` in templates.** The
+   Task SDK's enum stringifies to its name, not its value (the CLI's
+   `tasks render` shows `scheduled`, which hid the problem). The DAG passes
+   `run_type.value`, and the pipeline rejects unknown run types
+   (`UnknownRunTypeError`) instead of treating them as manual runs; before
+   the fix every scheduled run processed the full window.
+3. **`airflow dags test` runs tasks one at a time** unless given
+   `--use-executor`. With the Cosmos watcher (ADR-0029) a sensor then waits
+   for a producer that never starts; `just dag-test` passes the flag.
+
+Also observed: before each `@task.external_python` task Airflow probes the
+venv with `python -c "import pendulum"`; the logged ModuleNotFoundError is
+expected, because pendulum is not a pipeline dependency. Restarting the
+scheduler while a watcher build runs interrupts the producer, and the
+sensors then re-run their nodes one by one; such re-runs are recorded as
+`dbt_node_retry`, not as builds.
+
+The local stack idles at about 1.2 GB of memory (scheduler 385 MB, triggerer
+258 MB, API server 247 MB, DAG processor 200 MB, Postgres 79 MB).
 
 ## Rationale
 

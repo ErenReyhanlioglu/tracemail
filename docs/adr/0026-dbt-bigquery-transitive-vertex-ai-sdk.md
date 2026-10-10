@@ -30,6 +30,12 @@ brings (`google-genai`); the largest items are `pyarrow` (86 MB) and `pandas`
 (36 MB) from the `pandas` extra. The size in the `linux/arm64` Airflow image
 is measured in step 1.7.
 
+Measured 2026-10-09 in the `linux/amd64` Airflow image (step 1.7): the dbt
+environment's packages take 713 MB, of which about 179 MB are the Vertex AI
+SDK family (`aiplatform` v1 and v1beta1, `vertexai`, `google-genai`) and
+282 MB `pyarrow`, `pandas`, and `numpy`; the whole image is 1.15 GB. The
+`linux/arm64` size is measured when CI builds that image (step 1.11).
+
 ## Decision
 
 Accept `google-cloud-aiplatform` and its dependencies as **transitive**

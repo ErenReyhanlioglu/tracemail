@@ -88,8 +88,27 @@ dbt-freshness:
 
 # Start the local Compose stack
 up:
-    docker compose -f {{compose_file}} up -d
+    docker compose -f {{compose_file}} --env-file .env up -d --build
 
 # Stop the local Compose stack
 down:
-    docker compose -f {{compose_file}} down
+    docker compose -f {{compose_file}} --env-file .env down
+
+# Run an Airflow CLI command with the pipeline runtime, e.g. just airflow dags list
+airflow *args:
+    docker compose -f {{compose_file}} --env-file .env run --rm airflow-cli {{args}}
+
+# DAG integrity check inside the image: import errors, then the DAG's tasks
+dag-check:
+    docker compose -f {{compose_file}} --env-file .env run --rm airflow-cli dags list-import-errors
+    docker compose -f {{compose_file}} --env-file .env run --rm airflow-cli tasks list tracemail_hourly
+
+# Run the whole DAG once for a logical date, e.g. just dag-test 2026-10-09T12:00:00+00:00.
+# --use-executor is required: in watcher mode (ADR-0029) the dbt producer and its
+# sensors must run in parallel, which the default serial test mode cannot do.
+dag-test logical_date:
+    docker compose -f {{compose_file}} --env-file .env run --rm airflow-cli dags test tracemail_hourly {{logical_date}} --use-executor
+
+# Show the generated Airflow login password for the user "owner"
+airflow-password:
+    docker compose -f {{compose_file}} --env-file .env exec airflow-apiserver cat /opt/airflow/state/passwords.json

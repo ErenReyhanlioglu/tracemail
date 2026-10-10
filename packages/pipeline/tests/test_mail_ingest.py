@@ -3,7 +3,7 @@
 import hashlib
 import logging
 from collections.abc import Callable
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Any
 
 import pytest
@@ -105,6 +105,25 @@ def test_ingest_keys_mail_without_message_id_by_raw_bytes_and_stays_idempotent(
     assert counts(first) == expected(listed=1, written=1)
     assert counts(second) == expected(listed=1, already_stored=1)
     assert list(fake_store.objects) == [f"{KEY_PREFIX}{digest}.eml"]
+
+
+def test_ingest_reports_the_received_days_that_got_new_mail_once_each(
+    make_fake_imap: Callable[..., Any],
+    make_reader: Callable[[Any], Any],
+    message_factory: Callable[..., Any],
+    fake_store: Any,
+) -> None:
+    messages = {
+        "1": message_factory("hr@company.example", "<a@c>"),
+        "2": message_factory("hr@company.example", "<b@c>"),
+        "3": message_factory(
+            "hr@company.example", "<c@c>", internal_date="02-Oct-2026 09:15:00 +0000"
+        ),
+    }
+    first = run(make_reader(make_fake_imap(messages)), fake_store)
+    again = run(make_reader(make_fake_imap(messages)), fake_store)
+    assert first.written_days == [date(2026, 10, 2), date(2026, 10, 4)]
+    assert again.written_days == []
 
 
 def test_ingest_reports_operations_bytes_and_timings(

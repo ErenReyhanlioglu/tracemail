@@ -8,6 +8,7 @@ from pydantic import ValidationError
 
 from tracemail_pipeline import cli
 from tracemail_pipeline.config import PipelineSettings
+from tracemail_pipeline.dates import day_start_utc
 
 ENV = {
     "TRACEMAIL_IMAP_HOST": "imap.example.com",
@@ -45,7 +46,7 @@ def test_parser_requires_a_command() -> None:
 
 
 def test_day_start_utc_returns_midnight_utc() -> None:
-    assert cli.day_start_utc(date(2026, 10, 4)) == datetime(2026, 10, 4, tzinfo=UTC)
+    assert day_start_utc(date(2026, 10, 4)) == datetime(2026, 10, 4, tzinfo=UTC)
 
 
 def test_main_dispatches_ingest_mail_with_parsed_dates(
@@ -77,6 +78,21 @@ def test_main_dispatches_parse_mail_with_parsed_dates(
     monkeypatch.setattr(cli, "run_parse_mail", lambda *a: calls.append(a))
     cli.main(["parse-mail", "--start-date", "2026-10-01", "--end-date", "2026-10-02"])
     assert (calls[0][1], calls[0][2]) == (date(2026, 10, 1), date(2026, 10, 2))
+
+
+@pytest.mark.parametrize(
+    ("extra", "job_name"),
+    [([], "dbt_build"), (["--job-name", "dbt_node_retry"], "dbt_node_retry")],
+)
+def test_main_dispatches_record_dbt_build_with_its_job_name(
+    env: None, monkeypatch: pytest.MonkeyPatch, extra: list[str], job_name: str
+) -> None:
+    calls: list[tuple[Any, ...]] = []
+    monkeypatch.setattr(cli, "run_record_dbt_build", lambda *a: calls.append(a))
+    cli.main(
+        ["record-dbt-build", "--run-results", "r.json", "--manifest", "m.json", *extra]
+    )
+    assert calls[0][3] == job_name
 
 
 def test_main_dispatches_list_mailboxes(

@@ -1,7 +1,7 @@
 # ADR-0022: dbt Builds Only When Landing Changes
 
 **Date:** 2026-10-09
-**Status:** Accepted (gate not yet implemented; step 1.7)
+**Status:** Accepted
 
 ## Context
 
@@ -97,6 +97,13 @@ Option B, extending the dirty-partition signal proposed in ADR-0021:
 The gate itself (skip dbt when nothing is dirty) is implemented in step 1.7
 together with ADR-0021. In step 1.5, dbt runs manually and the per-build cost
 is measured.
+
+**Measured with the gate in place (2026-10-09 to 2026-10-10, 20 scheduled
+hourly runs, step 1.7).** dbt ran in 8 of 20 runs: 7 runs with new mail and
+the daily full-window run; the 12 runs without new mail skipped it. Each
+build billed 1.23 GB (9.8 GB in total). At that rate a month comes to about
+355 GB, about 35% of the free tier, close to the estimate for option B.
+Building every hour would have billed about 885 GB (86%).
 
 ## Rationale
 

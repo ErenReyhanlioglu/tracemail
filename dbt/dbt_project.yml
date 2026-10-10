@@ -43,6 +43,21 @@ vars:
   volume_drop_ratio: 0.5
   # Job name of dbt builds in ops.pipeline_runs (set by record-dbt-build).
   dbt_build_job: "dbt_build"
+  # First hour the scheduled DAG covered (step 1.7); hours before it are not
+  # expected, so they are never counted as missed.
+  hourly_schedule_start: "2026-10-09 20:00:00+00"
+  # Monthly free tiers, per billing account (checked 2026-10-10):
+  # https://docs.cloud.google.com/free/docs/free-cloud-features and
+  # https://cloud.google.com/bigquery/pricing (1 TiB of query bytes).
+  free_tier_gcs_class_a: 5000
+  free_tier_gcs_class_b: 50000
+  free_tier_bigquery_query_bytes: 1099511627776
+  # Projected use above this share of a free tier makes optimization
+  # mandatory (CLAUDE.md, 85% rule).
+  free_tier_action_share: 0.85
+  # The month-end projection carries the rate of this many recent hours over
+  # the rest of the month.
+  projection_lookback_hours: 24
 
 models:
   tracemail:

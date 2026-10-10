@@ -30,6 +30,27 @@ models:
       - name: week_start
         data_tests: [unique, not_null]
 
+  - name: fct_hourly_runs
+    description: >
+      One row per hour the hourly DAG should have covered; missed hours have
+      no ingestion run record (ADR-0020).
+    columns:
+      - name: hour_start
+        data_tests: [unique, not_null]
+
+  - name: fct_free_tier_usage
+    description: >
+      Current month's free-tier use per allowance from run records, projected
+      to month end; flags allowances over the 85% rule (CLAUDE.md).
+    columns:
+      - name: allowance
+        data_tests:
+          - unique
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [gcs_class_a, gcs_class_b, bigquery_query_bytes]
+
   - name: fct_dbt_builds
     description: One row per recorded dbt build with tests, cost, and coverage.
     columns:
