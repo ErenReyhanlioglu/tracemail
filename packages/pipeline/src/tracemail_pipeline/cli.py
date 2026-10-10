@@ -36,6 +36,13 @@ DATE_RANGE_COMMANDS = {
 }
 
 
+# Run-record job names for dbt (ADR-0023, ADR-0029): a whole watcher build,
+# or a single node a consumer sensor re-ran after the producer failed.
+DBT_BUILD_JOB = "dbt_build"
+DBT_NODE_RETRY_JOB = "dbt_node_retry"
+DBT_JOB_NAMES = (DBT_BUILD_JOB, DBT_NODE_RETRY_JOB)
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build the argument parser with one subcommand per pipeline step."""
     parser = argparse.ArgumentParser(prog="tracemail-pipeline")
@@ -46,6 +53,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     record.add_argument("--run-results", type=Path, nargs="+", required=True)
     record.add_argument("--manifest", type=Path, required=True)
+    record.add_argument(
+        "--job-name",
+        choices=DBT_JOB_NAMES,
+        default=DBT_BUILD_JOB,
+        help="dbt_build for a whole build; dbt_node_retry for a node a watcher "
+        "sensor re-ran on its own (ADR-0029)",
+    )
     for name, help_text in DATE_RANGE_COMMANDS.items():
         command = commands.add_parser(name, help=help_text)
         command.add_argument("--start-date", type=date.fromisoformat, required=True)
@@ -100,11 +114,14 @@ def run_raw_inventory(settings: PipelineSettings, start: date, end: date) -> Non
 
 
 def run_record_dbt_build(
-    settings: PipelineSettings, run_results: list[Path], manifest: Path
+    settings: PipelineSettings,
+    run_results: list[Path],
+    manifest: Path,
+    job_name: str = DBT_BUILD_JOB,
 ) -> None:
     """Record a finished dbt build in ops; fails if any dbt node failed."""
     context = RunContext(
-        job_name="dbt_build",
+        job_name=job_name,
         inputs=lineage_names(
             "bq", [f"{settings.bq_landing_dataset}.{name}" for name in LANDING_MODELS]
         ),
@@ -140,7 +157,9 @@ def main(argv: Sequence[str] | None = None) -> None:
         case "landing-check":
             run_landing_check(settings, args.start_date, args.end_date)
         case "record-dbt-build":
-            run_record_dbt_build(settings, args.run_results, args.manifest)
+            run_record_dbt_build(
+                settings, args.run_results, args.manifest, args.job_name
+            )
 
 
 if __name__ == "__main__":

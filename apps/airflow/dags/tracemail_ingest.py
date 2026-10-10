@@ -13,8 +13,9 @@ included (ADR-0022).
 dbt runs through Cosmos in watcher mode (ADR-0029): one ``dbt build`` in
 dbt_venv, one sensor task per model and test. The DAG is rendered from the
 manifest compiled into the image, so parsing this file never runs dbt. After
-the build, failed or not, the callback records it in ``ops`` with the
-pipeline's ``record-dbt-build`` command (ADR-0023).
+the build, failed or not, the producer's callback records it in ``ops``
+with the pipeline's ``record-dbt-build`` command (ADR-0023); a node that a
+sensor re-runs on its own is recorded as ``dbt_node_retry``, not as a build.
 
 Before each external_python task, Airflow probes the venv with
 ``python -c "import pendulum"``; the resulting ModuleNotFoundError in the
@@ -28,6 +29,7 @@ from pathlib import Path
 from typing import Any
 
 from airflow.sdk import dag, task
+from airflow.timetables.interval import CronDataIntervalTimetable
 from cosmos import (
     DbtTaskGroup,
     ExecutionConfig,
@@ -45,6 +47,17 @@ DBT_PROJECT = Path("/opt/airflow/dbt")
 # The dev target until the production project exists (step 1.11).
 DBT_TARGET = "dev"
 START_DATE = datetime(2026, 10, 9, tzinfo=UTC)
+# Hourly runs with real one-hour data intervals. Airflow 3 turns a plain cron
+# string into a trigger timetable whose runs have zero-length intervals
+# ([scheduler] create_cron_data_intervals = False); the interval timetable
+# keeps data_interval_start/end one hour apart, so each run covers its hour.
+HOURLY = CronDataIntervalTimetable("0 * * * *", timezone="UTC")
+# The Task SDK renders dag_run.run_type as "DagRunType.SCHEDULED"; its value
+# is the plain run type the pipeline expects (verified 2026-10-10).
+RUN_TYPE = (
+    "{{ dag_run.run_type.value if dag_run.run_type.value is defined "
+    "else dag_run.run_type }}"
+)
 
 # Network-bound steps retry with exponential backoff (CLAUDE.md, Airflow).
 DEFAULT_ARGS = {
@@ -56,11 +69,11 @@ DEFAULT_ARGS = {
 }
 
 
-def record_dbt_build(project_dir: str, **kwargs: Any) -> None:
-    """Cosmos callback: record the build's artifacts in ops (ADR-0023).
+def _record(project_dir: str, job_name: str) -> None:
+    """Record the dbt artifacts in ``project_dir`` in ops (ADR-0023).
 
-    Runs after the build whether it passed or failed. A recording failure is
-    logged, not raised, so it never hides the build's own outcome.
+    A recording failure is logged, not raised, so it never hides the dbt
+    command's own outcome.
     """
     target = Path(project_dir) / "target"
     command = [
@@ -72,15 +85,29 @@ def record_dbt_build(project_dir: str, **kwargs: Any) -> None:
         str(target / "run_results.json"),
         "--manifest",
         str(target / "manifest.json"),
+        "--job-name",
+        job_name,
     ]
     completed = subprocess.run(command, check=False)
     if completed.returncode != 0:
         logger.warning("record-dbt-build exited with %d", completed.returncode)
 
 
+def record_dbt_build(project_dir: str, **kwargs: Any) -> None:
+    """Producer callback: the whole watcher build, passed or failed."""
+    _record(project_dir, "dbt_build")
+
+
+def record_dbt_node_retry(project_dir: str, **kwargs: Any) -> None:
+    """Consumer callback: a node a sensor re-ran on its own after the
+    producer failed or was interrupted (ADR-0029), recorded separately so it
+    never counts as a build."""
+    _record(project_dir, "dbt_node_retry")
+
+
 @dag(
     dag_id="tracemail_hourly",
-    schedule="@hourly",
+    schedule=HOURLY,
     start_date=START_DATE,
     catchup=False,
     # Runs reload overlapping windows; two at once could interleave partition
@@ -130,15 +157,17 @@ def tracemail_hourly() -> None:
         execution_config=ExecutionConfig(
             execution_mode=ExecutionMode.WATCHER,
             dbt_executable_path=DBT_EXECUTABLE,
+            # Overrides operator_args for the producer only.
+            setup_operator_args={"callback": record_dbt_build},
         ),
         render_config=RenderConfig(load_method=LoadMode.DBT_MANIFEST),
-        operator_args={"install_deps": False, "callback": record_dbt_build},
+        operator_args={"install_deps": False, "callback": record_dbt_node_retry},
     )
 
     days = ingest_mail(
         "{{ data_interval_start.isoformat() }}",
         "{{ data_interval_end.isoformat() }}",
-        "{{ dag_run.run_type }}",
+        RUN_TYPE,
     )
     parsed = parse_mail(days)
     has_new_days(days) >> parsed

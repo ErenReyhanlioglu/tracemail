@@ -47,6 +47,12 @@ LOG_FORMAT = "%(asctime)s %(levelname)s %(name)s: %(message)s"
 # Airflow's run type for runs created by the schedule; manual runs and
 # backfills always process the full window.
 SCHEDULED_RUN_TYPE = "scheduled"
+# Every run type Airflow 3 creates. Anything else (for example an enum
+# rendered as "DagRunType.SCHEDULED") is a wiring error and must fail loudly,
+# not silently turn every hourly run into a full-window run.
+KNOWN_RUN_TYPES = frozenset(
+    {"scheduled", "manual", "backfill", "asset_triggered", "asset_materialization"}
+)
 # The scheduled run whose interval starts at this UTC hour processes the full
 # window (the daily safety net of ADR-0021).
 FULL_WINDOW_HOUR_UTC = 0
@@ -78,8 +84,14 @@ def parsed_names(settings: PipelineSettings) -> list[str]:
     )
 
 
+class UnknownRunTypeError(ValueError):
+    """The DAG passed a run type this module does not recognize."""
+
+
 def is_full_window(run_type: str, interval_start: datetime) -> bool:
     """Whether a run processes the whole ingestion window, not only new days."""
+    if run_type not in KNOWN_RUN_TYPES:
+        raise UnknownRunTypeError(f"Unknown Airflow run type: {run_type}")
     if run_type != SCHEDULED_RUN_TYPE:
         return True
     return interval_start.astimezone(UTC).hour == FULL_WINDOW_HOUR_UTC

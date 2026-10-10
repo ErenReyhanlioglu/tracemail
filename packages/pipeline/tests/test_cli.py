@@ -80,6 +80,21 @@ def test_main_dispatches_parse_mail_with_parsed_dates(
     assert (calls[0][1], calls[0][2]) == (date(2026, 10, 1), date(2026, 10, 2))
 
 
+@pytest.mark.parametrize(
+    ("extra", "job_name"),
+    [([], "dbt_build"), (["--job-name", "dbt_node_retry"], "dbt_node_retry")],
+)
+def test_main_dispatches_record_dbt_build_with_its_job_name(
+    env: None, monkeypatch: pytest.MonkeyPatch, extra: list[str], job_name: str
+) -> None:
+    calls: list[tuple[Any, ...]] = []
+    monkeypatch.setattr(cli, "run_record_dbt_build", lambda *a: calls.append(a))
+    cli.main(
+        ["record-dbt-build", "--run-results", "r.json", "--manifest", "m.json", *extra]
+    )
+    assert calls[0][3] == job_name
+
+
 def test_main_dispatches_list_mailboxes(
     env: None, monkeypatch: pytest.MonkeyPatch
 ) -> None:

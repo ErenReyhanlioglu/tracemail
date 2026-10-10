@@ -51,6 +51,14 @@ def test_full_window_runs_daily_and_on_every_manual_or_backfill_run(
     assert jobs.is_full_window(run_type, start) is expected
 
 
+@pytest.mark.parametrize("run_type", ["DagRunType.SCHEDULED", "", "Scheduled"])
+def test_unknown_run_type_fails_instead_of_processing_the_full_window(
+    run_type: str,
+) -> None:
+    with pytest.raises(jobs.UnknownRunTypeError):
+        jobs.is_full_window(run_type, datetime(2026, 10, 8, 10, tzinfo=UTC))
+
+
 def test_scheduled_hourly_run_returns_only_days_with_new_mail(
     recorded: list[tuple[str, Any]],
 ) -> None:
