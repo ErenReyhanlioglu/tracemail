@@ -45,3 +45,4 @@ written at the moment the decision is made — not drafted ahead of time.
 | [0028](0028-exclude-account-security-mail-by-subject.md) | Exclude Account-Security Mail by Subject | Accepted |
 | [0029](0029-cosmos-watcher-execution-mode.md) | Run dbt through Cosmos in Watcher Execution Mode | Accepted |
 | [0030](0030-gcs-class-a-headroom.md) | Keeping Class A Headroom as Mail Volume Grows | Proposed |
+| [0031](0031-sent-mail-is-a-phase-4-option.md) | Sent Mail Is Not Ingested; Direct Applications Are a Phase 4 Option | Accepted |

@@ -4,8 +4,8 @@ Build order and current position. Scope per phase is defined in
 [SUMMARY.md](../SUMMARY.md); decisions in [adr/](adr/README.md).
 
 **Current phase:** Phase 1 — Core
-**Current step:** 1.7 (`feat/airflow-stack`) — 1.0 to 1.5 done; 1.6 waits for
-the LinkedIn data export (checklist F)
+**Current step:** 1.8 (`feat/more-parsers`) — 1.0 to 1.5 and 1.7 done; 1.6
+waits for the LinkedIn data export (checklist F)
 
 Each step is one branch and one or more pull requests. A step is done when its
 "Done when" line is true on `main`.
@@ -27,7 +27,7 @@ open from any device, running hourly in production. No LLM.
 | 1.5 | `feat/dbt-core-models` | Sources, staging, intermediate dedup, marts: applications (with a channel column), events, postings, companies; application status, waiting time, silence indicator (ADR-0024); dbt test results to `ops` (ADR-0023) | `dbt build` passes on dev with tests; an application's stage is correct for a hand-checked sample |
 | 1.6 | `feat/linkedin-history` | LinkedIn export through the same raw → parsed → landing path, merged with mail-derived applications | Historical applications appear once, not duplicated against mail |
 | 1.7 | `feat/airflow-stack` | Airflow image with three environments (ADR-0003), hourly DAG with `external_python` tasks and Cosmos (ADR-0013, ADR-0014), local Compose stack; dirty-day gating of parse, load, and dbt (ADR-0021, ADR-0022); missed-runs metric (ADR-0020) | Stack runs locally end-to-end; a backfill of past days works; hourly runs stay within the GCS free tier |
-| 1.8 | `feat/more-parsers` | Further LinkedIn templates seen in real mail; a parser for another source only where the raw inventory shows enough volume; decide how sent mail (direct applications) enters ingestion | Parse health is recorded per LinkedIn template and for other senders combined; unclaimed mail is counted as "other" |
+| 1.8 | `feat/more-parsers` | Further LinkedIn templates seen in real mail; a parser for another source only where the raw inventory shows enough volume; sent mail (direct applications) deferred to Phase 4 ([ADR-0031](adr/0031-sent-mail-is-a-phase-4-option.md)) | Parse health is recorded per LinkedIn template and for other senders combined; unclaimed mail is counted as "other" |
 | 1.9 | `feat/api-owner-auth` | FastAPI: Google Sign-In (ADR-0015), owner session, read endpoint for applications, `/health`, public/private privacy test | Owner logs in on localhost; any other account is refused; privacy test passes |
 | 1.10 | `feat/web-application-list` | Next.js standalone app: login, minimal read-only application list, design tokens | Owner sees real applications in the browser locally |
 | 1.11 | `ci/deploy` | Prod GCP project, Oracle VM, Tailscale, Cloudflare Tunnel, `arm64` build to GHCR, deploy workflow, GitHub → GCP via WIF (ADR-0009, ADR-0010, ADR-0012, ADR-0016) | A merge to `main` deploys; the site is reachable on the domain with no open inbound ports |
@@ -139,4 +139,4 @@ guests; visitor skeletons. Ends with `v0.3.0`.
 
 Rough fit ranking with local embeddings (ADR-0001); text completion from
 public job pages; follow-up drafts; manual events and notes; a "correct"
-option on reports.
+option on reports; direct applications from sent mail (ADR-0031).

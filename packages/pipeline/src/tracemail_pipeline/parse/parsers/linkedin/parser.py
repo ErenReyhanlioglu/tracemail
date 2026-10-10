@@ -1,8 +1,10 @@
 """LinkedIn job-mail parser: detect the template, read cards, interpret them.
 
-Card templates use the plain-text part. Their HTML part carries one extra
-field (work mode: remote / hybrid / on-site) that the owner chose not to
-track; it stays in the raw zone and can be added later by replaying from raw.
+Card templates use the plain-text part, plus the HTML part's job link texts
+to recognize titles that wrap over several lines (``cards``). The HTML part
+carries one extra field (work mode: remote / hybrid / on-site) that the owner
+chose not to track; it stays in the raw zone and can be added later by
+replaying from raw.
 Application updates exist only in the HTML part (``updates``). Some templates
 are recognized and deliberately produce no records (``IGNORED_TEMPLATES``).
 """
@@ -18,6 +20,7 @@ from tracemail_pipeline.parse.base import (
     SourceMessage,
 )
 from tracemail_pipeline.parse.parsers.linkedin.cards import read_cards
+from tracemail_pipeline.parse.parsers.linkedin.html import read_html
 from tracemail_pipeline.parse.parsers.linkedin.templates import (
     IGNORED_TEMPLATES,
     TEMPLATES,
@@ -28,7 +31,7 @@ from tracemail_pipeline.parse.parsers.linkedin.updates import (
 )
 
 PARSER_NAME = "linkedin"
-PARSER_VERSION = "3"
+PARSER_VERSION = "4"
 SENDER_DOMAIN = "linkedin.com"
 PAGE_ID = re.compile(r"urn:li:page:(?P<page>[a-z0-9_]+)")
 
@@ -67,7 +70,8 @@ class LinkedInParser:
         spec = TEMPLATES.get(template)
         if spec is None:
             raise ParseError(f"Unknown LinkedIn template: {template}")
-        cards = read_cards(message.plain_text, spec.headers)
+        link_texts = {} if message.html is None else read_html(message.html).link_texts
+        cards = read_cards(message.plain_text, spec.headers, link_texts)
         sightings, actions = spec.interpret(origin, cards)
         return ParsedMessage(template=template, sightings=sightings, actions=actions)
 

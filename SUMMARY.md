@@ -114,7 +114,7 @@ clean URL.
   similarity to a profile summary, local embedding model), automatic
   text completion from companies' public job pages, follow-up email draft,
   manually adding events and notes from the interface, a "correct" option on
-  reports.
+  reports, recording direct applications from sent mail.
 
 ## Out of scope
 
@@ -134,6 +134,8 @@ formats, Kubernetes, and Azure.
 - **BigQuery is oversized for this data volume:** the justification is learning
   the tool.
 - **Developments outside of mail** cannot enter the system until phase four.
+- **Applications started by the owner's own mail** (cold applications) appear
+  only once the company replies; sent mail is not read until phase four.
 - **The button works only in a desktop browser**, and the system cannot know
   the text of a posting the user did not open.
 

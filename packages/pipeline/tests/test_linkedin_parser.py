@@ -128,7 +128,7 @@ def test_facet_suggestions_carry_each_facet_to_the_cards_below_it() -> None:
 def test_every_record_carries_parser_provenance() -> None:
     parsed = parse_fixture("linkedin_saved_job_reminder")
     records = [*parsed.sightings, *parsed.actions]
-    assert {(r.parser_name, r.parser_version) for r in records} == {("linkedin", "3")}
+    assert {(r.parser_name, r.parser_version) for r in records} == {("linkedin", "4")}
 
 
 @pytest.mark.parametrize(
@@ -185,6 +185,66 @@ def test_unknown_card_line_is_kept_without_shifting_core_fields() -> None:
     assert parsed is not None, outcome.reason
     first = parsed.sightings[0]
     assert (first.company, first.location) == ("Jobgether", "Türkiye")
+    assert first.unrecognized_lines == ["Yepyeni bir etiket"]
+
+
+FIRST_CARD = "AI Process Forward Deployed Engineer\nJobgether\nTürkiye\n"
+WRAPPED_FIRST_CARD = (
+    "AI Process Forward Deployed Engineer –\nTürkiye – Remote\nJobgether\nTürkiye\n"
+)
+WRAPPED_TITLE = "AI Process Forward Deployed Engineer – Türkiye – Remote"
+
+
+def job_link_html(job_id: str, text: str) -> str:
+    """A minimal HTML part: an image link and a card link wrapping a title link."""
+    href = f"https://www.linkedin.com/comm/jobs/view/{job_id}/?trackingId=x"
+    return (
+        f'<a href="{href}"><img></a><a href="{href}"><table><tr><td>'
+        f'<a href="{href}">\n{text}\n</a></td></tr>'
+        "<tr><td><p>Jobgether · Türkiye</p></td></tr></table></a>"
+    )
+
+
+def alert_with_first_card(card: str, html: str | None) -> ParsedMessage:
+    message = alert_message()
+    assert message.plain_text is not None
+    text = message.plain_text.replace(FIRST_CARD, card, 1)
+    outcome, parsed = parse_message(
+        message.model_copy(update={"plain_text": text, "html": html})
+    )
+    assert parsed is not None, outcome.reason
+    return parsed
+
+
+def test_title_wrapped_over_lines_is_joined_when_the_html_link_has_it_whole() -> None:
+    html = job_link_html("4471256693", WRAPPED_TITLE)
+    first = alert_with_first_card(WRAPPED_FIRST_CARD, html).sightings[0]
+    assert (first.title, first.company, first.location) == (
+        WRAPPED_TITLE,
+        "Jobgether",
+        "Türkiye",
+    )
+    assert first.unrecognized_lines == []
+
+
+def test_wrapped_title_without_html_falls_back_to_one_line_and_flags_the_rest() -> None:
+    first = alert_with_first_card(WRAPPED_FIRST_CARD, None).sightings[0]
+    assert (first.title, first.company) == (
+        "AI Process Forward Deployed Engineer –",
+        "Türkiye – Remote",
+    )
+    assert first.unrecognized_lines == ["Türkiye"]
+
+
+def test_new_badge_line_is_not_taken_into_a_single_line_html_title() -> None:
+    card = FIRST_CARD + "Yepyeni bir etiket\n"
+    html = job_link_html("4471256693", "AI Process Forward Deployed Engineer")
+    first = alert_with_first_card(card, html).sightings[0]
+    assert (first.title, first.company, first.location) == (
+        "AI Process Forward Deployed Engineer",
+        "Jobgether",
+        "Türkiye",
+    )
     assert first.unrecognized_lines == ["Yepyeni bir etiket"]
 
 
