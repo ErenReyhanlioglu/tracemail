@@ -1,0 +1,23 @@
+#cloud-config
+# First-boot setup of the production VM (Oracle Ampere A1, Ubuntu 24.04,
+# ADR-0016). Installs Docker and Tailscale and joins the tailnet, so the VM is
+# reachable over Tailscale SSH with no inbound port open to the internet.
+#
+# Before pasting this into the Oracle console, replace __TAILSCALE_AUTH_KEY__
+# with a one-off, pre-tagged (tag:prod-vm) auth key with a short expiry (see
+# README.md). The pasted copy stays in the instance metadata; the key is
+# useless once used or expired. Never commit a real key to this file.
+
+package_update: true
+package_upgrade: true
+packages:
+  - docker.io
+  - docker-compose-v2
+  - unattended-upgrades
+
+runcmd:
+  - timedatectl set-timezone UTC
+  - systemctl enable --now docker
+  - usermod -aG docker ubuntu
+  - curl -fsSL https://tailscale.com/install.sh | sh
+  - tailscale up --auth-key=__TAILSCALE_AUTH_KEY__ --ssh --hostname=tracemail-prod
