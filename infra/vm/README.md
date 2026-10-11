@@ -13,8 +13,10 @@ at about 1.6 GB (Airflow) plus the API and web app, so memory has room; the
 two cores are the tighter limit (see the Cosmos parse note in the roadmap).
 
 Oracle may reclaim an Always Free instance that is idle for 7 days: 95th
-percentile CPU, network, and (for A1) memory all below 20% [1]. The stack is
-expected to keep memory above that; check after deployment.
+percentile CPU, network, and (for A1) memory all below 20% [1]. After the
+first deploy the stack used about 16% of memory (see Continuous deployment),
+so memory alone may not keep the VM above the threshold; to be checked in
+the instance metrics after a week of hourly runs.
 
 ## Tailnet policy
 
@@ -73,9 +75,14 @@ The deploy job in `.github/workflows/ci.yml` runs after every push to
 1. **Tailscale federated identity** (admin console → Trust credentials →
    Credential → OpenID Connect): issuer GitHub
    (`https://token.actions.githubusercontent.com`), subject
-   `repo:ErenReyhanlioglu/tracemail:environment:production`, scope
-   `auth_keys` (write) with tag `tag:ci`. It returns a client ID and an
-   audience; neither is a secret.
+   `repo:ErenReyhanlioglu@116086022/tracemail@1403471837:environment:production`,
+   scope `auth_keys` (write) with tag `tag:ci`. It returns a client ID and an
+   audience; neither is a secret. The subject carries the owner's and the
+   repository's numeric IDs: GitHub uses this immutable format for
+   repositories created from 2026-07-15 [2], so a deleted and recreated
+   repository, or a reused owner name, cannot match it. The first deploy
+   failed with the name-only subject; Tailscale's credential page showed the
+   subject it received.
 2. **GitHub environment** `production` (repository Settings →
    Environments): deployment branches limited to `main`; environment
    variables `TS_CLIENT_ID` and `TS_AUDIENCE` from step 1. GitHub puts
@@ -83,15 +90,25 @@ The deploy job in `.github/workflows/ci.yml` runs after every push to
    federated identity trusts, so no other branch or workflow can join the
    tailnet.
 3. **GHCR packages public** (`tracemail-airflow`, `tracemail-api`,
-   `tracemail-web`): new packages are private, and the VM pulls anonymously.
-   The first deploy after the first push to `main` fails at the pull until
-   then; re-run its deploy job afterwards.
+   `tracemail-web`): the VM pulls anonymously. GitHub's documentation says
+   a new package starts private [3], but these three were public after the
+   first push from `main` with no change by the owner (anonymous manifest
+   requests returned HTTP 200). If a new package is private, make it public
+   in its package settings and re-run the deploy job.
 
 Each deploy job pins the VM's SSH host key from the tailnet, checks that
 `deploy` is refused an arbitrary command, SFTP, and port forwarding, then
 runs `deploy <SHA>`; the deploy script ends with a smoke test of
 `/api/v1/health` through the web app. Rollback: re-run the deploy job of an
 earlier successful run.
+
+First deploy (2026-10-11, commit `8cd9bca`): the deploy job took 4 min 5 s,
+including the first pull of every image. All three access checks were
+refused as expected, all services came up healthy, and the smoke test
+returned `{"status":"ok","bigquery":"ok"}`. Memory in use afterwards was
+1.8 of 11 GiB, below the 20% idle-reclamation threshold; whether the
+hourly runs keep the VM above it is to be read from the instance metrics
+after a week.
 
 ## Creating the VM
 
@@ -229,3 +246,5 @@ A copy of `.env.example` with production values. Differences from `.env`:
 ## References
 
 1. [Always Free Resources — Oracle Cloud Infrastructure Documentation](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm)
+2. [Immutable subject claims for GitHub Actions OIDC tokens — GitHub Changelog](https://github.blog/changelog/2026-04-23-immutable-subject-claims-for-github-actions-oidc-tokens/)
+3. [Configuring a package's access control and visibility — GitHub Docs](https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility)

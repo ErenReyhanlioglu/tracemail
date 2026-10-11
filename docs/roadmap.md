@@ -54,7 +54,14 @@ These are recorded as unverified in ADRs; each is checked at the step named.
   `[dag_processor] min_file_process_interval`, since the file only changes on
   deploy.
 - Oracle web-console emergency access works when Tailscale is down — 1.11
-- Free Ampere capacity in `eu-frankfurt-1` — 1.11
+- ~~Free Ampere capacity in `eu-frankfurt-1` — 1.11~~
+  Verified 2026-10-11: AD-3 had none; another availability domain did
+  (`infra/vm/README.md`).
+- The VM stays above Oracle's idle-reclamation threshold — 1.11
+  After the first deploy (2026-10-11) the stack used about 16% of memory,
+  below the 20% that, together with low CPU and network, marks an instance
+  idle. Read the 95th percentiles from the instance metrics after a week of
+  hourly runs; if all three stay below 20%, record the options in an ADR.
 
 ### Follow-ups
 

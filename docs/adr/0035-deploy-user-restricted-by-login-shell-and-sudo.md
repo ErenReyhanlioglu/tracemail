@@ -1,7 +1,7 @@
 # ADR-0035: Deploy User Restricted by Login Shell and One Sudo Rule
 
 **Date:** 2026-10-11
-**Status:** Accepted (not yet implemented)
+**Status:** Accepted
 
 ## Context
 

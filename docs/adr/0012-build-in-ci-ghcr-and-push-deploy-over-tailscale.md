@@ -1,7 +1,7 @@
 # ADR-0012: Build in CI, Publish to GHCR, Push-Deploy over Tailscale
 
 **Date:** 2026-10-03
-**Status:** Accepted (not yet implemented)
+**Status:** Accepted
 
 ## Context
 
