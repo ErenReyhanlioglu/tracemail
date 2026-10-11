@@ -5,6 +5,7 @@
 ![BigQuery](https://img.shields.io/badge/warehouse-BigQuery-669DF6?logo=googlebigquery&logoColor=white)
 ![Airflow](https://img.shields.io/badge/orchestration-Airflow%203.3-017CEE?logo=apacheairflow&logoColor=white)
 ![dbt](https://img.shields.io/badge/modeling-dbt-FF694B?logo=dbt&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 **An hourly data pipeline that turns a job-search mailbox into a tracked,
 measured, and explainable record of every application.**
@@ -224,3 +225,7 @@ exclusion list; see [.env.example](.env.example) for the settings it reads.
   still unverified
 - [infra/vm/README.md](infra/vm/README.md): production VM, deploy user, and
   continuous deployment, with what was verified on the VM
+
+## License
+
+[MIT](LICENSE)
