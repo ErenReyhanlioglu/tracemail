@@ -44,7 +44,7 @@ written at the moment the decision is made — not drafted ahead of time.
 | [0027](0027-close-silent-applications-after-30-days.md) | Open Applications Close without Reply after 30 Silent Days | Accepted |
 | [0028](0028-exclude-account-security-mail-by-subject.md) | Exclude Account-Security Mail by Subject | Accepted |
 | [0029](0029-cosmos-watcher-execution-mode.md) | Run dbt through Cosmos in Watcher Execution Mode | Accepted |
-| [0030](0030-gcs-class-a-headroom.md) | Keeping Class A Headroom as Mail Volume Grows | Proposed |
+| [0030](0030-gcs-class-a-headroom.md) | Keeping Class A Headroom as Mail Volume Grows | Accepted (option 2 implemented) |
 | [0031](0031-sent-mail-is-a-phase-4-option.md) | Sent Mail Is Not Ingested; Direct Applications Are a Phase 4 Option | Accepted |
 | [0032](0032-owner-login-implementation.md) | Owner Login Implementation — Authlib, a Signed Session Cookie, and Fixed Routes | Accepted |
 | [0033](0033-ui-copy-in-turkish.md) | User-Facing UI Copy Is Turkish | Accepted |
