@@ -30,8 +30,7 @@ Verified in the Tailscale source (`main`, read 2026-10-11):
   the user's home, `/tmp`, and `/run/user/<uid>`, so the Docker socket is
   out of reach [4].
 - sudo 1.9.10 and later accept a regular expression as a command argument
-  in a sudoers rule [5]; Ubuntu 24.04 ships a later version (to be confirmed
-  on the VM).
+  in a sudoers rule [5]; the VM runs sudo 1.9.15p5.
 
 Membership in the `docker` group is equivalent to root [6].
 
@@ -59,10 +58,16 @@ owner reinstalls them; a deploy never rewrites what sudo runs.
 The tailnet policy lets `tag:ci` SSH only to `tag:prod-vm`, only as `deploy`
 (action `accept`, since the job is non-interactive).
 
-ADR-0012's test requirement is met in two places: the VM setup checks the
-gate with `su -l deploy -c '<command>'` (the path Tailscale uses), and every
-deploy job first asserts that an arbitrary command is refused before it
-deploys.
+ADR-0012's test requirement is met in three places:
+
+- **CI, every pull request:** `infra/vm/test-deploy-gate.sh` runs the
+  unmodified gate on the runner against a stub deploy script, checks the
+  sudoers syntax, and checks the deploy script's argument validation.
+- **VM setup, once:** the gate is checked with `su -l deploy -c '<command>'`,
+  the path Tailscale uses, and the sudo rule with the gate bypassed
+  (`infra/vm/README.md`).
+- **Every deploy job:** before deploying, it asserts that an arbitrary
+  command, SFTP, and port forwarding are refused for `deploy` on the live VM.
 
 ## Rationale
 
