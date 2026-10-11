@@ -1,7 +1,7 @@
 # ADR-0010: Separate GCP Projects for Dev and Prod
 
 **Date:** 2026-10-03
-**Status:** Accepted (not yet implemented)
+**Status:** Accepted
 
 ## Context
 

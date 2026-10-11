@@ -1,7 +1,7 @@
 # ADR-0005: Access Model — Three Roles and Signed Share Links
 
 **Date:** 2026-10-03
-**Status:** Accepted (not yet implemented)
+**Status:** Accepted (owner role implemented; guest share links and visitor views in Phase 3)
 
 ## Context
 

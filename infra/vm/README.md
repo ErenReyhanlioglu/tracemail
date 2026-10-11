@@ -103,7 +103,15 @@ runs `deploy <SHA>`; the deploy script ends with a smoke test of
 earlier successful run.
 
 First deploy (2026-10-11, commit `8cd9bca`): the deploy job took 4 min 5 s,
-including the first pull of every image. All three access checks were
+including the first pull of every image. The next deploy (`dc18f29`, a
+documentation change) took 1 min 47 s: 4 s to join the tailnet and 1 min
+39 s for the checks, the deploy, and the smoke test; most of it is the stack
+restarting, since every commit gets a new image tag.
+
+Image builds on the arm64 runner (pull request runs, 2026-10-11): without a
+cache, airflow 3 min, web 2 min, api 39 s; with the layer cache, 20 s, 27 s,
+and 18 s. GitHub's cache is scoped by branch, so `main` cannot use a pull
+request's cache and its first build ran without one. All three access checks were
 refused as expected, all services came up healthy, and the smoke test
 returned `{"status":"ok","bigquery":"ok"}`. Memory in use afterwards was
 1.8 of 11 GiB, below the 20% idle-reclamation threshold; whether the

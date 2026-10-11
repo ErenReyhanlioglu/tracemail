@@ -1,7 +1,7 @@
 # ADR-0015: Owner Login with Google Sign-In, Handled by the API
 
 **Date:** 2026-10-04
-**Status:** Accepted (not yet implemented)
+**Status:** Accepted
 
 ## Context
 

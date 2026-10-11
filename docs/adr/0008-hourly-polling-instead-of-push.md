@@ -1,7 +1,7 @@
 # ADR-0008: Hourly Polling Instead of Push
 
 **Date:** 2026-10-03
-**Status:** Accepted (not yet implemented)
+**Status:** Accepted
 
 ## Context
 

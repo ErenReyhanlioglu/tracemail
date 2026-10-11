@@ -1,7 +1,7 @@
 # ADR-0002: Release Tagging and Versioning
 
 **Date:** 2026-10-03
-**Status:** Accepted (not yet implemented)
+**Status:** Accepted (deploys from `main` implemented; the first tag is cut at the Phase 1 exit)
 
 ## Context
 

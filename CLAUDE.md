@@ -600,6 +600,9 @@ is published.
 - Build and deploy follow ADR-0012: images built on a native `arm64` runner,
   published publicly to GHCR, deployed by a job that joins the tailnet via
   OIDC and runs the deploy script over SSH.
+- The deploy user runs only `deploy <commit SHA>` (ADR-0035). A change to
+  `infra/vm/deploy.sh` or `deploy-gate.sh` must pass
+  `infra/vm/test-deploy-gate.sh` in CI and is reinstalled on the VM by hand.
 - SSH on the VM listens only on the Tailscale interface; never open port 22
   to the internet. No long-lived VM credential is stored in GitHub.
 - The VM has **no inbound port open to the internet** (ADR-0016). Public web

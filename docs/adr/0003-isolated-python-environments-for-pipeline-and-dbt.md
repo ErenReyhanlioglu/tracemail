@@ -1,7 +1,7 @@
 # ADR-0003: Isolated Python Environments for Pipeline Code and dbt
 
 **Date:** 2026-10-03
-**Status:** Accepted (not yet implemented)
+**Status:** Accepted
 
 ## Context
 

@@ -1,7 +1,7 @@
 # ADR-0014: dbt 1.x Orchestrated with Cosmos
 
 **Date:** 2026-10-04
-**Status:** Accepted (not yet implemented); execution mode superseded by [ADR-0029](0029-cosmos-watcher-execution-mode.md)
+**Status:** Accepted; execution mode superseded by [ADR-0029](0029-cosmos-watcher-execution-mode.md)
 
 ## Context
 

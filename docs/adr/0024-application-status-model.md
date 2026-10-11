@@ -1,7 +1,7 @@
 # ADR-0024: Application Status Model — Events, Three Statuses, and a Silence Indicator
 
 **Date:** 2026-10-09
-**Status:** Accepted (not yet implemented)
+**Status:** Accepted
 
 ## Context
 
