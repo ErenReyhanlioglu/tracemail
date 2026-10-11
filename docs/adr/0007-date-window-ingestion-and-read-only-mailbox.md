@@ -1,7 +1,7 @@
 # ADR-0007: Date-Window Ingestion and a Read-Only Mailbox
 
 **Date:** 2026-10-03
-**Status:** Accepted (not yet implemented)
+**Status:** Accepted
 
 ## Context
 

@@ -4,8 +4,14 @@ Build order and current position. Scope per phase is defined in
 [SUMMARY.md](../SUMMARY.md); decisions in [adr/](adr/README.md).
 
 **Current phase:** Phase 1 — Core
-**Current step:** 1.10 (`feat/web-application-list`) — 1.0 to 1.5 and 1.7 to 1.9
-done; 1.6 waits for the LinkedIn data export (checklist F)
+**Current step:** 1.11 (`ci/deploy`) — 1.0 to 1.5 and 1.7 to 1.10 done; 1.6
+waits for the LinkedIn data export (checklist F). In 1.11, deploys from
+`main` run in production since 2026-10-11
+([infra/vm](../infra/vm/README.md#continuous-deployment)). Still open: the
+first production data run (backfill, dbt as the transform account, Cosmos
+load on the VM); Cloudflare Tunnel and the production OAuth client once the
+domain is active; the dbt build on a CI target in GitHub Actions, which needs
+GitHub → GCP Workload Identity Federation.
 
 Each step is one branch and one or more pull requests. A step is done when its
 "Done when" line is true on `main`.
@@ -21,7 +27,7 @@ open from any device, running hourly in production. No LLM.
 |---|---|---|---|
 | 1.0 | — | Owner setup (local): see checklist A | Public repo exists with branch protection |
 | 1.1 | `chore/skeleton` | Full tree with stubs (ADR-0004), uv workspace, `dbt/` as its own uv project, ruff/mypy/pytest config, justfile, `.gitignore`, `.env.example`, CI (lint, typecheck, test) | `just check` passes locally and in CI |
-| 1.2 | `feat/imap-ingest` | Read-only IMAP fetch by date window (ADR-0007), sender allowlist, write-once raw objects to the dev bucket (ADR-0006) | A real day of mail lands in `raw/`; rerunning the same day writes nothing new; mailbox shows no change |
+| 1.2 | `feat/imap-ingest` | Read-only IMAP fetch by date window (ADR-0007), sender allowlist (replaced by an exclusion list, ADR-0025), write-once raw objects to the dev bucket (ADR-0006) | A real day of mail lands in `raw/`; rerunning the same day writes nothing new; mailbox shows no change |
 | 1.3 | `feat/parsers-linkedin` | LinkedIn parser for all five templates seen in real mail (alert, application confirmation, viewed / saved reminders, suggestions), `parsed/` JSONL with partition overwrite (ADR-0018), `message_parse_outcomes`, redacted fixtures, raw inventory command | Parser tests pass, including a "changed template" fixture |
 | 1.4 | `feat/landing-load` | BigQuery load jobs into `landing` (partition replace), run-record rows in `ops` | Loading the same interval twice leaves identical tables |
 | 1.5 | `feat/dbt-core-models` | Sources, staging, intermediate dedup, marts: applications (with a channel column), events, postings, companies; application status, waiting time, silence indicator (ADR-0024); dbt test results to `ops` (ADR-0023) | `dbt build` passes on dev with tests; an application's stage is correct for a hand-checked sample |
@@ -65,6 +71,15 @@ These are recorded as unverified in ADRs; each is checked at the step named.
 
 ### Follow-ups
 
+- OpenSSH on the VM listens on every interface, and the image's host
+  firewall accepts port 22 (seen 2026-10-11); only the VCN security list
+  blocks it. ADR-0012 control 1 says SSH listens only on the Tailscale
+  interface, and Tailscale SSH already serves the tailnet's port 22, so
+  OpenSSH is to be disabled on the VM.
+- Every merge restarts the whole stack, documentation-only merges included,
+  because each commit gets a new image tag (`infra/vm/README.md`). Harmless
+  while tasks are idempotent; narrow the deploy trigger if restarts start to
+  interrupt runs.
 - Landing load spends ~5 s per run checking tables (ADR-0019) — monitor,
   optimize later.
 - Alert yield metric (which alerts lead to saved / applied postings) — after
@@ -103,7 +118,7 @@ Things only the owner can do. Each lists the first step that needs it.
 
 - [x] Gmail app password for IMAP
 - [x] Initial sender allowlist (domains / addresses of job platforms and
-      companies)
+      companies); replaced by the sender exclusion list (ADR-0025)
 - [x] GCP billing account and the **dev** project (`us-central1`), budget
       alert (ADR-0010, ADR-0011)
 - [x] Two-step verification or a passkey on the Google account
@@ -122,17 +137,21 @@ Things only the owner can do. Each lists the first step that needs it.
 
 ### D. Before 1.9
 
-- [ ] OAuth client in the dev project (redirect URI on `localhost`)
+- [x] OAuth client in the dev project (redirect URI on `localhost`)
 
 ### E. Before 1.11
 
 - [ ] Domain (`.com` or `.com.tr`, cheapest first year); if `.com.tr`, confirm
-      nameserver delegation to Cloudflare first (ADR-0016)
+      nameserver delegation to Cloudflare first (ADR-0016). A `.com.tr`
+      domain is registered; the registry's document check is pending.
 - [ ] Cloudflare account, domain DNS moved to Cloudflare
-- [ ] Oracle Cloud account, home region `eu-frankfurt-1` (ADR-0016)
-- [ ] Tailscale account (free Personal plan)
-- [ ] GCP **prod** project, budget alert, OAuth client for the production
-      domain
+- [x] Oracle Cloud account, home region `eu-frankfurt-1` (ADR-0016)
+- [x] Tailscale account (free Personal plan); federated identity for the
+      deploy job (`infra/vm/README.md`)
+- [x] GCP **prod** project and budget alert (`infra/gcp/README.md`)
+- [ ] OAuth client for the production domain (prod project)
+- [x] GitHub `production` environment limited to `main`; image checks
+      required on `main`
 
 ---
 

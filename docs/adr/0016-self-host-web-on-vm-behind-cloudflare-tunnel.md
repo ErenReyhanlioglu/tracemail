@@ -1,7 +1,7 @@
 # ADR-0016: Self-Host the Web App on the VM behind Cloudflare Tunnel
 
 **Date:** 2026-10-04
-**Status:** Accepted (not yet implemented)
+**Status:** Accepted (web app on the VM implemented; the tunnel goes live with the domain)
 
 ## Context
 

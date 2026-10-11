@@ -1,7 +1,7 @@
 # ADR-0009: VM-to-GCP Authentication with Per-Role Service Account Keys
 
 **Date:** 2026-10-03
-**Status:** Accepted (not yet implemented)
+**Status:** Accepted
 
 ## Context
 
