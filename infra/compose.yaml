@@ -6,15 +6,20 @@
 # Airflow 3.3 with the LocalExecutor (CLAUDE.md, Airflow): the scheduler runs
 # the tasks, so only the scheduler (and the debug CLI) receive the pipeline's
 # secrets and GCP credentials. Adapted from the official Airflow 3.3.2 compose
-# file, without Celery and Redis. Services for the API (1.9), web (1.10), and
-# tunnel (1.11) are added in their steps.
+# file, without Celery and Redis.
+#
+# Each service gets only its own credentials (ADR-0009): the pipeline the
+# ingestion key, dbt the transform key, the API the api key and only the
+# settings it reads. Locally all three point at the gcloud ADC file. Images
+# are built locally and, on the VM, pulled from the registry by tag (ADR-0012).
+# The Cloudflare tunnel runs only with the `tunnel` profile (on the VM).
 name: tracemail
 
 x-airflow-common: &airflow-common
   build:
     context: ..
     dockerfile: apps/airflow/Dockerfile
-  image: tracemail-airflow:local
+  image: ${TRACEMAIL_IMAGE_REGISTRY:?set in .env}/tracemail-airflow:${TRACEMAIL_IMAGE_TAG:?set in .env}
   user: "50000:0"
   environment: &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
@@ -29,6 +34,8 @@ x-airflow-common: &airflow-common
     # Generated login password, kept across restarts in the state volume.
     AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_PASSWORDS_FILE: /opt/airflow/state/passwords.json
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
+    # dbt profile target, read by the DAG when it is parsed (dev or prod).
+    TRACEMAIL_DBT_TARGET: ${TRACEMAIL_DBT_TARGET:?set in .env}
   volumes:
     - ../apps/airflow/dags:/opt/airflow/dags:ro
     - airflow-logs:/opt/airflow/logs
@@ -38,7 +45,9 @@ x-airflow-common: &airflow-common
       condition: service_healthy
 
 # What the pipeline tasks need: settings, the private exclusion list, and
-# read-only GCP credentials (gcloud ADC locally, a role key on the VM).
+# read-only GCP credentials (gcloud ADC locally, role keys on the VM): the
+# pipeline uses the ingestion key through Application Default Credentials,
+# dbt's prod target the transform key file.
 x-pipeline-runtime: &pipeline-runtime
   env_file:
     - ../.env
@@ -46,12 +55,14 @@ x-pipeline-runtime: &pipeline-runtime
     <<: *airflow-common-env
     TRACEMAIL_SENDER_EXCLUSIONS_PATH: /opt/tracemail-config/sender_exclusions.yaml
     GOOGLE_APPLICATION_CREDENTIALS: /opt/tracemail-secrets/gcp-credentials.json
+    TRACEMAIL_DBT_KEYFILE: /opt/tracemail-secrets/dbt-credentials.json
   volumes:
     - ../apps/airflow/dags:/opt/airflow/dags:ro
     - airflow-logs:/opt/airflow/logs
     - airflow-home:/opt/airflow/state
     - ./config/sender_exclusions.yaml:/opt/tracemail-config/sender_exclusions.yaml:ro
     - ${TRACEMAIL_GCP_CREDENTIALS_FILE:?set in .env}:/opt/tracemail-secrets/gcp-credentials.json:ro
+    - ${TRACEMAIL_DBT_CREDENTIALS_FILE:?set in .env}:/opt/tracemail-secrets/dbt-credentials.json:ro
 
 services:
   postgres:
@@ -146,6 +157,65 @@ services:
     profiles: [debug]
     entrypoint: ["airflow"]
     command: ["version"]
+
+  # Read-only API (ADR-0015, ADR-0032). Only its own settings are passed; it
+  # never sees the mailbox password or the pipeline's settings.
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    image: ${TRACEMAIL_IMAGE_REGISTRY:?set in .env}/tracemail-api:${TRACEMAIL_IMAGE_TAG:?set in .env}
+    environment:
+      TRACEMAIL_API_GOOGLE_CLIENT_ID: ${TRACEMAIL_API_GOOGLE_CLIENT_ID:?set in .env}
+      TRACEMAIL_API_GOOGLE_CLIENT_SECRET: ${TRACEMAIL_API_GOOGLE_CLIENT_SECRET:?set in .env}
+      TRACEMAIL_API_OWNER_SUB: ${TRACEMAIL_API_OWNER_SUB:?set in .env}
+      TRACEMAIL_API_SESSION_SECRET: ${TRACEMAIL_API_SESSION_SECRET:?set in .env}
+      TRACEMAIL_API_PUBLIC_URL: ${TRACEMAIL_API_PUBLIC_URL:?set in .env}
+      TRACEMAIL_GCP_PROJECT: ${TRACEMAIL_GCP_PROJECT:?set in .env}
+      TRACEMAIL_BQ_LOCATION: ${TRACEMAIL_BQ_LOCATION:?set in .env}
+      TRACEMAIL_BQ_MARTS_DATASET: ${TRACEMAIL_BQ_MARTS_DATASET:?set in .env}
+      TRACEMAIL_BQ_MAX_BYTES_BILLED: ${TRACEMAIL_BQ_MAX_BYTES_BILLED:?set in .env}
+      GOOGLE_APPLICATION_CREDENTIALS: /opt/tracemail-secrets/api-credentials.json
+    volumes:
+      - ${TRACEMAIL_API_CREDENTIALS_FILE:?set in .env}:/opt/tracemail-secrets/api-credentials.json:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: always
+
+  # Next.js standalone server; the browser reaches the API through its /api
+  # rewrite, so site and API share one origin (ADR-0016, ADR-0032).
+  web:
+    build:
+      context: ../apps/web
+    image: ${TRACEMAIL_IMAGE_REGISTRY:?set in .env}/tracemail-web:${TRACEMAIL_IMAGE_TAG:?set in .env}
+    environment:
+      TRACEMAIL_API_URL: http://api:8000
+    ports:
+      # Local only; on the VM the tunnel reaches the web app inside the network.
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: always
+
+  # Cloudflare Tunnel (ADR-0016): the only public ingress, an outbound
+  # connection from the VM. The token is read from a mounted file, not an
+  # environment variable, so `docker inspect` does not show it.
+  cloudflared:
+    image: cloudflare/cloudflared:2026.9.3
+    profiles: [tunnel]
+    command: ["tunnel", "--no-autoupdate", "run"]
+    environment:
+      TUNNEL_TOKEN_FILE: /run/secrets/tunnel-token
+    volumes:
+      - ${TRACEMAIL_TUNNEL_TOKEN_FILE:?set in .env}:/run/secrets/tunnel-token:ro
+    depends_on:
+      - web
+    restart: always
 
 volumes:
   postgres-db:

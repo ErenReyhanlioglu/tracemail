@@ -12,6 +12,8 @@
 !.env.example
 **/*.json.key
 **/*-key.json
+**/*.key.json
+**/secrets
 infra/config/*.yaml
 !infra/config/*.example.yaml
 dbt/target

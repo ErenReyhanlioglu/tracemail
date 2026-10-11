@@ -130,8 +130,13 @@ parser changes, which spend the same allowance.
   the mailbox at fetch time; a message later deleted from the mailbox would
   silently drop out of the parsed file.
 
-**After** (to be measured on scheduled runs from 2026-10-11 14:00 UTC, with
-the same query as the table above): pending.
+**After, preliminary** (scheduled runs 2026-10-11 14:00 to 18:00 UTC, same
+query): 3 parse runs with new mail wrote 7 of 12 partition files and skipped
+5 unchanged ones; parse Class A per run fell from 7.0 (35 over 5 runs) to
+3.3 (10 over 3), at the cost of 5 metadata reads (Class B). The window is
+too short and too different from the baseline (5 new messages in 5 hours,
+daytime, no daily full-window run) to compare daily rates; a full day
+including the 00:00 UTC run is still to be measured.
 
 ## Consequences
 

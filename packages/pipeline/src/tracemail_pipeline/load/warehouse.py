@@ -1,6 +1,8 @@
 """Thin wrapper over the BigQuery client: tables, partition loads, queries.
 
-The loader creates the datasets and tables it needs (ADR-0019). Schema changes
+The loader creates the datasets and tables it needs (ADR-0019); a dataset that
+already exists is only read, so a least-privilege account that may not create
+datasets works once they exist (infra/gcp). Schema changes
 are applied only when additive (new nullable or repeated columns); anything
 else raises ``SchemaChangeError`` instead of silently changing a table. Every
 query carries ``maximum_bytes_billed`` (CLAUDE.md, BigQuery and dbt).
@@ -10,6 +12,7 @@ from collections.abc import Sequence
 from datetime import date
 from typing import Any, Protocol
 
+from google.api_core.exceptions import NotFound
 from google.cloud import bigquery
 from pydantic import BaseModel
 
@@ -97,9 +100,7 @@ class BigQueryWarehouse:
     ) -> None:
         """Create the dataset and day-partitioned table if missing; apply
         additive schema changes before any load; refuse any other change."""
-        dataset_ref = bigquery.Dataset(f"{self._client.project}.{dataset}")
-        dataset_ref.location = self._location
-        self._client.create_dataset(dataset_ref, exists_ok=True)
+        self._ensure_dataset(dataset)
         wanted = bigquery.Table(self._table_id(dataset, table), schema=list(schema))
         wanted.time_partitioning = bigquery.TimePartitioning(
             field=partition_field,
@@ -178,6 +179,15 @@ class BigQueryWarehouse:
             bytes_processed=job.total_bytes_processed or 0,
             bytes_billed=job.total_bytes_billed or 0,
         )
+
+    def _ensure_dataset(self, dataset: str) -> None:
+        dataset_id = f"{self._client.project}.{dataset}"
+        try:
+            self._client.get_dataset(dataset_id)
+        except NotFound:
+            dataset_ref = bigquery.Dataset(dataset_id)
+            dataset_ref.location = self._location
+            self._client.create_dataset(dataset_ref, exists_ok=True)
 
     def _table_id(self, dataset: str, table: str) -> str:
         return f"{self._client.project}.{dataset}.{table}"
