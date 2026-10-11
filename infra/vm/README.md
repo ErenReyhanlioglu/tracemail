@@ -158,6 +158,26 @@ availability domain or retry later [1].
   Docker 29.1 and Compose 2.40, `ubuntu` in the `docker` group, time zone
   UTC, `unattended-upgrades` active.
 
+## OpenSSH off (2026-10-12)
+
+Tailscale SSH serves the tailnet's port 22, so OpenSSH has no use on the VM.
+It was still running: socket-activated, listening on `0.0.0.0:22` and
+`[::]:22`, with the image's host firewall accepting port 22, so only the VCN
+security list kept it off the internet. ADR-0012 (control 1) requires SSH on
+the Tailscale interface only. On the existing VM:
+
+```sh
+sudo systemctl disable --now ssh.socket ssh.service
+sudo systemctl mask ssh.socket ssh.service
+```
+
+`mask` keeps a package upgrade from starting it again. `cloud-init.yaml` does
+the same on first boot. Verified afterwards: nothing listens on port 22;
+both units are `inactive` and `masked`; a new Tailscale SSH session and a
+`scp -O` copy (`just vm-exclusions`) still work. Run the commands in one
+session and test from a second one, so the first can undo them
+(`systemctl unmask`, `enable --now`) if Tailscale SSH stops answering.
+
 ## Stack and deploy user
 
 Run on the VM as `ubuntu`. Layout:
