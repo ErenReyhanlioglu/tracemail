@@ -1,0 +1,120 @@
+# ADR-0036: Dev and Prod Share One Free Tier
+
+**Date:** 2026-10-12
+**Status:** Proposed
+
+## Context
+
+Prod is deployed (step 1.11) but its DAG is still paused. Free-tier limits
+are calculated per billing account [1], and the dev and prod projects share
+one billing account (ADR-0010), so both draw on the same 5,000 Class A
+operations a month. ADR-0030 measured the Class A use of one environment
+running hourly and asked to revisit it here, when prod starts.
+
+Measured 2026-10-12 in dev, from two sources:
+
+- **Cloud Monitoring** (`storage.googleapis.com/api/request_count`, every
+  caller, grouped by method and response code): 1,619 successful
+  `WriteObject` and 951 `ListObjects` requests from 1 October to the end of
+  11 October, **2,570 Class A**. Only 2 writes were rejected by the
+  create-only precondition. Prod's bucket had 4 requests, all from setup.
+- **The pipeline's run records** (`ops.pipeline_runs`, what
+  `marts.fct_free_tier_usage` sums): 2,077 for the same period.
+
+Day by day the two agree on scheduled runs alone (11 October: about 104 in
+Monitoring, 103 recorded). The 493 missing from the run records are
+development work: 180 on 7 October, before run records existed, and about
+300 on 9 and 10 October from manual commands that write no run record. The
+recorded steady-state rate is therefore sound, but the month-to-date base is
+Monitoring's:
+
+| | Class A |
+|---|---|
+| October so far (dev only, development and backfills included) | 2,570 (51%) |
+| Rate of a day with scheduled runs only (dev, after ADR-0030 option 2) | about 103 a day |
+| October projection, dev alone hourly | about 4,630 (93%) |
+
+`ReadObject` (Class B) shows the same kind of gap at a larger scale: 7,265
+in Monitoring against 1,736 recorded. Most of the difference is expected to
+be BigQuery load jobs reading `parsed/` files, which ADR-0030 listed as not
+yet known; Monitoring does not name the caller. It is 15% of the Class B
+tier.
+
+Expected, not measured:
+
+- **Prod running hourly** reads the same mailbox with the same code, so it
+  should match dev's rate: about 103 a day, about 3,100 a month (62%).
+- **Prod's first backfill** (2026-07-10 to today, 92 days): about 725 raw
+  writes, 368 parsed files (four record types per day), and listings, about
+  1,300 Class A in total. Dev's backfill day (2026-10-09) measured 1,740, but
+  that day re-parsed the range several times after parser changes.
+- About 55 of dev's 103 daily operations are ingestion listings (ADR-0030's
+  breakdown: about 1,650 of 3,040 a month).
+
+With both environments hourly and the backfill run now, October reaches
+about 8,000 (160%). The 85% rule (CLAUDE.md) applies before prod's runs are
+added. BigQuery stays well inside its tier: dbt in dev projects 23% of the
+1 TiB query allowance for October, so a second environment roughly doubles
+it.
+
+## Options
+
+1. **Dev runs on demand.** Pause the dev DAG's schedule; dev runs only when
+   code is being developed or tested (`just dag-test`, CLI commands). Saves
+   about 3,100 Class A a month. No code change. Dev's run records, and with
+   them the dev health views, stop updating between development sessions.
+2. **Conditional writes without a listing.** Today ingestion lists each day
+   of its window (2–3 listings a run, about 55 Class A a day) to fetch only
+   new mail, then writes it with the create-only precondition
+   (`if_generation_match=0`). Instead, fetch every kept message in the window
+   and attempt the create-only write: a stored message is rejected with 412,
+   and Google does not charge for operations that return 4xx [2]. This is
+   the standard write-if-absent pattern (GCS generation preconditions; S3
+   added the same with `If-None-Match`). Saves the same about 1,650 Class A
+   a month as option 3 and adds no Class B; ingestion gets simpler (no
+   existing-key step). Cost: every run downloads the bodies of all kept
+   messages in its window over IMAP (about 25, a few hundred KB) instead of
+   only new ones, and makes one rejected upload per stored message; run time
+   to be measured. Raw stays write-once: the precondition was already the
+   guarantee, the listing only an optimization.
+3. **Existence checks instead of ingestion listings** (ADR-0030 option 1).
+   Saves the same as option 2, for about 18,000 Class B a month (36% of that
+   tier). Dominated by option 2.
+4. **Prod's backfill at the start of a month.** One-off work then has the
+   whole month's allowance behind it instead of what is left of October.
+5. **Accept the overage.** USD 0.005 per 1,000 Class A [2]: 2,500
+   operations over cost about USD 0.0125. ADR-0030 keeps this as the
+   fallback, since the project's goal is to stay within the free tier.
+
+Considered and not pursued: push notifications from the Gmail API through
+Pub/Sub, which remove polling altogether but were rejected for other reasons
+in ADR-0008; a local cache or manifest of stored keys, which adds the state
+ADR-0007 rules out; running less often, which changes ADR-0008's product
+behavior.
+
+Projections (Class A, expected; from 2,570 used and prod hourly from
+12 October, about 20 days; option 2 assumed deployed after about 2 days):
+
+| Combination | October | November | Later months |
+|---|---|---|---|
+| 1, backfill now | about 5,930 (119%) | about 3,100 (62%) | 62% |
+| 1, backfill on 1 November | about 4,630 (93%) | about 4,400 (88%) | 62% |
+| 1 + 2 (or 3), backfill on 1 November | about 3,640 (73%) | about 2,740 (55%) | about 1,450 (29%) |
+
+Only the last combination stays under 85% in every month. Dev hourly alone
+would already end October at about 93%.
+
+## Decision
+
+Pending the owner's choice.
+
+## Consequences
+
+To be written with the decision.
+
+## References
+
+1. [Free cloud features and trial — Google Cloud docs](https://docs.cloud.google.com/free/docs/free-cloud-features) (read 2026-10-12: "monthly usage limits that are calculated per billing account"; Cloud Storage 5,000 Class A and 50,000 Class B a month in `us-central1`; BigQuery 1 TiB of querying a month)
+2. [Cloud Storage pricing — Google Cloud](https://cloud.google.com/storage/pricing) (downloaded and read 2026-10-12: "Generally, you are not charged for operations that return 307, 4xx, or 5xx responses", the exception being 404s from buckets with a website configuration; Class A price as read for ADR-0030)
+3. [ADR-0010: Separate GCP Projects for Dev and Prod](0010-separate-gcp-projects-for-dev-and-prod.md)
+4. [ADR-0030: Keeping Class A Headroom as Mail Volume Grows](0030-gcs-class-a-headroom.md)
