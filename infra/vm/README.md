@@ -37,9 +37,61 @@ The tailnet policy defines the tags and who may SSH to the VM:
 
 `check` makes Tailscale ask the owner to re-authenticate with Google
 periodically before an SSH session, so a stolen laptop alone cannot reach
-the VM. `tag:ci` is for the deploy job (step 1.11, deploy workflow); its SSH
-rule, in `accept` mode for the non-interactive job, is added with the
-workflow.
+the VM.
+
+With the deploy job, the policy adds network grants and a second SSH rule
+(ADR-0035). The owner's devices reach everything; the deploy job (`tag:ci`)
+reaches only the VM's port 22 and only as `deploy`, in `accept` mode because
+the job is non-interactive; the VM itself is granted nothing:
+
+```json
+"grants": [
+	{"src": ["autogroup:member"], "dst": ["*"], "ip": ["*"]},
+	{"src": ["tag:ci"], "dst": ["tag:prod-vm"], "ip": ["tcp:22"]},
+],
+"ssh": [
+	{
+		"action": "check",
+		"src":    ["autogroup:admin"],
+		"dst":    ["tag:prod-vm"],
+		"users":  ["ubuntu", "root"],
+	},
+	{
+		"action": "accept",
+		"src":    ["tag:ci"],
+		"dst":    ["tag:prod-vm"],
+		"users":  ["deploy"],
+	},
+],
+```
+
+## Continuous deployment
+
+The deploy job in `.github/workflows/ci.yml` runs after every push to
+`main` (ADR-0012, ADR-0035). It needs, once:
+
+1. **Tailscale federated identity** (admin console → Trust credentials →
+   Credential → OpenID Connect): issuer GitHub
+   (`https://token.actions.githubusercontent.com`), subject
+   `repo:ErenReyhanlioglu/tracemail:environment:production`, scope
+   `auth_keys` (write) with tag `tag:ci`. It returns a client ID and an
+   audience; neither is a secret.
+2. **GitHub environment** `production` (repository Settings →
+   Environments): deployment branches limited to `main`; environment
+   variables `TS_CLIENT_ID` and `TS_AUDIENCE` from step 1. GitHub puts
+   `environment:production` in the job's OIDC subject, which is what the
+   federated identity trusts, so no other branch or workflow can join the
+   tailnet.
+3. **GHCR packages public** (`tracemail-airflow`, `tracemail-api`,
+   `tracemail-web`): new packages are private, and the VM pulls anonymously.
+   The first deploy after the first push to `main` fails at the pull until
+   then; re-run its deploy job afterwards.
+
+Each deploy job pins the VM's SSH host key from the tailnet, checks that
+`deploy` is refused an arbitrary command, SFTP, and port forwarding, then
+runs `deploy <SHA>`; the deploy script ends with a smoke test of
+`/api/v1/health` through the web app. Rollback: re-run the deploy job of an
+earlier successful run.
 
 ## Creating the VM
 
@@ -110,8 +162,9 @@ files are readable inside them and by no other user on the VM.
    ```sh
    sudo git clone https://github.com/ErenReyhanlioglu/tracemail.git /opt/tracemail/app
    cd /opt/tracemail/app
-   sudo chown root:root /opt/tracemail/secrets /opt/tracemail/secrets/*
-   sudo chmod 750 /opt/tracemail/secrets && sudo chmod 640 /opt/tracemail/secrets/*
+   # Globs expand in root's shell: after the chown, ubuntu cannot list the folder.
+   sudo sh -c 'chown root:root /opt/tracemail/secrets /opt/tracemail/secrets/* \
+     && chmod 750 /opt/tracemail/secrets && chmod 640 /opt/tracemail/secrets/*'
    sudo install -o root -g root -m 755 infra/vm/deploy-gate.sh /usr/local/sbin/tracemail-deploy-gate
    sudo install -o root -g root -m 755 infra/vm/deploy.sh /usr/local/sbin/tracemail-deploy
    sudo visudo -cf infra/vm/sudoers-deploy \
@@ -134,6 +187,22 @@ files are readable inside them and by no other user on the VM.
    sudo su -l deploy -c true       # refused
    sudo su -l deploy               # refused (interactive)
    ```
+
+Verified on the VM (2026-10-11):
+
+- tailscaled's environment contains both `TS_SSH_DISABLE_*` settings after
+  a reboot (read from `/proc/<pid>/environ`).
+- sudo 1.9.15p5 accepts the regex rule (`visudo -cf`: parsed OK).
+- `deploy` belongs only to its own group; `sudo -l -U deploy` lists the one
+  rule.
+- Through the gate (`su -l deploy -c ...`): `id`, `true`, and an interactive
+  session are refused; `deploy <40 zeros>` passes the gate and the sudo rule,
+  and the deploy script refuses it as not on `main`.
+- Bypassing the gate (`sudo -u deploy sudo -n ...`): the deploy script with
+  argument `id` and `/bin/bash` are both refused by sudo.
+- From the owner's machine: `sftp` gets "sftp disabled"; `ssh -W` gets
+  "administratively prohibited: port forwarding is disabled"; a plain
+  `ssh ubuntu@tracemail-prod "<command>"` still works.
 
 Manual Compose commands need the release file as well, for example:
 

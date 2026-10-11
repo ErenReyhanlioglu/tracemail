@@ -13,6 +13,9 @@ readonly APP_DIR=/opt/tracemail/app
 readonly RELEASE_ENV=/opt/tracemail/release.env
 # Unused images older than this are removed; a rollback pulls again.
 readonly IMAGE_RETENTION=168h
+# Smoke test after the stack is up: the API's health check through the web
+# app, so the path web -> API -> BigQuery is exercised as a browser uses it.
+readonly SMOKE_URL=http://127.0.0.1:3000/api/v1/health
 
 sha="${1:-}"
 if [[ ! "$sha" =~ ^[0-9a-f]{40}$ ]]; then
@@ -32,5 +35,8 @@ printf 'TRACEMAIL_IMAGE_TAG=%s\n' "$sha" > "$RELEASE_ENV"
 compose=(docker compose -f infra/compose.yaml --env-file .env --env-file "$RELEASE_ENV")
 "${compose[@]}" pull --quiet
 "${compose[@]}" up --detach --no-build --remove-orphans --wait
+# Assigned first: a failure inside echo's arguments would not stop the script.
+health=$(curl --fail --silent --show-error --retry 5 --retry-connrefused --retry-delay 3 "$SMOKE_URL")
+echo "Smoke test: $health"
 docker image prune --all --force --filter "until=$IMAGE_RETENTION" > /dev/null
 echo "Deployed $sha"
