@@ -81,6 +81,82 @@ availability domain or retry later [1].
   Docker 29.1 and Compose 2.40, `ubuntu` in the `docker` group, time zone
   UTC, `unattended-upgrades` active.
 
+## Stack and deploy user
+
+Run on the VM as `ubuntu`. Layout:
+
+| Path | Contents | Owner, mode |
+|---|---|---|
+| `/opt/tracemail/app` | Checkout of this repository; the deploy script moves it to the deployed commit | root |
+| `/opt/tracemail/app/.env` | Production settings (`just vm-env` copies the owner's `.env.prod`) | root, 600 |
+| `/opt/tracemail/app/infra/config/sender_exclusions.yaml` | Private exclusion list (`just vm-exclusions`) | root, 640 |
+| `/opt/tracemail/secrets` | Role key files (`infra/gcp/README.md`) | root, 750 / 640 |
+| `/opt/tracemail/release.env` | `TRACEMAIL_IMAGE_TAG=<deployed SHA>`, written by each deploy | root |
+
+Containers run as group 0 (`50000:0`, `10001:0`), so group-readable root
+files are readable inside them and by no other user on the VM.
+
+1. Tailscale SSH without SFTP and port forwarding (ADR-0035). Restarting
+   tailscaled drops the session; reconnect after a few seconds.
+
+   ```sh
+   systemctl cat tailscaled | grep EnvironmentFile   # expect /etc/default/tailscaled
+   printf 'TS_SSH_DISABLE_SFTP=true\nTS_SSH_DISABLE_FORWARDING=true\n' | sudo tee -a /etc/default/tailscaled
+   sudo systemctl restart tailscaled
+   ```
+
+2. Checkout, secrets, and the deploy user:
+
+   ```sh
+   sudo git clone https://github.com/ErenReyhanlioglu/tracemail.git /opt/tracemail/app
+   cd /opt/tracemail/app
+   sudo chown root:root /opt/tracemail/secrets /opt/tracemail/secrets/*
+   sudo chmod 750 /opt/tracemail/secrets && sudo chmod 640 /opt/tracemail/secrets/*
+   sudo install -o root -g root -m 755 infra/vm/deploy-gate.sh /usr/local/sbin/tracemail-deploy-gate
+   sudo install -o root -g root -m 755 infra/vm/deploy.sh /usr/local/sbin/tracemail-deploy
+   sudo visudo -cf infra/vm/sudoers-deploy \
+     && sudo install -o root -g root -m 440 infra/vm/sudoers-deploy /etc/sudoers.d/tracemail-deploy
+   sudo useradd --system --create-home --shell /usr/local/sbin/tracemail-deploy-gate deploy
+   ```
+
+   Reinstall a script the same way after it changes; deploys never rewrite
+   the installed copies.
+
+3. From the owner's machine: `just vm-env` and `just vm-exclusions`.
+
+4. Checks. Tailscale runs sessions through `su -l <user> -c`, so `su`
+   exercises the same gate:
+
+   ```sh
+   id deploy                       # no docker group
+   sudo -l -U deploy               # only /usr/local/sbin/tracemail-deploy ^[0-9a-f]{40}$
+   sudo su -l deploy -c id         # refused
+   sudo su -l deploy -c true       # refused
+   sudo su -l deploy               # refused (interactive)
+   ```
+
+Manual Compose commands need the release file as well, for example:
+
+```sh
+cd /opt/tracemail/app
+sudo docker compose -f infra/compose.yaml --env-file .env --env-file ../release.env ps
+```
+
+### `.env.prod`
+
+A copy of `.env.example` with production values. Differences from `.env`:
+
+- `TRACEMAIL_GCP_PROJECT=tracemail-prod`, `TRACEMAIL_DATA_BUCKET=tracemail-prod-data`.
+- The three credentials files: `/opt/tracemail/secrets/tm-ingestion.key.json`,
+  `tm-transform.key.json`, `tm-api.key.json`; `TRACEMAIL_DBT_TARGET=prod`.
+- New Airflow and session secrets, never the dev ones.
+- `TRACEMAIL_IMAGE_REGISTRY=ghcr.io/<lowercase GitHub owner>`; no
+  `TRACEMAIL_IMAGE_TAG` (from `release.env`).
+- `TRACEMAIL_TUNNEL_TOKEN_FILE=/opt/tracemail/secrets/tunnel-token`, and
+  `COMPOSE_PROFILES=tunnel` once the tunnel exists.
+- `TRACEMAIL_SENDER_EXCLUSIONS_PATH`: unused on the VM (Compose sets the
+  container path); any value.
+
 ## References
 
 1. [Always Free Resources — Oracle Cloud Infrastructure Documentation](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm)

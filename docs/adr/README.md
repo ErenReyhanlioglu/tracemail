@@ -49,3 +49,4 @@ written at the moment the decision is made — not drafted ahead of time.
 | [0032](0032-owner-login-implementation.md) | Owner Login Implementation — Authlib, a Signed Session Cookie, and Fixed Routes | Accepted |
 | [0033](0033-ui-copy-in-turkish.md) | User-Facing UI Copy Is Turkish | Accepted |
 | [0034](0034-web-ui-design-system.md) | Web UI Design System — Mockup Tokens, Semantic Status Colors, Light and Dark Themes | Accepted |
+| [0035](0035-deploy-user-restricted-by-login-shell-and-sudo.md) | Deploy User Restricted by Login Shell and One Sudo Rule | Accepted (not yet implemented) |

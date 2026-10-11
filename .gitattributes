@@ -1,3 +1,8 @@
 # Mail fixtures must stay byte-identical on every OS: never convert their line
 # endings (otherwise Windows checkouts get CRLF and tests diverge from CI).
 *.eml -text
+
+# Scripts and config installed on the Linux VM must keep LF line endings even
+# in a Windows checkout (core.autocrlf), or the shell and visudo reject them.
+*.sh text eol=lf
+infra/vm/sudoers-* text eol=lf

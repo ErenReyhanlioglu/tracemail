@@ -1,0 +1,4 @@
+# The deploy user's only privilege (ADR-0035): run the deploy script as root
+# with one argument, a full commit SHA. Installed as
+# /etc/sudoers.d/tracemail-deploy (mode 440) after `visudo -cf` accepts it.
+deploy ALL=(root) NOPASSWD: /usr/local/sbin/tracemail-deploy ^[0-9a-f]{40}$

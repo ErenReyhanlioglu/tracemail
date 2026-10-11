@@ -124,6 +124,18 @@ dag-check:
 dag-test logical_date:
     docker compose -f {{compose_file}} --env-file .env run --rm airflow-cli dags test tracemail_hourly {{logical_date}} --use-executor
 
+vm_host := "tracemail-prod"
+
+# Copy .env.prod to the VM as the stack's .env (root only). scp -O: SFTP is off on the VM (ADR-0035)
+vm-env:
+    scp -O -q .env.prod ubuntu@{{vm_host}}:tracemail.env
+    ssh ubuntu@{{vm_host}} "sudo install -o root -g root -m 600 tracemail.env /opt/tracemail/app/.env && rm tracemail.env"
+
+# Copy the private sender exclusion list to the VM (readable by the containers' group 0)
+vm-exclusions:
+    scp -O -q infra/config/sender_exclusions.yaml ubuntu@{{vm_host}}:sender_exclusions.yaml
+    ssh ubuntu@{{vm_host}} "sudo install -o root -g root -m 640 sender_exclusions.yaml /opt/tracemail/app/infra/config/sender_exclusions.yaml && rm sender_exclusions.yaml"
+
 # Show the generated Airflow login password for the user "owner"
 airflow-password:
     docker compose -f {{compose_file}} --env-file .env exec airflow-apiserver cat /opt/airflow/state/passwords.json
