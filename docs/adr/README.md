@@ -26,7 +26,7 @@ written at the moment the decision is made — not drafted ahead of time.
 | [0009](0009-vm-to-gcp-auth-with-service-account-keys.md) | VM-to-GCP Authentication with Per-Role Service Account Keys | Accepted (not yet implemented) |
 | [0010](0010-separate-gcp-projects-for-dev-and-prod.md) | Separate GCP Projects for Dev and Prod | Accepted (not yet implemented) |
 | [0011](0011-gcp-region-us-central1.md) | GCP Region `us-central1` | Accepted (not yet implemented) |
-| [0012](0012-build-in-ci-ghcr-and-push-deploy-over-tailscale.md) | Build in CI, Publish to GHCR, Push-Deploy over Tailscale | Accepted (not yet implemented) |
+| [0012](0012-build-in-ci-ghcr-and-push-deploy-over-tailscale.md) | Build in CI, Publish to GHCR, Push-Deploy over Tailscale | Accepted |
 | [0013](0013-airflow-3-3-on-python-3-12.md) | Airflow 3.3 on Python 3.12 | Accepted |
 | [0014](0014-dbt-1x-orchestrated-with-cosmos.md) | dbt 1.x Orchestrated with Cosmos | Accepted (not yet implemented); execution mode superseded by [0029](0029-cosmos-watcher-execution-mode.md) |
 | [0015](0015-owner-login-with-google-sign-in.md) | Owner Login with Google Sign-In, Handled by the API | Accepted (not yet implemented) |
@@ -49,4 +49,4 @@ written at the moment the decision is made — not drafted ahead of time.
 | [0032](0032-owner-login-implementation.md) | Owner Login Implementation — Authlib, a Signed Session Cookie, and Fixed Routes | Accepted |
 | [0033](0033-ui-copy-in-turkish.md) | User-Facing UI Copy Is Turkish | Accepted |
 | [0034](0034-web-ui-design-system.md) | Web UI Design System — Mockup Tokens, Semantic Status Colors, Light and Dark Themes | Accepted |
-| [0035](0035-deploy-user-restricted-by-login-shell-and-sudo.md) | Deploy User Restricted by Login Shell and One Sudo Rule | Accepted (not yet implemented) |
+| [0035](0035-deploy-user-restricted-by-login-shell-and-sudo.md) | Deploy User Restricted by Login Shell and One Sudo Rule | Accepted |
