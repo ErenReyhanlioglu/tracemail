@@ -23,6 +23,7 @@ log is expected (pendulum is not a pipeline dependency) and harmless.
 """
 
 import logging
+import os
 import subprocess
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -44,8 +45,9 @@ logger = logging.getLogger(__name__)
 PIPELINE_PYTHON = "/opt/venvs/pipeline/bin/python"
 DBT_EXECUTABLE = "/opt/venvs/dbt/bin/dbt"
 DBT_PROJECT = Path("/opt/airflow/dbt")
-# The dev target until the production project exists (step 1.11).
-DBT_TARGET = "dev"
+# dbt profile target (dev locally, prod on the VM), set per environment in the
+# Compose env file; reading an environment variable is not I/O.
+DBT_TARGET = os.environ["TRACEMAIL_DBT_TARGET"]
 START_DATE = datetime(2026, 10, 9, tzinfo=UTC)
 # Hourly runs with real one-hour data intervals. Airflow 3 turns a plain cron
 # string into a trigger timetable whose runs have zero-length intervals

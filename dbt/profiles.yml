@@ -2,8 +2,10 @@
 # environment (.env locally, the VM's env file in production).
 #
 # dev: local runs authenticate with `gcloud auth application-default login`
-# (oauth). The VM target, with the transform service account key (ADR-0009),
-# is added with the production project in step 1.11.
+# (oauth). prod: the VM authenticates as the transform service account with
+# its key file (ADR-0009), never with the ingestion account's credentials.
+# The target is chosen by TRACEMAIL_DBT_TARGET (the Airflow DAG and the
+# justfile pass it).
 tracemail:
   target: dev
   outputs:
@@ -19,4 +21,16 @@ tracemail:
       job_execution_timeout_seconds: 300
       job_retries: 1
       # Cost guardrail: a query that would bill more fails instead (CLAUDE.md).
+      maximum_bytes_billed: "{{ env_var('TRACEMAIL_BQ_MAX_BYTES_BILLED') | int }}"
+    prod:
+      type: bigquery
+      method: service-account
+      keyfile: "{{ env_var('TRACEMAIL_DBT_KEYFILE') }}"
+      project: "{{ env_var('TRACEMAIL_GCP_PROJECT') }}"
+      location: "{{ env_var('TRACEMAIL_BQ_LOCATION') }}"
+      dataset: staging
+      threads: 4
+      priority: interactive
+      job_execution_timeout_seconds: 300
+      job_retries: 1
       maximum_bytes_billed: "{{ env_var('TRACEMAIL_BQ_MAX_BYTES_BILLED') | int }}"
