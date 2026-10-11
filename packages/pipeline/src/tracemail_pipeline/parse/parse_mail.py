@@ -58,7 +58,11 @@ class ParseMailResult(BaseModel):
     bytes_written: int = 0
     gcs_lists: int = 0
     gcs_reads: int = 0
+    # Metadata reads of existing parsed files (Class B, ADR-0030).
+    gcs_metadata_reads: int = 0
     gcs_writes: int = 0
+    # Partition files left in place because their content did not change.
+    parsed_unchanged: int = 0
     seconds_total: float = 0.0
     seconds_gcs_read: float = 0.0
     seconds_parse: float = 0.0
@@ -147,8 +151,11 @@ def _write_day(
         (UPDATES, records.updates),
         (OUTCOMES, records.outcomes),
     ):
-        result.bytes_written += parsed_store.write_partition(record_type, day, rows)
-        result.gcs_writes += 1
+        write = parsed_store.write_partition(record_type, day, rows)
+        result.bytes_written += write.bytes_written
+        result.gcs_writes += write.written
+        result.parsed_unchanged += not write.written
+        result.gcs_metadata_reads += write.metadata_read
     result.seconds_gcs_write += time.perf_counter() - started
 
 

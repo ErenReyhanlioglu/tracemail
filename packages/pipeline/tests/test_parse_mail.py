@@ -20,6 +20,8 @@ from tracemail_pipeline.parse.parse_mail import (
 )
 from tracemail_pipeline.parse.parsed_store import (
     GcsParsedStore,
+    PartitionWrite,
+    md5_base64,
     parsed_object_key,
     to_jsonl,
 )
@@ -30,15 +32,22 @@ NEXT_DAY = date(2026, 10, 2)
 
 
 class FakeParsedStore:
+    """Like the GCS store: skips a file whose content is unchanged."""
+
     def __init__(self) -> None:
         self.files: dict[tuple[str, date], bytes] = {}
 
     def write_partition(
         self, record_type: str, received_date: date, rows: Sequence[BaseModel]
-    ) -> int:
+    ) -> PartitionWrite:
         data = to_jsonl(rows)
+        stored = self.files.get((record_type, received_date))
+        if stored == data:
+            return PartitionWrite(bytes_written=0, written=False, metadata_read=True)
         self.files[(record_type, received_date)] = data
-        return len(data)
+        return PartitionWrite(
+            bytes_written=len(data), written=True, metadata_read=stored is not None
+        )
 
     def rows(self, record_type: str, day: date = DAY) -> list[dict[str, Any]]:
         lines = self.files[(record_type, day)].decode().splitlines()
@@ -142,24 +151,104 @@ def test_parsed_object_key_uses_record_type_and_received_date() -> None:
     )
 
 
-def test_gcs_parsed_store_overwrites_the_partition_file() -> None:
-    uploads: dict[str, bytes] = {}
+class Row(BaseModel):
+    value: int
 
-    class Blob:
-        def __init__(self, key: str) -> None:
-            self.key = key
 
-        def upload_from_string(self, data: bytes, content_type: str) -> None:
-            uploads[self.key] = data
+ROW_1_JSONL = b'{"value":1}\n'
+ROW_3_JSONL = b'{"value":3}\n'
 
-    class Bucket:
-        def blob(self, key: str) -> Blob:
-            return Blob(key)
 
-    class Row(BaseModel):
-        value: int
+class FakeBlob:
+    def __init__(self, key: str, uploads: dict[str, bytes]) -> None:
+        self.key = key
+        self.uploads = uploads
+        self.md5_hash = md5_base64(uploads[key]) if key in uploads else None
 
-    store = GcsParsedStore(Bucket())
+    def upload_from_string(self, data: bytes, content_type: str) -> None:
+        self.uploads[self.key] = data
+
+
+class FakeBucket:
+    """Bucket double: get_blob returns None for a missing object (a 404)."""
+
+    def __init__(self) -> None:
+        self.uploads: dict[str, bytes] = {}
+        self.metadata_reads = 0
+
+    def get_blob(self, key: str) -> FakeBlob | None:
+        self.metadata_reads += 1
+        return FakeBlob(key, self.uploads) if key in self.uploads else None
+
+    def blob(self, key: str) -> FakeBlob:
+        return FakeBlob(key, self.uploads)
+
+
+def test_gcs_parsed_store_writes_a_missing_partition_without_a_billed_read() -> None:
+    bucket = FakeBucket()
+    write = GcsParsedStore(bucket).write_partition(SIGHTINGS, DAY, [Row(value=1)])
+    assert write == PartitionWrite(bytes_written=12, written=True, metadata_read=False)
+    assert bucket.uploads == {parsed_object_key(SIGHTINGS, DAY): ROW_1_JSONL}
+
+
+def test_gcs_parsed_store_overwrites_a_partition_whose_content_changed() -> None:
+    bucket = FakeBucket()
+    store = GcsParsedStore(bucket)
     store.write_partition(SIGHTINGS, DAY, [Row(value=1), Row(value=2)])
-    store.write_partition(SIGHTINGS, DAY, [Row(value=3)])
-    assert uploads == {parsed_object_key(SIGHTINGS, DAY): b'{"value":3}\n'}
+    write = store.write_partition(SIGHTINGS, DAY, [Row(value=3)])
+    assert (write.written, write.metadata_read) == (True, True)
+    assert bucket.uploads == {parsed_object_key(SIGHTINGS, DAY): ROW_3_JSONL}
+
+
+def test_gcs_parsed_store_skips_a_partition_whose_content_is_unchanged() -> None:
+    bucket = FakeBucket()
+    store = GcsParsedStore(bucket)
+    store.write_partition(SIGHTINGS, DAY, [Row(value=1)])
+    write = store.write_partition(SIGHTINGS, DAY, [Row(value=1)])
+    assert write == PartitionWrite(bytes_written=0, written=False, metadata_read=True)
+
+
+def test_gcs_parsed_store_rewrites_when_the_stored_object_has_no_md5() -> None:
+    bucket = FakeBucket()
+    store = GcsParsedStore(bucket)
+    store.write_partition(SIGHTINGS, DAY, [])
+    original = bucket.get_blob
+
+    def without_md5(key: str) -> FakeBlob | None:
+        blob = original(key)
+        if blob is not None:
+            blob.md5_hash = None
+        return blob
+
+    bucket.get_blob = without_md5  # type: ignore[method-assign]
+    assert store.write_partition(SIGHTINGS, DAY, []).written
+
+
+def test_reparsing_an_unchanged_day_writes_nothing_and_counts_the_skips(
+    fake_store: Any,
+) -> None:
+    store_fixtures(fake_store, ["linkedin_job_alert"])
+    parsed = FakeParsedStore()
+    first = parse_mail(fake_store, parsed, days_between(DAY, NEXT_DAY))
+    second = parse_mail(fake_store, parsed, days_between(DAY, NEXT_DAY))
+    assert (first.gcs_writes, first.parsed_unchanged, first.gcs_metadata_reads) == (
+        4,
+        0,
+        0,
+    )
+    assert (second.gcs_writes, second.parsed_unchanged, second.gcs_metadata_reads) == (
+        0,
+        4,
+        4,
+    )
+    assert second.bytes_written == 0
+
+
+def test_new_mail_rewrites_only_the_partitions_that_changed(fake_store: Any) -> None:
+    store_fixtures(fake_store, ["linkedin_job_alert"])
+    parsed = FakeParsedStore()
+    parse_mail(fake_store, parsed, days_between(DAY, NEXT_DAY))
+    store_fixtures(fake_store, ["linkedin_facet_suggestions"])
+    result = parse_mail(fake_store, parsed, days_between(DAY, NEXT_DAY))
+    # New sightings and a new outcome row; actions and updates stay empty.
+    assert (result.gcs_writes, result.parsed_unchanged) == (2, 2)
