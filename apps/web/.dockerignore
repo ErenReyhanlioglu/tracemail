@@ -1,0 +1,11 @@
+# Build context for apps/web/Dockerfile is apps/web. Dependencies are
+# installed in the image from package-lock.json; local builds and secrets
+# never go in.
+node_modules
+.next
+*.tsbuildinfo
+next-env.d.ts
+.env
+.env.*
+**/*.key.json
+**/secrets
