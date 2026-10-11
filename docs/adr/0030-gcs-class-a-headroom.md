@@ -1,7 +1,7 @@
 # ADR-0030: Keeping Class A Headroom as Mail Volume Grows
 
 **Date:** 2026-10-10
-**Status:** Proposed — decide when the trigger below is reached
+**Status:** Accepted — option 2 implemented; option 1 deferred; option 3 rejected
 
 ## Context
 
@@ -96,10 +96,59 @@ owner chose to keep the hourly schedule running unchanged for several days
 and decide on scheduled-run data only; the 85% rule applies once that
 projection is clean.
 
+**2026-10-11: decided.** Measured on scheduled runs only (2026-10-10 20:00
+to 2026-10-11 14:00 UTC, about 18 hours, no manual work in the window):
+
+| Step | Runs | Class A | Class B | Mean duration |
+|---|---|---|---|---|
+| `ingest_mail` | 18 | 41 (37 lists, 4 writes) | 0 | 2.3 s |
+| `parse_mail` | 5 | 35 (7 lists, 28 writes) | 19 | 4.7 s |
+
+That is about 101 Class A a day, about 3,040 a month (61%). The window is a
+quiet night with 4 new messages; a day like 2026-10-10 (9 messages) writes
+more, so the steady state is expected between about 61% and 76%. October
+as a whole, with the backfills already spent (2,038 by 2026-10-11), projects
+to about 4,100 (82%). An earlier estimate of 94% in conversation included
+development runs and was wrong; the 85% rule is not strictly reached.
+
+The owner chose to implement **option 2** anyway, for headroom as mail
+volume grows (cold applications and replies) and for future replays after
+parser changes, which spend the same allowance.
+
+- **Option 2: implemented.** `GcsParsedStore` reads the stored object's
+  metadata and skips the write when its MD5 equals the new content's. A
+  missing object is a free 404 and is written. Parse results record
+  `gcs_metadata_reads` (Class B) and `parsed_unchanged`; `gcs_writes`
+  counts only real writes, and `fct_free_tier_usage` adds the metadata
+  reads to Class B. Verified 2026-10-11 against dev GCS: re-parsing
+  2026-10-10 wrote nothing (4 of 4 files unchanged, 4 metadata reads),
+  which also confirms the stored files equal the current parser's output.
+- **Option 1: deferred.** It trades about 18,000 Class B a month for the
+  listings; revisit if the measured projection approaches 85% again.
+- **Option 3: rejected.** Parsing a day must read every raw object of that
+  day, because raw is the source of truth. Ingestion's key list reflects
+  the mailbox at fetch time; a message later deleted from the mailbox would
+  silently drop out of the parsed file.
+
+**After** (to be measured on scheduled runs from 2026-10-11 14:00 UTC, with
+the same query as the table above): pending.
+
 ## Consequences
 
-To be written with the decision. Any option must keep ADR-0021's guarantees:
-idempotent runs, full backfills, and the daily full-window repair.
+**Positive:**
+
+- Writes are spent only on content that changed; the parsed zone still
+  equals the parser's output (ADR-0018), and ADR-0021's guarantees hold:
+  idempotent runs, full backfills, the daily full-window repair.
+- Replays after a parser change rewrite only the days whose output changed.
+
+**Negative / trade-offs:**
+
+- Each write now costs a metadata read first (Class B, well within its free
+  tier) and a little latency (measured: four sequential reads took 1.9 s
+  locally, about what four writes took before).
+- Revisit option 1 when the projection approaches 85% again, and in step
+  1.11, when prod starts sharing the billing account's free tier.
 
 ## References
 

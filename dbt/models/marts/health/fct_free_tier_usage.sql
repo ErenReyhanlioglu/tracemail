@@ -18,7 +18,11 @@ with runs as (
                 + coalesce(int64(metrics.gcs_writes), 0)
         end as gcs_class_a,
         case
-            when job_name = 'parse_mail' then coalesce(int64(metrics.gcs_reads), 0)
+            -- Object downloads, and metadata reads of existing parsed files
+            -- before a skipped or replaced write (ADR-0030, option 2).
+            when job_name = 'parse_mail'
+                then coalesce(int64(metrics.gcs_reads), 0)
+                + coalesce(int64(metrics.gcs_metadata_reads), 0)
         end as gcs_class_b,
         case
             when job_name in ('dbt_build', 'dbt_node_retry')

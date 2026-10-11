@@ -74,9 +74,9 @@ These are recorded as unverified in ADRs; each is checked at the step named.
 
 ### Decisions still needed in Phase 1
 
-- **GCS Class A headroom** — [ADR-0030](adr/0030-gcs-class-a-headroom.md)
-  (Proposed) — mandatory when projected monthly Class A use exceeds 85%
-  (CLAUDE.md, 85% rule).
+None open. GCS Class A headroom was decided in
+[ADR-0030](adr/0030-gcs-class-a-headroom.md) (option 2 implemented, option 1
+deferred until the projection approaches 85% again).
 
 ---
 
