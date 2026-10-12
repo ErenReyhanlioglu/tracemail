@@ -24,7 +24,11 @@ Measured 2026-10-12 in dev, from two sources:
 Day by day the two agree on scheduled runs alone (11 October: about 104 in
 Monitoring, 103 recorded). The 493 missing from the run records are
 development work: 180 on 7 October, before run records existed, and about
-300 on 9 and 10 October from manual commands that write no run record. The
+300 on 9 and 10 October from work outside the pipeline's jobs, which write
+no run record: `raw-inventory` (one listing per day of its range),
+integration tests, and `gcloud` or console listings. (Corrected
+2026-10-12: an earlier version blamed manual CLI runs, but `ingest-mail`,
+`parse-mail`, and `load-landing` record their runs like scheduled ones.) The
 recorded steady-state rate is therefore sound, but the month-to-date base is
 Monitoring's:
 
@@ -149,7 +153,7 @@ operations rather than one.
 
 ## Decision
 
-Decided by the owner on 2026-10-12 and 2026-10-13:
+Decided by the owner on 2026-10-12:
 
 - **Option 1: dev runs on demand.** The local stack is stopped when no code
   is being worked on; prod is the only environment running hourly.
@@ -164,6 +168,12 @@ Decided by the owner on 2026-10-12 and 2026-10-13:
   Anything above the free tier is billed postpay at USD 0.005 per 1,000 [2],
   a fraction of a cent. The owner chose a complete history in prod now over
   a two-part backfill that kept every month under 85%.
+
+Prod's backfill, measured on 2026-10-12 (CLI on the VM, 2026-07-08 to
+2026-10-12): ingestion stored 736 of 1,080 messages (344 excluded) in
+216 s with 49 IMAP commands and 736 writes; parsing produced 639 parsed,
+0 failed, and 97 unclaimed messages with 97 listings and 388 writes in
+281 s; loading ran 388 load jobs for 3,452 rows in 143 s. Class A: 1,221.
 
 Cost is read from Cloud Monitoring at the end of October and recorded here.
 
@@ -185,7 +195,8 @@ Cost is read from Cloud Monitoring at the end of October and recorded here.
   a run takes about 10 s instead of 2 s (measured on a laptop).
 - Dev's health views no longer update between development sessions.
 - October exceeds the 85% rule once, by the owner's choice; the run records
-  undercount manual work, so the month-end figure comes from Monitoring.
+  miss work outside the pipeline's jobs, so the month-end figure comes from
+  Monitoring.
 - Revisit if a message larger than 8 MiB appears often (each run then makes
   a Class B existence check for it) or if Gmail's IMAP limits tighten.
 
