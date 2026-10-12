@@ -14,6 +14,9 @@ adaptations:
 - **Panel summary.** Every postmortem ends with the two lines the public
   health panel's incident log shows (Phase 3), proposed with the postmortem
   and published only after the owner approves them (CLAUDE.md, Incidents).
+  The postmortem records the approval. The summary is written in English
+  like every file; the panel's copy is Turkish (ADR-0033), so publishing it
+  means adding its Turkish translation to the web app's strings module.
 
 Postmortems state what went wrong, not who: the subject is the system and
 the process. Like everything public in this repository, they never contain
@@ -66,7 +69,8 @@ How it was noticed, and how long that took.
 - HH:MM — ...
 
 ## Panel summary
-Two lines for the health panel's incident log.
+Two lines for the health panel's incident log. Approved by the owner on
+YYYY-MM-DD (or: pending approval).
 
 ## References
 1. ...

@@ -101,6 +101,9 @@ weeks later when a manual run was needed in a hurry.
 
 ## Panel summary
 
+Approved by the owner on 2026-10-12. Published in Turkish with the health
+panel (Phase 3).
+
 **2026-10-12 — Manual runs failed.** Runs started without a date had no
 time window; one manual run failed, scheduled runs and data were unaffected.
 **Fix:** such runs now use their trigger time.
