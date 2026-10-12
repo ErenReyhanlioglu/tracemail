@@ -104,6 +104,49 @@ Projections (Class A, expected; from 2,570 used and prod hourly from
 Only the last combination stays under 85% in every month. Dev hourly alone
 would already end October at about 93%.
 
+## Option 2, implemented and measured (2026-10-12)
+
+`ingest_mail` no longer lists the raw zone. It downloads every kept message
+in the window and calls the create-only write; a 412 counts as already
+stored (`gcs_writes_rejected`, not billed). Exclusion still happens on
+headers, before any body is downloaded. A message larger than the GCS
+client's single-request upload size (8 MiB in google-cloud-storage 3.16) is
+checked for existence first (`gcs_existence_checks`, Class B): a rejected
+resumable upload is billed as one Class A operation on success [2], and its
+billing on a 412 is not documented. Dev's raw zone holds no such message:
+725 objects, mean 135 KB, largest 0.77 MB. Tests lock that a stored message
+is never replaced even when the fetched bytes differ, that nothing is listed,
+and that excluded mail is never downloaded.
+
+Bodies are fetched in one IMAP command per batch of 20 (as headers already
+are, ADR-0017), each body matched to its message by the UID in its response
+line; a requested message missing from the response fails the run, as a
+single fetch did. Uploads within a batch run 8 at a time (as parsing reads
+do); workers return their outcome and the run counts them in one thread.
+A test stores more than two batches and checks every body under its own key.
+
+Measured against dev, CLI runs over a three-day window like a scheduled
+run's (Windows laptop, 2026-10-12):
+
+| | Before (scheduled runs, ADR-0030) | After, one by one | After, batched and concurrent |
+|---|---|---|---|
+| Class A per run | 2–3 listings plus new writes | new writes only (0 here) | new writes only (0 here) |
+| Messages kept / already stored | — | 29 / 29, rejected with 412 | 29 / 29, rejected with 412 |
+| IMAP commands | 2 plus one per new message | 31 | 4 |
+| IMAP download | new mail only | 2.4 MB | 2.4 MB |
+| Duration | mean 2.3 s | 27.3 s | 10.5 s (4.2 s IMAP bodies, 5.2 s uploads) |
+
+Cloud Monitoring recorded the first run's 29 writes as `FAILED_PRECONDITION`
+with no successful write: the stored objects were not touched. The VM's
+duration is expected to be shorter (faster network than a home connection)
+and is read from prod's run records after deployment. At 24 runs a day the
+extra IMAP download is about 60 MB, within Gmail's 2,500 MB daily IMAP
+limit [5] (a Google Workspace figure; not confirmed for consumer accounts).
+
+The size check for this decision was itself a lesson: a recursive
+`gcloud storage ls` lists each date partition separately, about 96 Class A
+operations rather than one.
+
 ## Decision
 
 Pending the owner's choice.
@@ -118,3 +161,4 @@ To be written with the decision.
 2. [Cloud Storage pricing — Google Cloud](https://cloud.google.com/storage/pricing) (downloaded and read 2026-10-12: "Generally, you are not charged for operations that return 307, 4xx, or 5xx responses", the exception being 404s from buckets with a website configuration; Class A price as read for ADR-0030)
 3. [ADR-0010: Separate GCP Projects for Dev and Prod](0010-separate-gcp-projects-for-dev-and-prod.md)
 4. [ADR-0030: Keeping Class A Headroom as Mail Volume Grows](0030-gcs-class-a-headroom.md)
+5. [Gmail bandwidth limits — Google Workspace Admin Help](https://knowledge.workspace.google.com/admin/gmail/gmail-bandwidth-limits) (known from search-result summaries: IMAP download 2,500 MB a day)
