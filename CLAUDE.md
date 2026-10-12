@@ -579,10 +579,12 @@ alert postings that have only a title.
 
 ### Incidents
 
-When something breaks in production and gets fixed, propose an entry for the
-incident log: date, what broke, impact, fix, follow-up. Keep it to two lines,
-in the same tone as the health panel mockup. The owner approves it before it
-is published.
+When something breaks in production and gets fixed, write a postmortem in
+`docs/incidents/` following the template in its README (Google SRE's example
+postmortem): impact with numbers, root causes, trigger, resolution,
+detection, action items, lessons learned, timeline. It ends with the two-line
+panel summary for the health panel's incident log, in the same tone as the
+health panel mockup; the owner approves it before it is published.
 
 ---
 

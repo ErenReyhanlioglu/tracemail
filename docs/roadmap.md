@@ -7,11 +7,11 @@ Build order and current position. Scope per phase is defined in
 **Current step:** 1.11 (`ci/deploy`) — 1.0 to 1.5 and 1.7 to 1.10 done; 1.6
 waits for the LinkedIn data export (checklist F). In 1.11, deploys from
 `main` run in production since 2026-10-11
-([infra/vm](../infra/vm/README.md#continuous-deployment)). Still open: the
-first production data run (backfill, dbt as the transform account, Cosmos
-load on the VM); Cloudflare Tunnel and the production OAuth client once the
-domain is active; the dbt build on a CI target in GitHub Actions, which needs
-GitHub → GCP Workload Identity Federation.
+([infra/vm](../infra/vm/README.md#continuous-deployment)), and prod has run
+hourly since 2026-10-12 with its history backfilled (ADR-0036). Still open:
+Cloudflare Tunnel and the production OAuth client once the domain is active;
+the dbt build on a CI target in GitHub Actions, which needs GitHub → GCP
+Workload Identity Federation.
 
 Each step is one branch and one or more pull requests. A step is done when its
 "Done when" line is true on `main`.
@@ -53,12 +53,10 @@ These are recorded as unverified in ADRs; each is checked at the step named.
 - ~~`external_python` subprocess inherits environment variables — 1.7~~
   Verified 2026-10-09: a `dags test` run of the hourly DAG read IMAP, GCS, and
   BigQuery settings from the scheduler's environment inside `pipeline_venv`.
-- Cosmos DAG-parsing load is acceptable on the VM — 1.7 / 1.11
-  Measured locally 2026-10-10 (amd64): the DAG file (52 tasks, manifest
-  rendering) parses in 6.6 s, and the DAG processor re-parses it every 30 s by
-  default. Measure on the VM; if the load is too high, lengthen
-  `[dag_processor] min_file_process_interval`, since the file only changes on
-  deploy.
+- ~~Cosmos DAG-parsing load is acceptable on the VM — 1.7 / 1.11~~
+  Verified 2026-10-12: on the VM the DAG file parses in 1.6 s (6.6 s locally
+  on amd64), and the DAG processor uses about 5% of a core re-parsing it
+  every 30 s. No change needed.
 - Oracle web-console emergency access works when Tailscale is down — 1.11
 - ~~Free Ampere capacity in `eu-frankfurt-1` — 1.11~~
   Verified 2026-10-11: AD-3 had none; another availability domain did
@@ -68,6 +66,8 @@ These are recorded as unverified in ADRs; each is checked at the step named.
   below the 20% that, together with low CPU and network, marks an instance
   idle. Read the 95th percentiles from the instance metrics after a week of
   hourly runs; if all three stay below 20%, record the options in an ADR.
+  With prod running (2026-10-12, one snapshot): memory about 24% in use
+  (total minus available), CPU about 24% busy over a quiet minute.
 
 ### Follow-ups
 
