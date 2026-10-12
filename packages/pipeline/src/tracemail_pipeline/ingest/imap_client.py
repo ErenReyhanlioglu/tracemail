@@ -104,11 +104,24 @@ class MailboxReader:
             headers.extend(_parse_header_item(item) for item in _literals(data))
         return headers
 
-    def fetch_raw(self, uid: str) -> bytes:
-        """Fetch the full original message bytes."""
-        status, data = self._uid("FETCH", uid, BODY_FETCH_ITEMS)
+    def fetch_raw_many(self, uids: Sequence[str]) -> dict[str, bytes]:
+        """Fetch the full original bytes of several messages in one command.
+
+        Each body is matched to its message by the UID in its response line.
+        A requested message missing from the response (deleted since its
+        header was read) raises, as a single fetch would, so the run fails
+        and is retried rather than silently storing less.
+        """
+        status, data = self._uid("FETCH", ",".join(uids), BODY_FETCH_ITEMS)
         _require_ok(status, "FETCH body")
-        return _first_literal(data)[1]
+        bodies = {_uid_of(line): raw for line, raw in _literals(data)}
+        missing = [uid for uid in uids if uid not in bodies]
+        if missing:
+            returned = len(uids) - len(missing)
+            raise ImapFetchError(
+                f"FETCH body returned {returned} of {len(uids)} messages"
+            )
+        return bodies
 
     def list_mailboxes(self) -> list[str]:
         """Return all mailbox names, decoded for display."""
@@ -152,22 +165,19 @@ def _literals(data: list[Any]) -> list[tuple[bytes, bytes]]:
     ]
 
 
-def _first_literal(data: list[Any]) -> tuple[bytes, bytes]:
-    literals = _literals(data)
-    if not literals:
-        raise ImapFetchError("FETCH response contained no message data")
-    return literals[0]
+def _uid_of(response_line: bytes) -> str:
+    uid_match = UID_PATTERN.search(response_line)
+    if uid_match is None:
+        raise ImapFetchError("FETCH response line has no UID")
+    return uid_match.group(1).decode("ascii")
 
 
 def _parse_header_item(item: tuple[bytes, bytes]) -> MailHeader:
     response_line, header_bytes = item
-    uid_match = UID_PATTERN.search(response_line)
-    if uid_match is None:
-        raise ImapFetchError("FETCH response line has no UID")
     headers = message_from_bytes(header_bytes, policy=default_policy)
     message_id = headers.get("Message-ID")
     return MailHeader(
-        uid=uid_match.group(1).decode("ascii"),
+        uid=_uid_of(response_line),
         internal_date=parse_internaldate(response_line),
         from_header=str(headers.get("From", "")),
         subject=str(headers.get("Subject", "")),

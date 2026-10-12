@@ -71,11 +71,9 @@ These are recorded as unverified in ADRs; each is checked at the step named.
 
 ### Follow-ups
 
-- OpenSSH on the VM listens on every interface, and the image's host
-  firewall accepts port 22 (seen 2026-10-11); only the VCN security list
-  blocks it. ADR-0012 control 1 says SSH listens only on the Tailscale
-  interface, and Tailscale SSH already serves the tailnet's port 22, so
-  OpenSSH is to be disabled on the VM.
+- ~~OpenSSH on the VM listens on every interface~~ Fixed 2026-10-12:
+  disabled and masked, nothing listens on port 22, Tailscale SSH unaffected
+  (`infra/vm/README.md`, OpenSSH off).
 - Every merge restarts the whole stack, documentation-only merges included,
   because each commit gets a new image tag (`infra/vm/README.md`). Harmless
   while tasks are idempotent; narrow the deploy trigger if restarts start to

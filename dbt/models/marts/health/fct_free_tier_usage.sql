@@ -23,6 +23,10 @@ with runs as (
             when job_name = 'parse_mail'
                 then coalesce(int64(metrics.gcs_reads), 0)
                 + coalesce(int64(metrics.gcs_metadata_reads), 0)
+            -- Existence checks before large uploads (ADR-0036). Writes
+            -- rejected as already stored return 412 and are not billed.
+            when job_name = 'ingest_mail'
+                then coalesce(int64(metrics.gcs_existence_checks), 0)
         end as gcs_class_b,
         case
             when job_name in ('dbt_build', 'dbt_node_retry')

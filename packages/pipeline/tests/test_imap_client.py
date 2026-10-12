@@ -30,7 +30,7 @@ def test_every_fetch_uses_peek_so_no_message_is_marked_as_read(
     imap = make_fake_imap({"7": message_factory("a@example.com", "<id@example.com>")})
     reader = make_reader(imap)
     reader.fetch_headers(["7"])
-    reader.fetch_raw("7")
+    reader.fetch_raw_many(["7"])
     fetch_items = [call[3] for call in imap.fetch_calls()]
     assert len(fetch_items) == 2
     assert all("BODY.PEEK[" in items for items in fetch_items)
@@ -116,14 +116,27 @@ def test_fetch_headers_rejects_a_response_without_uid(
         make_reader(imap).fetch_headers(["1"])
 
 
-def test_fetch_raw_returns_original_bytes(
+def test_fetch_raw_many_returns_each_body_by_uid_in_one_command(
     make_fake_imap: Callable[..., Any],
     make_reader: Callable[[Any], Any],
     message_factory: Callable[..., Any],
 ) -> None:
-    message = message_factory("a@example.com", "<id@example.com>")
-    imap = make_fake_imap({"7": message})
-    assert make_reader(imap).fetch_raw("7") == message.raw
+    first = message_factory("a@example.com", "<a@example.com>")
+    second = message_factory("b@example.com", "<b@example.com>")
+    imap = make_fake_imap({"7": first, "9": second})
+    bodies = make_reader(imap).fetch_raw_many(["9", "7"])
+    assert bodies == {"7": first.raw, "9": second.raw}
+    assert len(imap.fetch_calls()) == 1
+
+
+def test_fetch_raw_many_raises_when_a_requested_message_is_missing(
+    make_fake_imap: Callable[..., Any],
+    make_reader: Callable[[Any], Any],
+    message_factory: Callable[..., Any],
+) -> None:
+    imap = make_fake_imap({"7": message_factory("a@example.com", "<a@example.com>")})
+    with pytest.raises(ImapFetchError):
+        make_reader(imap).fetch_raw_many(["7", "8"])
 
 
 def test_list_mailboxes_decodes_names(
@@ -152,4 +165,4 @@ def test_fetch_without_message_data_raises_imap_fetch_error(
     imap = make_fake_imap()
     imap.uid = lambda command, *args: ("OK", [b")"])
     with pytest.raises(ImapFetchError):
-        make_reader(imap).fetch_raw("7")
+        make_reader(imap).fetch_raw_many(["7"])
