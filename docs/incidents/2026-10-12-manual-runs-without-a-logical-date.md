@@ -1,7 +1,7 @@
 # Incident: Manual Runs Without a Logical Date Failed
 
 **Date:** 2026-10-12 (start, UTC)
-**Status:** Mitigated
+**Status:** Resolved
 
 ## Summary
 
@@ -9,7 +9,8 @@ The first manual run of the hourly DAG in prod failed before doing any
 work: Airflow 3 starts a run triggered without a date with no data interval,
 and the ingestion task's template required one. A manual run triggered with
 a date did the same work 12 minutes later. The DAG now falls back to the
-trigger time; the fix is in review and is verified once deployed.
+trigger time; deployed with pull request #15 and verified in prod the same
+day by a dateless manual run.
 
 ## Impact
 
@@ -20,8 +21,8 @@ trigger time; the fix is in review and is verified once deployed.
 - Scheduled runs were unaffected; the 16:00 run succeeded before and every
   hourly run after.
 - The first full dbt build in prod started at 16:23 instead of 16:11.
-- Until the fix is deployed, the Airflow UI's "Trigger" and a dateless
-  `airflow dags trigger` fail the same way.
+- Until the fix was deployed, the Airflow UI's "Trigger" and a dateless
+  `airflow dags trigger` failed the same way.
 
 ## Root causes
 
@@ -65,8 +66,8 @@ the failure; it was found because the run was being watched.
 
 | Action | Type | State |
 |---|---|---|
-| Fall back to the trigger time when a run has no interval (`apps/airflow/dags/tracemail_ingest.py`) | prevent | Done, deploys with the fix's pull request |
-| Trigger a dateless manual run in prod after the deploy and confirm it succeeds | mitigate | Open |
+| Fall back to the trigger time when a run has no interval (`apps/airflow/dags/tracemail_ingest.py`) | prevent | Done (#15) |
+| Trigger a dateless manual run in prod after the deploy and confirm it succeeds | mitigate | Done: succeeded 2026-10-12 22:18 |
 | Document changing a run's state through the REST API, since the UI is unreachable | process | Done (`infra/vm/README.md`) |
 
 ## Lessons learned
@@ -94,6 +95,9 @@ weeks later when a manual run was needed in a hurry.
   starts.
 - About 16:44 — Queued run finishes (its last dbt node at 16:43); the first
   dbt build in prod is complete.
+- 22:14 — With the fix deployed (#15), a dateless manual run is triggered:
+  ingestion uses the trigger time, parsing and loading the whole window.
+- 22:18 — That run succeeds, dbt build included. Resolved.
 
 ## Panel summary
 

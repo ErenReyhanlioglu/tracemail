@@ -76,7 +76,7 @@ Two lines for the health panel's incident log.
 
 | Date | Incident | Status |
 |---|---|---|
-| 2026-10-12 | [Manual runs without a logical date failed](2026-10-12-manual-runs-without-a-logical-date.md) | Mitigated |
+| 2026-10-12 | [Manual runs without a logical date failed](2026-10-12-manual-runs-without-a-logical-date.md) | Resolved |
 
 ## References
 
