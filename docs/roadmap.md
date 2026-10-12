@@ -166,7 +166,9 @@ Open decision: which models to compare. Ends with `v0.2.0`.
 Public health panel (24-hour and 30-day run views, parse quality, tests, LLM
 section, incident log); the remaining private sections (the application
 and incoming-posting lists exist since step 1.10); share links for guests;
-visitor skeletons. Ends with `v0.3.0`.
+visitor skeletons. Ends with `v0.3.0`. The incident log is built from the
+approved panel summaries in [incidents/](incidents/README.md), translated
+into the Turkish UI strings (ADR-0033); one is waiting (2026-10-12).
 
 ## Phase 4 — Optional (outline)
 
