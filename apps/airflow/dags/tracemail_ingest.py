@@ -54,6 +54,20 @@ START_DATE = datetime(2026, 10, 9, tzinfo=UTC)
 # ([scheduler] create_cron_data_intervals = False); the interval timetable
 # keeps data_interval_start/end one hour apart, so each run covers its hour.
 HOURLY = CronDataIntervalTimetable("0 * * * *", timezone="UTC")
+# A run triggered without a logical date (Airflow 3's default for manual
+# runs) has no data interval: the template variables are undefined, not
+# None. Such a run falls back to the moment it was triggered; manual runs
+# process the whole window around it anyway (ADR-0021). Seen in prod on
+# 2026-10-12, when a manual run failed with "'data_interval_start' is
+# undefined".
+INTERVAL_START = (
+    "{{ (data_interval_start if data_interval_start is defined "
+    "and data_interval_start is not none else dag_run.run_after).isoformat() }}"
+)
+INTERVAL_END = (
+    "{{ (data_interval_end if data_interval_end is defined "
+    "and data_interval_end is not none else dag_run.run_after).isoformat() }}"
+)
 # The Task SDK renders dag_run.run_type as "DagRunType.SCHEDULED"; its value
 # is the plain run type the pipeline expects (verified 2026-10-10).
 RUN_TYPE = (
@@ -166,11 +180,7 @@ def tracemail_hourly() -> None:
         operator_args={"install_deps": False, "callback": record_dbt_node_retry},
     )
 
-    days = ingest_mail(
-        "{{ data_interval_start.isoformat() }}",
-        "{{ data_interval_end.isoformat() }}",
-        RUN_TYPE,
-    )
+    days = ingest_mail(INTERVAL_START, INTERVAL_END, RUN_TYPE)
     parsed = parse_mail(days)
     has_new_days(days) >> parsed
     load_landing(parsed) >> dbt
