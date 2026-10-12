@@ -249,6 +249,44 @@ Verified on the VM (2026-10-11):
   "administratively prohibited: port forwarding is disabled"; a plain
   `ssh ubuntu@tracemail-prod "<command>"` still works.
 
+### Operations notes
+
+- **First data run (2026-10-12).** The 92-day backfill ran with the
+  pipeline CLI inside the scheduler container, with the DAG paused, so no
+  scheduled run wrote the same days at the same time:
+
+  ```sh
+  C="sudo docker compose -f infra/compose.yaml --env-file .env --env-file ../release.env"
+  $C exec -T airflow-scheduler /opt/venvs/pipeline/bin/python -m tracemail_pipeline.cli ingest-mail --start-date <first day> --end-date <day after last>
+  ```
+
+  followed by `parse-mail` and `load-landing` over the same days, then
+  `airflow dags unpause` and a manual run for the first dbt build. Results
+  are in ADR-0036. Hourly ingestion then took about 4 s a run on the VM.
+- **The first dbt build on a fresh project fails once.**
+  `stg_ops__dbt_node_runs` reads `ops.dbt_node_runs`, which the build's own
+  recording step creates after the build. The watcher's sensor re-runs the
+  node once the table exists (ADR-0029), and later builds pass.
+- **Changing a run's state without the Airflow UI.** The UI is not reachable
+  (port forwarding is off, ADR-0035); the REST API is, from inside the
+  apiserver container. For example, to mark a stuck run failed:
+
+  ```sh
+  $C exec -T airflow-apiserver python - <<'PY'
+  import json, urllib.parse, urllib.request
+  base, run_id = "http://localhost:8080", "<run id>"
+  password = json.load(open("/opt/airflow/state/passwords.json"))["owner"]
+  token = json.load(urllib.request.urlopen(urllib.request.Request(
+      f"{base}/auth/token", method="POST",
+      data=json.dumps({"username": "owner", "password": password}).encode(),
+      headers={"Content-Type": "application/json"})))["access_token"]
+  urllib.request.urlopen(urllib.request.Request(
+      f"{base}/api/v2/dags/tracemail_hourly/dagRuns/{urllib.parse.quote(run_id, safe='')}",
+      method="PATCH", data=json.dumps({"state": "failed"}).encode(),
+      headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}"}))
+  PY
+  ```
+
 Manual Compose commands need the release file as well, for example:
 
 ```sh

@@ -41,8 +41,8 @@ Notes:
   `marts`: `tm-transform` writer, `tm-api` reader; `landing`: `tm-ingestion`
   writer, `tm-transform` reader). At project level the accounts hold only
   `roles/bigquery.jobUser`.
-- Not yet verified: that a dbt build as `tm-transform` needs no permission to
-  create datasets when they already exist. Checked with the first prod build.
+- 2026-10-12, first prod build: dbt as `tm-transform` built every model in
+  the existing datasets; no permission to create datasets was needed.
 
 ## Keys (VM → GCP, ADR-0009)
 
