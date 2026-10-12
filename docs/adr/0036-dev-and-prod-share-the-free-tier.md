@@ -1,7 +1,7 @@
 # ADR-0036: Dev and Prod Share One Free Tier
 
 **Date:** 2026-10-12
-**Status:** Proposed
+**Status:** Accepted
 
 ## Context
 
@@ -149,11 +149,45 @@ operations rather than one.
 
 ## Decision
 
-Pending the owner's choice.
+Decided by the owner on 2026-10-12 and 2026-10-13:
+
+- **Option 1: dev runs on demand.** The local stack is stopped when no code
+  is being worked on; prod is the only environment running hourly.
+- **Option 2: conditional writes without a listing**, batched and
+  concurrent, as described above.
+- **Prod's backfill runs in full now, as a one-off exception to the 85%
+  rule**, after option 2 is deployed so the backfill makes no listings
+  either. Expected October total, from what was used by 12 October (about
+  2,670, including about 96 for the size check above): about 2,670 + 910
+  (prod hourly for 19 days, about 48 a day) + 1,200 (backfill: about 725
+  raw writes, 368 parsed files, 92 parse listings) = about 4,800 (96%).
+  Anything above the free tier is billed postpay at USD 0.005 per 1,000 [2],
+  a fraction of a cent. The owner chose a complete history in prod now over
+  a two-part backfill that kept every month under 85%.
+
+Cost is read from Cloud Monitoring at the end of October and recorded here.
 
 ## Consequences
 
-To be written with the decision.
+**Positive:**
+
+- From November, Class A use is expected at about 29% a month instead of
+  about 124% with both environments hourly: headroom for parser replays,
+  growing mail volume, and the LinkedIn history (step 1.6).
+- Ingestion is simpler: no existing-key step, and raw immutability rests on
+  one mechanism, the create-only precondition, which tests and Monitoring
+  confirmed.
+
+**Negative / trade-offs:**
+
+- Each ingestion run downloads every kept message in its window (about
+  60 MB a day over IMAP) and makes one rejected upload per stored message;
+  a run takes about 10 s instead of 2 s (measured on a laptop).
+- Dev's health views no longer update between development sessions.
+- October exceeds the 85% rule once, by the owner's choice; the run records
+  undercount manual work, so the month-end figure comes from Monitoring.
+- Revisit if a message larger than 8 MiB appears often (each run then makes
+  a Class B existence check for it) or if Gmail's IMAP limits tighten.
 
 ## References
 
