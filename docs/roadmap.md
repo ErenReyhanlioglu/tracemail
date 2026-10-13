@@ -83,15 +83,12 @@ These are recorded as unverified in ADRs; each is checked at the step named.
   optimize later.
 - Alert yield metric (which alerts lead to saved / applied postings) — after
   1.5, not urgent.
-- Web polish (owner-requested, nice-to-have, after the core works):
-  - **Error handling.** Tell failures apart instead of one "data
-    unavailable" message: session expired (to login), API down (retry
-    message), unknown route (not-found page), unexpected error (error
-    boundary). Pages answer with the matching HTTP status, not 200 with a
-    message. Seen 2026-10-11: an API 404 after a half-applied reload showed
-    as "data unavailable".
-  - **Loading states.** Skeleton rows while a list loads (Next.js
-    `loading.tsx`), in the table's own layout so nothing jumps.
+- Web UX baseline before the site goes public: every state designed
+  (loading, empty, error, not found), "last checked" time on the lists,
+  WCAG 2.2 AA; desktop first, then a mobile layout as polished as the
+  desktop; measured with Lighthouse and a manual pass before and after
+  ([ADR-0039](adr/0039-web-ux-baseline.md)). Seen 2026-10-11: an
+  API 404 after a half-applied reload showed as "data unavailable".
 
 ### Decisions still needed in Phase 1
 

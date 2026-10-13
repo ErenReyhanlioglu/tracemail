@@ -53,3 +53,4 @@ written at the moment the decision is made — not drafted ahead of time.
 | [0036](0036-dev-and-prod-share-the-free-tier.md) | Dev and Prod Share One Free Tier | Accepted |
 | [0037](0037-dbt-build-in-ci-on-dev-data.md) | dbt Build in CI on Dev Data through Workload Identity Federation | Accepted |
 | [0038](0038-web-security-headers-and-nonce-csp.md) | Web Security Headers and a Nonce-Based Content Security Policy | Accepted |
+| [0039](0039-web-ux-baseline.md) | Web UX Baseline — States, Mobile, and Accessibility | Accepted (not yet implemented) |
