@@ -51,4 +51,4 @@ written at the moment the decision is made — not drafted ahead of time.
 | [0034](0034-web-ui-design-system.md) | Web UI Design System — Mockup Tokens, Semantic Status Colors, Light and Dark Themes | Accepted |
 | [0035](0035-deploy-user-restricted-by-login-shell-and-sudo.md) | Deploy User Restricted by Login Shell and One Sudo Rule | Accepted |
 | [0036](0036-dev-and-prod-share-the-free-tier.md) | Dev and Prod Share One Free Tier | Accepted |
-| [0037](0037-dbt-build-in-ci-on-dev-data.md) | dbt Build in CI on Dev Data through Workload Identity Federation | Accepted (not yet implemented) |
+| [0037](0037-dbt-build-in-ci-on-dev-data.md) | dbt Build in CI on Dev Data through Workload Identity Federation | Accepted |

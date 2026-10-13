@@ -1,7 +1,7 @@
 # ADR-0037: dbt Build in CI on Dev Data through Workload Identity Federation
 
 **Date:** 2026-10-13
-**Status:** Accepted (not yet implemented)
+**Status:** Accepted
 
 ## Context
 
@@ -93,9 +93,9 @@ Workload Identity Federation (verified 2026-10-13):
 
 **Negative / trade-offs:**
 
-- Cost: about 1.2 GB billed a run; at about 50 runs a month, about 60 GB
-  (6% of the query allowance), about 27% together with prod's builds.
-  Expected, to be measured from the CI account's jobs.
+- Cost: 1,190 MB billed a run (measured, below); at about 50 runs a month,
+  about 60 GB (6% of the query allowance), about 27% together with prod's
+  builds. The monthly figure is an expectation.
 - Dev's data is frozen while dev runs on demand (ADR-0036). A pull request
   whose models need a field a parser just added fails until the affected
   days are replayed in dev; that replay is part of developing such a
@@ -104,6 +104,17 @@ Workload Identity Federation (verified 2026-10-13):
   job may print query results.
 - Pull requests from forks skip this job, and with it the image builds.
 - The CI run adds about two minutes before images build on `main`.
+
+## Verified (2026-10-13)
+
+The first run, on this ADR's pull request: GitHub obtained short-lived
+credentials through the pool and impersonated `tm-ci-dbt` with no stored
+key; `dbt build --target ci --full-refresh` passed 117 of 117 nodes
+(22 models, 94 data tests, 1 seed) in 38.6 s, every model in a `ci_*`
+dataset; the job's log shows names, counts, and durations, no rows. The
+account's BigQuery jobs that run, from `INFORMATION_SCHEMA.JOBS_BY_PROJECT`:
+118 jobs, 4.1 MB processed, 1,190 MB billed. The grants read back from GCP
+are in `infra/gcp/README.md`.
 
 ## References
 
