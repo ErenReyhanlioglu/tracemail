@@ -1,24 +1,25 @@
 // The incoming-postings list: same table style as the application list. The
 // status is plain text as in the mockup; role type, rough fit, and the match
 // report join as columns in later phases.
-import type { ReactNode } from "react";
-
 import { formatDayMonth } from "@/lib/format";
 import type { Posting } from "@/lib/postings";
 import { strings } from "@/lib/strings";
 
 import styles from "./DataTable.module.css";
-import { Clipped, columnStyle, ExternalLink } from "./TableParts";
+import { Clipped, ExternalLink, TableHead, type TableShape, type TableSorting } from "./TableParts";
 
 const text = strings.postings;
 
-const COLUMNS: readonly { label: string; width: string | null }[] = [
-  { label: text.columns.posting, width: null },
-  { label: text.columns.location, width: "--col-posting-location" },
-  { label: text.columns.firstSeen, width: "--col-first-seen" },
-  { label: text.columns.lastSeen, width: "--col-last-seen" },
-  { label: text.columns.status, width: "--col-posting-status" },
-];
+export const POSTING_TABLE: TableShape = {
+  columns: [
+    { label: text.columns.posting, width: null },
+    { label: text.columns.location, width: "--col-posting-location" },
+    { label: text.columns.firstSeen, width: "--col-first-seen", sortKey: "first_seen" },
+    { label: text.columns.lastSeen, width: "--col-last-seen", sortKey: "last_seen" },
+    { label: text.columns.status, width: "--col-posting-status" },
+  ],
+  minWidth: "--postings-min-width",
+};
 
 function statusLabel(posting: Posting): string {
   switch (posting.status) {
@@ -64,35 +65,23 @@ function Row({ posting }: { posting: Posting }) {
   );
 }
 
-export function PostingTable({ postings, footer }: { postings: Posting[]; footer: ReactNode }) {
+export function PostingTable({
+  postings,
+  sorting,
+}: {
+  postings: Posting[];
+  sorting: TableSorting;
+}) {
   return (
-    <div className={styles.panel}>
-      <div className={styles.scroll}>
-        <table className={styles.table} style={{ minWidth: "var(--postings-min-width)" }}>
-          <colgroup>
-            {COLUMNS.map((column) => (
-              <col key={column.label} style={columnStyle(column.width)} />
-            ))}
-            <col style={columnStyle("--col-link")} />
-          </colgroup>
-          <thead>
-            <tr>
-              {COLUMNS.map((column) => (
-                <th key={column.label} scope="col">
-                  {column.label}
-                </th>
-              ))}
-              <td aria-hidden="true" />
-            </tr>
-          </thead>
-          <tbody>
-            {postings.map((posting) => (
-              <Row key={posting.posting_key} posting={posting} />
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {footer}
+    <div className={styles.scroll}>
+      <table className={styles.table} style={{ minWidth: `var(${POSTING_TABLE.minWidth})` }}>
+        <TableHead shape={POSTING_TABLE} sorting={sorting} />
+        <tbody>
+          {postings.map((posting) => (
+            <Row key={posting.posting_key} posting={posting} />
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

@@ -1,7 +1,5 @@
 // The application list (ADR-0034): one column per field, fixed widths, one
 // line per cell, so every row has the same height.
-import type { ReactNode } from "react";
-
 import type { Application } from "@/lib/applications";
 import { formatDayMonth } from "@/lib/format";
 import { badgesFor, daysAgo } from "@/lib/status";
@@ -9,18 +7,21 @@ import { strings } from "@/lib/strings";
 
 import styles from "./DataTable.module.css";
 import { StatusBadge } from "./StatusBadge";
-import { Clipped, columnStyle, ExternalLink } from "./TableParts";
+import { Clipped, ExternalLink, TableHead, type TableShape, type TableSorting } from "./TableParts";
 
 const text = strings.applications;
 
-const COLUMNS: readonly { label: string; width: string | null }[] = [
-  { label: text.columns.application, width: null },
-  { label: text.columns.channel, width: "--col-channel" },
-  { label: text.columns.location, width: "--col-location" },
-  { label: text.columns.appliedOn, width: "--col-date" },
-  { label: text.columns.lastEvent, width: "--col-last-event" },
-  { label: text.columns.status, width: "--col-status" },
-];
+export const APPLICATION_TABLE: TableShape = {
+  columns: [
+    { label: text.columns.application, width: null },
+    { label: text.columns.channel, width: "--col-channel" },
+    { label: text.columns.location, width: "--col-location" },
+    { label: text.columns.appliedOn, width: "--col-date", sortKey: "applied" },
+    { label: text.columns.lastEvent, width: "--col-last-event", sortKey: "last_event" },
+    { label: text.columns.status, width: "--col-status" },
+  ],
+  minWidth: "--applications-min-width",
+};
 
 function channelLabel(channel: string | null): string {
   return channel ? (strings.channels[channel] ?? channel) : text.unknown;
@@ -77,39 +78,21 @@ function Row({ application }: { application: Application }) {
 
 export function ApplicationTable({
   applications,
-  footer,
+  sorting,
 }: {
   applications: Application[];
-  footer: ReactNode;
+  sorting: TableSorting;
 }) {
   return (
-    <div className={styles.panel}>
-      <div className={styles.scroll}>
-        <table className={styles.table} style={{ minWidth: "var(--applications-min-width)" }}>
-          <colgroup>
-            {COLUMNS.map((column) => (
-              <col key={column.label} style={columnStyle(column.width)} />
-            ))}
-            <col style={columnStyle("--col-link")} />
-          </colgroup>
-          <thead>
-            <tr>
-              {COLUMNS.map((column) => (
-                <th key={column.label} scope="col">
-                  {column.label}
-                </th>
-              ))}
-              <td aria-hidden="true" />
-            </tr>
-          </thead>
-          <tbody>
-            {applications.map((application) => (
-              <Row key={application.application_key} application={application} />
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {footer}
+    <div className={styles.scroll}>
+      <table className={styles.table} style={{ minWidth: `var(${APPLICATION_TABLE.minWidth})` }}>
+        <TableHead shape={APPLICATION_TABLE} sorting={sorting} />
+        <tbody>
+          {applications.map((application) => (
+            <Row key={application.application_key} application={application} />
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

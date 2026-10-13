@@ -1,7 +1,7 @@
 # ADR-0032: Owner Login Implementation — Authlib, a Signed Session Cookie, and Fixed Routes
 
 **Date:** 2026-10-10
-**Status:** Accepted
+**Status:** Accepted; point 5 (refusal page) superseded by [ADR-0040](0040-viewer-routing-and-public-landing.md)
 
 ## Context
 

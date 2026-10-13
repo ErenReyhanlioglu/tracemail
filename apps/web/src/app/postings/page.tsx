@@ -1,25 +1,47 @@
-// Incoming postings (step 1.10): every posting seen in a job mail, newest
-// first, filtered by period and by what the owner did with it. Filtering and
+// Incoming postings (step 1.10): every posting seen in a job mail, filtered
+// by what the owner did with it, by period, and by a search of title and
+// company, and sorted by a date column (ADR-0042). Filtering, sorting, and
 // paging happen in the API; this page fetches one page on the server.
+import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import type { ReactNode } from "react";
 
 import { AppShell } from "@/components/AppShell";
-import { ChipGroup } from "@/components/ChipGroup";
+import { EmptyState, NoMatchState, UnavailableState } from "@/components/ListState";
+import { ListPanel } from "@/components/ListPanel";
+import panelStyles from "@/components/ListPanel.module.css";
 import { Pagination } from "@/components/Pagination";
+import { PeriodMenu } from "@/components/PeriodMenu";
 import { PostingTable } from "@/components/PostingTable";
+import { SearchBox } from "@/components/SearchBox";
+import { SegmentedControl } from "@/components/SegmentedControl";
+import type { TableSorting } from "@/components/TableParts";
 import { fetchPostings } from "@/lib/api";
 import { loadPrivate } from "@/lib/load";
-import { type ListLocation, listUrl, pageCount, parsePageSize } from "@/lib/paging";
 import {
+  type ListLocation,
+  listUrl,
+  pageCount,
+  type PageSize,
+  parsePageSize,
+  sizeQuery,
+} from "@/lib/paging";
+import {
+  DEFAULT_PERIOD,
+  DEFAULT_POSTING_SORT,
   parsePeriod,
   parseStatusFilter,
-  type Period,
   PERIOD_DAYS,
   PERIODS,
+  POSTING_SORT_KEYS,
+  type PostingFilters,
+  type PostingPage,
   postingsQuery,
   STATUS_FILTERS,
-  type StatusFilter,
 } from "@/lib/postings";
+import { parseQuery } from "@/lib/search";
+import { nextSort, parseSort } from "@/lib/sorting";
 import { strings } from "@/lib/strings";
 
 import styles from "../list.module.css";
@@ -29,78 +51,166 @@ export const dynamic = "force-dynamic";
 const PATH = "/postings";
 const text = strings.postings;
 
-function location(status: StatusFilter, period: Period): ListLocation {
-  return { path: PATH, query: postingsQuery(status, period) };
+// Behind login: never indexed, whatever the response status (ADR-0039).
+export const metadata: Metadata = {
+  title: strings.pageTitle(text.title),
+  robots: { index: false },
+};
+
+function location(filters: PostingFilters): ListLocation {
+  return { path: PATH, query: postingsQuery(filters) };
+}
+
+function at(filters: PostingFilters, size: PageSize): string {
+  return listUrl(location(filters), 1, size);
+}
+
+// The toolbar: status segments and the period menu on the left; a way back
+// to the default filters once they changed, and the search, on the right.
+function toolbarParts(
+  data: PostingPage,
+  filters: PostingFilters,
+  size: PageSize,
+): { start: ReactNode; end: ReactNode } {
+  const cleared = { ...filters, status: "all" as const, period: DEFAULT_PERIOD, search: "" };
+  const changed =
+    filters.status !== "all" || filters.period !== DEFAULT_PERIOD || filters.search !== "";
+  return {
+    start: (
+      <>
+        <SegmentedControl
+          label={text.statusLabel}
+          segments={STATUS_FILTERS.map((option) => ({
+            key: option,
+            label: text.filters[option],
+            count: data.counts[option],
+            href: at({ ...filters, status: option }, size),
+            selected: option === filters.status,
+          }))}
+        />
+        <PeriodMenu
+          label={text.periodLabel}
+          options={PERIODS.map((option) => ({
+            key: option,
+            label: text.periods[option],
+            href: at({ ...filters, period: option }, size),
+            selected: option === filters.period,
+          }))}
+        />
+      </>
+    ),
+    end: (
+      <>
+        {changed ? (
+          <Link className={panelStyles.clear} href={at(cleared, size)}>
+            {text.clearFilters}
+          </Link>
+        ) : null}
+        <SearchBox
+          path={PATH}
+          query={filters.search}
+          keep={{ ...postingsQuery({ ...filters, search: "" }), ...sizeQuery(size) }}
+          placeholder={text.searchPlaceholder}
+        />
+      </>
+    ),
+  };
+}
+
+function sortingOf(filters: PostingFilters, size: PageSize): TableSorting {
+  const hrefs = Object.fromEntries(
+    POSTING_SORT_KEYS.map((key) => [
+      key,
+      at({ ...filters, sort: nextSort(filters.sort, key) }, size),
+    ]),
+  );
+  return { ...filters.sort, hrefs };
+}
+
+function PostingList({
+  data,
+  filters,
+  size,
+}: {
+  data: PostingPage;
+  filters: PostingFilters;
+  size: PageSize;
+}) {
+  const { start, end } = toolbarParts(data, filters, size);
+  if (data.total === 0) {
+    const everything = { ...filters, status: "all" as const, period: "all" as const, search: "" };
+    return (
+      <ListPanel start={start} end={end}>
+        <NoMatchState
+          title={text.noMatch}
+          clearLabel={text.clearFilters}
+          clearHref={at(everything, size)}
+        />
+      </ListPanel>
+    );
+  }
+  return (
+    <ListPanel
+      start={start}
+      end={end}
+      footer={
+        <Pagination
+          location={location(filters)}
+          page={data.page}
+          size={size}
+          total={data.total}
+          noun={text.noun}
+        />
+      }
+    >
+      <PostingTable postings={data.items} sorting={sortingOf(filters, size)} />
+    </ListPanel>
+  );
 }
 
 export default async function PostingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; period?: string; page?: string; size?: string }>;
+  searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const params = await searchParams;
-  const status = parseStatusFilter(params.status);
-  const period = parsePeriod(params.period);
+  const filters: PostingFilters = {
+    status: parseStatusFilter(params.status),
+    period: parsePeriod(params.period),
+    search: parseQuery(params.q),
+    sort: parseSort(POSTING_SORT_KEYS, DEFAULT_POSTING_SORT, params.sort, params.order),
+  };
   const size = parsePageSize(params.size);
   const requested = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
   const data = await loadPrivate(() =>
-    fetchPostings({ status, days: PERIOD_DAYS[period], page: requested, pageSize: size }),
+    fetchPostings({
+      status: filters.status,
+      days: PERIOD_DAYS[filters.period],
+      query: filters.search,
+      sort: filters.sort.key,
+      order: filters.sort.order,
+      page: requested,
+      pageSize: size,
+    }),
   );
   if (data && data.items.length === 0 && data.total > 0) {
     // Past the last page (a stale link or a smaller filter): open the last one.
-    redirect(listUrl(location(status, period), pageCount(data.total, size), size));
+    redirect(listUrl(location(filters), pageCount(data.total, size), size));
   }
+  const neverAny =
+    data !== null && data.counts.all === 0 && filters.period === "all" && filters.search === "";
   return (
-    <AppShell active="postings">
+    <AppShell active="postings" viewer="owner">
       <header className={styles.header}>
         <h1 className={styles.title}>{text.title}</h1>
-        {data ? (
-          <span className={styles.summary}>
-            {text.summary(data.counts.all, text.periodsInSummary[period])}
-          </span>
-        ) : null}
       </header>
       {data === null ? (
-        <p className={styles.message}>{strings.errors.unavailable}</p>
+        <UnavailableState />
+      ) : neverAny ? (
+        <EmptyState title={text.emptyTitle} body={text.emptyBody} />
       ) : (
         <>
-          <div className={styles.filters}>
-            <ChipGroup
-              label={text.periodLabel}
-              chips={PERIODS.map((option) => ({
-                key: option,
-                label: text.periods[option],
-                href: listUrl(location(status, option), 1, size),
-                active: option === period,
-              }))}
-            />
-            <ChipGroup
-              label={text.statusLabel}
-              chips={STATUS_FILTERS.map((option) => ({
-                key: option,
-                label: text.filters[option],
-                count: data.counts[option],
-                href: listUrl(location(option, period), 1, size),
-                active: option === status,
-              }))}
-            />
-          </div>
-          {data.total === 0 ? (
-            <p className={styles.message}>{text.empty}</p>
-          ) : (
-            <PostingTable
-              postings={data.items}
-              footer={
-                <Pagination
-                  location={location(status, period)}
-                  page={data.page}
-                  size={size}
-                  total={data.total}
-                  noun={text.noun}
-                />
-              }
-            />
-          )}
+          <PostingList data={data} filters={filters} size={size} />
           <p className={styles.note}>{text.laterNote}</p>
         </>
       )}

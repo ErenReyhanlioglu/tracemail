@@ -1,63 +1,145 @@
-// Navigation as in the mockups. The application and incoming-posting lists
-// exist since step 1.10; the other sections are shown but not yet reachable.
+// Navigation as in the mockups, with an icon per section. The owner reaches
+// the application and incoming-posting lists; a visitor sees them locked,
+// and the public health panel is open to everyone (ADR-0040). Sections not
+// built yet are dimmed. The sidebar collapses to its icons; labels stay in
+// the markup for screen readers and show as a tooltip (ADR-0041).
+import { cookies } from "next/headers";
 import Link from "next/link";
+import type { ComponentType } from "react";
 
+import type { Viewer } from "@/lib/load";
+import { LOGIN_PATH, PANEL_PATH } from "@/lib/paths";
+import { isCollapsed, SIDEBAR_COOKIE } from "@/lib/sidebar";
 import { strings } from "@/lib/strings";
 
+import {
+  ApplicationsIcon,
+  HealthIcon,
+  LockIcon,
+  OverviewIcon,
+  PostingsIcon,
+  ReportsIcon,
+  SignInIcon,
+} from "./icons/NavIcons";
+import { LogoMark } from "./icons/LogoMark";
+import { SidebarToggle } from "./SidebarToggle";
 import { SignOutButton } from "./SignOutButton";
 import styles from "./Sidebar.module.css";
 import { ThemeToggle } from "./ThemeToggle";
 
-export type Section = "postings" | "applications";
+export type Section = "postings" | "applications" | "health";
+
+const SIDEBAR_ID = "sidebar";
 
 interface NavItem {
   label: string;
+  icon: ComponentType;
   section?: Section;
   href?: string;
+  ownerOnly?: boolean;
 }
 
 const NAV: readonly NavItem[] = [
-  { label: strings.nav.overview },
-  { label: strings.nav.postings, section: "postings", href: "/postings" },
-  { label: strings.nav.applications, section: "applications", href: "/applications" },
-  { label: strings.nav.reports },
-  { label: strings.nav.health },
+  { label: strings.nav.overview, icon: OverviewIcon },
+  {
+    label: strings.nav.postings,
+    icon: PostingsIcon,
+    section: "postings",
+    href: "/postings",
+    ownerOnly: true,
+  },
+  {
+    label: strings.nav.applications,
+    icon: ApplicationsIcon,
+    section: "applications",
+    href: "/applications",
+    ownerOnly: true,
+  },
+  { label: strings.nav.reports, icon: ReportsIcon },
+  { label: strings.nav.health, icon: HealthIcon, section: "health", href: PANEL_PATH },
 ];
 
-export function Sidebar({ active }: { active: Section }) {
+function Unavailable({ item, locked }: { item: NavItem; locked: boolean }) {
+  const reason = locked ? strings.nav.ownerOnly : strings.nav.comingLater;
   return (
-    <nav className={styles.sidebar} aria-label={strings.appName}>
+    <span className={styles.itemDisabled} aria-disabled="true" title={item.label}>
+      <item.icon />
+      <span className={styles.label}>
+        {item.label}
+        <span className="visually-hidden">, {reason}</span>
+      </span>
+      {locked ? (
+        <span className={styles.lock}>
+          <LockIcon />
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
+function Item({ item, active, viewer }: { item: NavItem; active: Section; viewer: Viewer }) {
+  const locked = Boolean(item.ownerOnly) && viewer !== "owner";
+  if (item.href === undefined || locked) {
+    return <Unavailable item={item} locked={locked} />;
+  }
+  const current = item.section === active;
+  return (
+    <Link
+      href={item.href}
+      className={current ? styles.itemActive : styles.item}
+      aria-current={current ? "page" : undefined}
+      title={item.label}
+    >
+      <item.icon />
+      <span className={styles.label}>{item.label}</span>
+    </Link>
+  );
+}
+
+function Footer({ viewer }: { viewer: Viewer }) {
+  return (
+    <div className={styles.footer}>
+      <div className={styles.footerRow}>
+        <span className={styles.role}>
+          {viewer === "owner" ? strings.account.owner : strings.account.visitor}
+        </span>
+        <ThemeToggle />
+      </div>
+      {viewer === "owner" ? (
+        <SignOutButton />
+      ) : (
+        <Link href={LOGIN_PATH} className={styles.footerAction} title={strings.account.signIn}>
+          <SignInIcon />
+          <span className={styles.label}>{strings.account.signIn}</span>
+        </Link>
+      )}
+    </div>
+  );
+}
+
+export async function Sidebar({ active, viewer }: { active: Section; viewer: Viewer }) {
+  const collapsed = isCollapsed((await cookies()).get(SIDEBAR_COOKIE)?.value);
+  return (
+    <nav id={SIDEBAR_ID} className={styles.sidebar} aria-label={strings.appName}>
       <div className={styles.brand}>
-        <span className={styles.brandName}>{strings.appName}</span>
-        <span className={styles.brandTagline}>{strings.appTagline}</span>
+        <span className={styles.brandMark}>
+          <LogoMark className={styles.logo} />
+          <span className={styles.brandName}>{strings.appName}</span>
+        </span>
+        <SidebarToggle
+          initialCollapsed={collapsed}
+          controls={SIDEBAR_ID}
+          className={styles.collapseButton}
+        />
       </div>
       <ul className={styles.items}>
         {NAV.map((item) => (
           <li key={item.label}>
-            {item.href ? (
-              <Link
-                href={item.href}
-                className={item.section === active ? styles.itemActive : styles.item}
-                aria-current={item.section === active ? "page" : undefined}
-              >
-                {item.label}
-              </Link>
-            ) : (
-              <span className={styles.itemDisabled} aria-disabled="true">
-                {item.label}
-                <span className={styles.later}>{strings.nav.comingLater}</span>
-              </span>
-            )}
+            <Item item={item} active={active} viewer={viewer} />
           </li>
         ))}
       </ul>
-      <div className={styles.footer}>
-        <div className={styles.footerRow}>
-          <span className={styles.role}>{strings.account.owner}</span>
-          <ThemeToggle />
-        </div>
-        <SignOutButton />
-      </div>
+      <Footer viewer={viewer} />
     </nav>
   );
 }

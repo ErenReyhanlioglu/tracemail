@@ -1,8 +1,9 @@
 # Web app
 
-Next.js app (standalone build): owner login, the application list, and the
-incoming postings list, with the design system of ADR-0034 and Turkish UI
-copy (ADR-0033). It contains no authentication logic; it forwards the session
+Next.js app (standalone build): owner login, the application list, the
+incoming postings list, and the public health panel where visitors land
+(a placeholder until Phase 3, ADR-0040), with the design system of ADR-0034,
+the page states of ADR-0039, and Turkish UI copy (ADR-0033). It contains no authentication logic; it forwards the session
 cookie to the API, which it reaches through its `/api` rewrite, so the site and
 the API share one origin.
 

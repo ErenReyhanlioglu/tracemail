@@ -64,6 +64,12 @@ export function pageItems(current: number, pages: number): PageItem[] {
   return items;
 }
 
+// The page-size parameter, when it differs from the default, for links and
+// forms that keep it.
+export function sizeQuery(size: PageSize): Record<string, string> {
+  return size === DEFAULT_PAGE_SIZE ? {} : { size: String(size) };
+}
+
 export function listUrl(location: ListLocation, page: number, size: PageSize): string {
   const params = new URLSearchParams(location.query);
   if (page > 1) {
