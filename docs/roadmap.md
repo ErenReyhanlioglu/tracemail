@@ -4,15 +4,16 @@ Build order and current position. Scope per phase is defined in
 [SUMMARY.md](../SUMMARY.md); decisions in [adr/](adr/README.md).
 
 **Current phase:** Phase 1 — Core
-**Current step:** 1.11 (`ci/deploy`) — 1.0 to 1.5 and 1.7 to 1.10 done; 1.6
-waits for the LinkedIn data export (checklist F). In 1.11, deploys from
-`main` run in production since 2026-10-11
-([infra/vm](../infra/vm/README.md#continuous-deployment)), and prod has run
-hourly since 2026-10-12 with its history backfilled (ADR-0036); every push
+**Current step:** 1.12 (phase exit) — 1.0 to 1.5 and 1.7 to 1.11 done; 1.6
+waits for the LinkedIn data export (checklist F). Deploys from `main` run in
+production since 2026-10-11
+([infra/vm](../infra/vm/README.md#continuous-deployment)), prod has run
+hourly since 2026-10-12 with its history backfilled (ADR-0036), every push
 runs a dbt build on dev data through Workload Identity Federation
-(ADR-0037); the web app sends security headers and a nonce-based CSP
-(ADR-0038). Still open: Cloudflare Tunnel and the production OAuth client
-once the domain is active.
+(ADR-0037), and the web app sends security headers and a nonce-based CSP
+(ADR-0038). 1.11 done on 2026-10-14: the site is public at
+[tracemail.com.tr](https://tracemail.com.tr) through Cloudflare Tunnel,
+with the production OAuth client (ADR-0016).
 
 Each step is one branch and one or more pull requests. A step is done when its
 "Done when" line is true on `main`.
@@ -147,15 +148,19 @@ Things only the owner can do. Each lists the first step that needs it.
 
 ### E. Before 1.11
 
-- [ ] Domain (`.com` or `.com.tr`, cheapest first year); if `.com.tr`, confirm
-      nameserver delegation to Cloudflare first (ADR-0016). A `.com.tr`
-      domain is registered; the registry's document check is pending.
-- [ ] Cloudflare account, domain DNS moved to Cloudflare
+- [x] Domain (`.com` or `.com.tr`, cheapest first year); if `.com.tr`, confirm
+      nameserver delegation to Cloudflare first (ADR-0016). `tracemail.com.tr`,
+      delegated to Cloudflare after the registry's document check (2026-10-14).
+- [x] Cloudflare account, domain DNS moved to Cloudflare; "Always Use HTTPS"
+      on
 - [x] Oracle Cloud account, home region `eu-frankfurt-1` (ADR-0016)
 - [x] Tailscale account (free Personal plan); federated identity for the
       deploy job (`infra/vm/README.md`)
 - [x] GCP **prod** project and budget alert (`infra/gcp/README.md`)
-- [ ] OAuth client for the production domain (prod project)
+- [x] OAuth client for the production domain (prod project). Left in
+      Google's Testing mode with the owner as test user, so accounts that
+      are not test users stop at Google's own page before reaching the
+      login page's refusal (ADR-0040); publishing it is deferred.
 - [x] GitHub `production` environment limited to `main`; image checks
       required on `main`
 

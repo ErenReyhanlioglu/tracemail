@@ -30,7 +30,7 @@ written at the moment the decision is made — not drafted ahead of time.
 | [0013](0013-airflow-3-3-on-python-3-12.md) | Airflow 3.3 on Python 3.12 | Accepted |
 | [0014](0014-dbt-1x-orchestrated-with-cosmos.md) | dbt 1.x Orchestrated with Cosmos | Accepted; execution mode superseded by [0029](0029-cosmos-watcher-execution-mode.md) |
 | [0015](0015-owner-login-with-google-sign-in.md) | Owner Login with Google Sign-In, Handled by the API | Accepted |
-| [0016](0016-self-host-web-on-vm-behind-cloudflare-tunnel.md) | Self-Host the Web App on the VM behind Cloudflare Tunnel | Accepted (web app on the VM; tunnel with the domain) |
+| [0016](0016-self-host-web-on-vm-behind-cloudflare-tunnel.md) | Self-Host the Web App on the VM behind Cloudflare Tunnel | Accepted (public on the domain since 2026-10-14) |
 | [0017](0017-every-step-measures-time-volume-operations-and-cost.md) | Every Step Measures Its Time, Volume, Operations, and Cost | Accepted |
 | [0018](0018-parsed-zone-uses-partition-overwrite.md) | The Parsed Zone Uses Partition Overwrite | Accepted |
 | [0019](0019-landing-load-schema-from-models-and-partition-replace.md) | Landing Load — Schema from Models, Tables Created by the Loader, Partition Replace | Accepted |

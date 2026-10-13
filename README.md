@@ -26,9 +26,13 @@ the system reports on itself.
 It runs on real data only. There is no demo dataset: the public panel shows
 real system metrics or nothing.
 
+**Live:** [tracemail.com.tr](https://tracemail.com.tr), the public health
+panel. The owner's lists are behind login.
+
 **Status:** Phase 1 (the data foundation) runs in production on an Oracle
-Cloud ARM VM, and every merge to `main` deploys itself. The public site goes
-live when its domain is active. See [Status](#status).
+Cloud ARM VM, and every merge to `main` deploys itself. The site has been
+public on its domain since 2026-10-14, through Cloudflare Tunnel. See
+[Status](#status).
 
 ## Why this project
 
@@ -77,11 +81,11 @@ flowchart LR
     TS -->|SSH as a one-command user| VM[Oracle ARM VM<br/>Docker Compose]
     GHCR --> VM
     VM -->|per-role service accounts| GCP[(GCS + BigQuery)]
-    U[Browser] -.->|Cloudflare Tunnel<br/>with the domain| VM
+    U[Browser] -->|Cloudflare Tunnel| VM
 ```
 
 - **No open inbound port.** The VM's firewall has no ingress rule.
-  Administration and deploys arrive over Tailscale; public traffic will arrive
+  Administration and deploys arrive over Tailscale; public traffic arrives
   through an outbound Cloudflare Tunnel
   ([ADR-0016](docs/adr/0016-self-host-web-on-vm-behind-cloudflare-tunnel.md)).
 - **No stored deploy credential.** The deploy job joins the tailnet with
@@ -171,7 +175,7 @@ can be checked today:
 
 | Phase | Scope | State |
 |---|---|---|
-| 1. Core | Ingestion, parsing, warehouse, dbt models, Airflow, owner login, application and posting lists, production deployment | Running in production; public domain and LinkedIn history pending ([roadmap](docs/roadmap.md)) |
+| 1. Core | Ingestion, parsing, warehouse, dbt models, Airflow, owner login, application and posting lists, production deployment | Running in production and public on its domain; LinkedIn history pending ([roadmap](docs/roadmap.md)) |
 | 2. Intelligence | Reply classification, evidence-quoted match reports, golden set, MLflow comparison, CI eval gate | Planned |
 | 3. Interface | Public health panel, share links, full private sections | Planned |
 | 4. Optional | Rough fit ranking with a local embedding model, follow-up drafts | Planned |
