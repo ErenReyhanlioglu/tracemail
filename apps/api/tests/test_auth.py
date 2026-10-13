@@ -62,14 +62,14 @@ def test_owner_callback_sets_a_secure_httponly_lax_cookie_and_redirects(
     assert owner_client.get("/api/v1/auth/me").json() == {"role": "owner"}
 
 
-def test_other_account_gets_403_with_its_own_id_and_no_session() -> None:
+def test_other_account_goes_to_login_as_not_authorized_without_id_or_session() -> None:
     with api_client(FakeGoogle(sub=OTHER_SUB)) as client:
         response = client.get(CALLBACK)
-        assert response.status_code == 403
-        assert response.json() == {
-            "detail": "This account is not authorized",
-            "account_id": OTHER_SUB,
-        }
+        assert (response.status_code, response.headers["location"]) == (
+            303,
+            "/login?error=not_authorized",
+        )
+        assert OTHER_SUB not in response.text
         assert SESSION_COOKIE not in response.cookies
         assert client.get("/api/v1/auth/me").status_code == 401
 
@@ -77,13 +77,15 @@ def test_other_account_gets_403_with_its_own_id_and_no_session() -> None:
 @pytest.mark.parametrize(
     "google", [FakeGoogle(error="mismatching_state"), FakeGoogle(sub=None)]
 )
-def test_failed_callback_returns_400_without_details_or_session(
+def test_failed_callback_is_sent_to_login_as_failed_without_session(
     google: FakeGoogle,
 ) -> None:
     with api_client(google) as client:
         response = client.get(CALLBACK)
-        assert response.status_code == 400
-        assert response.json() == {"detail": "Login failed"}
+        assert (response.status_code, response.headers["location"]) == (
+            303,
+            "/login?error=failed",
+        )
         assert client.get("/api/v1/auth/me").status_code == 401
 
 

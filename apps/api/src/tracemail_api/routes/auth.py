@@ -1,16 +1,16 @@
-"""Owner login and logout routes (ADR-0015, ADR-0032).
+"""Owner login and logout routes (ADR-0015, ADR-0032, ADR-0040).
 
 Any Google account can complete Google's side of the login; only the owner's
-``sub`` gets a session. Everyone else gets 403 and, so the owner can find
-their own id on first setup, the refusal shows the signed-in account its own
-``sub`` and nothing else.
+``sub`` gets a session. Everyone else, and any login that fails, is sent back
+to the web app's login page with a reason code, which the page explains in
+Turkish; no account identifier is shown or put in the address.
 """
 
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import JSONResponse, RedirectResponse, Response
+from fastapi import APIRouter, Depends, Request, status
+from fastapi.responses import RedirectResponse, Response
 from pydantic import BaseModel
 
 from tracemail_api.auth.google import (
@@ -28,21 +28,25 @@ from tracemail_api.auth.sessions import (
 from tracemail_api.config import ApiSettings
 
 AFTER_LOGIN_PATH = "/"
+# The web app's login page and the reasons it explains (ADR-0040).
+LOGIN_PAGE_PATH = "/login"
+NOT_AUTHORIZED = "not_authorized"
+LOGIN_FAILED = "failed"
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
-
-
-class NotAuthorized(BaseModel):
-    """Returned to a Google account that is not the owner."""
-
-    detail: str
-    account_id: str
 
 
 class Me(BaseModel):
     """The role of the current session."""
 
     role: Role
+
+
+def back_to_login(reason: str) -> RedirectResponse:
+    """Send the browser to the login page with the reason it was refused."""
+    return RedirectResponse(
+        f"{LOGIN_PAGE_PATH}?error={reason}", status.HTTP_303_SEE_OTHER
+    )
 
 
 def get_settings(request: Request) -> ApiSettings:
@@ -69,23 +73,19 @@ async def google_login(
     return await google.authorize_redirect(request, callback_url(settings))
 
 
-@router.get(
-    "/google/callback",
-    responses={status.HTTP_403_FORBIDDEN: {"model": NotAuthorized}},
-)
+@router.get("/google/callback")
 async def google_callback(
     request: Request, settings: Settings, google: Google
 ) -> Response:
-    """Finish the login: a session for the owner, 403 for anyone else."""
+    """Finish the login: a session for the owner, the login page for others."""
     try:
         sub = await signed_in_sub(google, request)
-    except LoginError as e:
+    except LoginError:
         end_session(request.session)
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Login failed") from e
+        return back_to_login(LOGIN_FAILED)
     if sub != settings.owner_sub:
         end_session(request.session)
-        refusal = NotAuthorized(detail="This account is not authorized", account_id=sub)
-        return JSONResponse(refusal.model_dump(), status.HTTP_403_FORBIDDEN)
+        return back_to_login(NOT_AUTHORIZED)
     lifetime = timedelta(days=settings.session_days)
     start_session(request.session, Role.OWNER, datetime.now(UTC), lifetime)
     return RedirectResponse(AFTER_LOGIN_PATH, status.HTTP_303_SEE_OTHER)

@@ -84,11 +84,13 @@ def posting(
     *,
     saved: bool = False,
     applied_on: date | None = None,
+    title: str = "Example Role",
+    company: str = "Example Company",
 ) -> PostingRow:
     return PostingRow(
         posting_key=key,
-        title="Example Role",
-        company="Example Company",
+        title=title,
+        company=company,
         location="Istanbul",
         posting_url=None,
         first_seen_date=first_seen,
