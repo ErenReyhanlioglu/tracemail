@@ -153,7 +153,7 @@ can be checked today:
 | Warehouse and data modeling | Layered datasets, star schema, cross-source dedup: [`dbt/models`](dbt/models/marts), [ADR-0024](docs/adr/0024-application-status-model.md) | Built |
 | Data quality | dbt tests, parse outcomes per message, 90% test coverage floor | Built |
 | Cloud fundamentals | Least-privilege setup script: [`setup-project.sh`](infra/gcp/setup-project.sh), [ADR-0009](docs/adr/0009-vm-to-gcp-auth-with-service-account-keys.md), [ADR-0010](docs/adr/0010-separate-gcp-projects-for-dev-and-prod.md) | Built |
-| CI/CD | [`ci.yml`](.github/workflows/ci.yml): checks, arm64 images, deploy with pre-deploy checks | Built; LLM eval gate in Phase 2 |
+| CI/CD | [`ci.yml`](.github/workflows/ci.yml): checks, dbt build and data tests on dev data through Workload Identity Federation ([ADR-0037](docs/adr/0037-dbt-build-in-ci-on-dev-data.md)), arm64 images, deploy with pre-deploy checks | Built; LLM eval gate in Phase 2 |
 | Data privacy and access separation | Exclusion at ingestion, public/private API test: [ADR-0025](docs/adr/0025-sender-exclusion-list-instead-of-allowlist.md), [`test_privacy.py`](apps/api/tests/test_privacy.py) | Built; share links in Phase 3 |
 | API design | FastAPI with owner login and cached reads: [ADR-0032](docs/adr/0032-owner-login-implementation.md) | Built |
 | Portable deployment | One Compose file for local and the VM: [`compose.yaml`](infra/compose.yaml) | Built |
@@ -183,7 +183,7 @@ Phase 1 has no LLM by design: the data foundation comes first.
 | Serving | FastAPI, Next.js |
 | Infrastructure | Docker Compose, Oracle Cloud ARM VM, Tailscale, Cloudflare Tunnel |
 | Quality | pytest (90% coverage floor), dbt tests, ruff, mypy `--strict`, shellcheck |
-| CI/CD | GitHub Actions (SHA-pinned actions, native arm64 runners), GHCR, OIDC to Tailscale |
+| CI/CD | GitHub Actions (SHA-pinned actions, native arm64 runners), GHCR, keyless OIDC to Tailscale and to GCP (Workload Identity Federation) |
 | LLM (Phase 2) | Gemini through Google Cloud, Pydantic structured output, MLflow |
 
 ## Repository layout
