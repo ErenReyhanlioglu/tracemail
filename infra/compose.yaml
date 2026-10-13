@@ -208,6 +208,10 @@ services:
   cloudflared:
     image: cloudflare/cloudflared:2026.9.3
     profiles: [tunnel]
+    # The image's own non-root user (65532), in group 0 so it can read the
+    # token file, which is root-owned and group-readable like every secret on
+    # the VM (infra/vm/README.md).
+    user: "65532:0"
     command: ["tunnel", "--no-autoupdate", "run"]
     environment:
       TUNNEL_TOKEN_FILE: /run/secrets/tunnel-token
