@@ -22,6 +22,22 @@ tracemail:
       job_retries: 1
       # Cost guardrail: a query that would bill more fails instead (CLAUDE.md).
       maximum_bytes_billed: "{{ env_var('TRACEMAIL_BQ_MAX_BYTES_BILLED') | int }}"
+    # GitHub Actions (ADR-0037): the dev project, through the CI service
+    # account impersonated with Workload Identity Federation. google-github-
+    # actions/auth writes the credentials file that oauth's Application
+    # Default Credentials read; models build into ci_* datasets
+    # (macros/generate_schema_name.sql).
+    ci:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('TRACEMAIL_GCP_PROJECT') }}"
+      location: "{{ env_var('TRACEMAIL_BQ_LOCATION') }}"
+      dataset: ci_staging
+      threads: 4
+      priority: interactive
+      job_execution_timeout_seconds: 300
+      job_retries: 1
+      maximum_bytes_billed: "{{ env_var('TRACEMAIL_BQ_MAX_BYTES_BILLED') | int }}"
     prod:
       type: bigquery
       method: service-account

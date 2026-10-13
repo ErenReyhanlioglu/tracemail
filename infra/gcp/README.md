@@ -65,3 +65,32 @@ build of the repository root as Docker context contained no key file.
 Never commit a key, put it in an image, a log, or a chat. Rotate a key by
 creating a new one, replacing the file on the VM, and deleting the old key
 (`gcloud iam service-accounts keys list / delete`).
+
+## CI on the dev project (ADR-0037)
+
+`setup-ci.sh` prepares the dbt build in GitHub Actions on the dev project
+only: the `ci_staging`, `ci_intermediate`, and `ci_marts` datasets (tables
+expire after seven days), the `tm-ci-dbt` account, and a workload identity pool
+whose provider admits this repository alone, by its immutable numeric IDs:
+
+```sh
+infra/gcp/setup-ci.sh <dev-project-id> <github-owner-id> <github-repo-id>
+```
+
+| Service account | Grants | Used by |
+|---|---|---|
+| `tm-ci-dbt` (dev only) | BigQuery Job User on the project; Data Viewer on `landing` and `ops`; Data Editor on the `ci_*` datasets | `dbt build --target ci` in GitHub Actions |
+
+The script prints two values for the repository's Actions variables
+(Settings → Secrets and variables → Actions → Variables), with
+`GCP_DEV_PROJECT` as the third: `GCP_WORKLOAD_IDENTITY_PROVIDER` and
+`GCP_CI_SERVICE_ACCOUNT`. None of them is a secret, and no key is created.
+
+Verified 2026-10-13 on `tracemail-510615`, read back after running the
+script: the provider's condition is
+`assertion.repository_owner_id == '116086022' && assertion.repository_id == '1403471837'`
+(state active); only `principalSet://…/attribute.repository_id/1403471837`
+may impersonate `tm-ci-dbt`; the account holds `roles/bigquery.jobUser` on
+the project, reader on `landing` and `ops`, writer on the three `ci_*`
+datasets, and nothing on `staging`, `intermediate`, or `marts`. A service
+account ID needs 6 to 30 characters, hence `tm-ci-dbt`.
