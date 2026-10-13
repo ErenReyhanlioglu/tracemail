@@ -16,6 +16,7 @@ export function PageSizeSelect({ location, size }: { location: ListLocation; siz
       {strings.pagination.perPage}
       <span className={styles.selectWrap}>
         <select
+          name="pageSize"
           className={styles.select}
           value={size}
           onChange={(event) =>

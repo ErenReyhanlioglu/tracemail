@@ -52,3 +52,4 @@ written at the moment the decision is made — not drafted ahead of time.
 | [0035](0035-deploy-user-restricted-by-login-shell-and-sudo.md) | Deploy User Restricted by Login Shell and One Sudo Rule | Accepted |
 | [0036](0036-dev-and-prod-share-the-free-tier.md) | Dev and Prod Share One Free Tier | Accepted |
 | [0037](0037-dbt-build-in-ci-on-dev-data.md) | dbt Build in CI on Dev Data through Workload Identity Federation | Accepted |
+| [0038](0038-web-security-headers-and-nonce-csp.md) | Web Security Headers and a Nonce-Based Content Security Policy | Accepted |
