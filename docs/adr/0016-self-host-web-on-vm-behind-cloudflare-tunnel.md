@@ -1,7 +1,7 @@
 # ADR-0016: Self-Host the Web App on the VM behind Cloudflare Tunnel
 
 **Date:** 2026-10-04
-**Status:** Accepted (web app on the VM implemented; the tunnel goes live with the domain)
+**Status:** Accepted (implemented; public on the domain since 2026-10-14)
 
 ## Context
 
@@ -87,8 +87,30 @@ Alternatives considered:
 - The hostname is configuration, not code: changing the domain later means
   updating the tunnel's public hostname, the Google OAuth redirect URI, and
   the site's base URL setting.
-- Not verified: that a `.com.tr` domain's nameservers can be delegated to
-  Cloudflare without TRABIS-specific issues. Check before buying a `.com.tr`.
+- Verified 2026-10-14: a `.com.tr` domain's nameservers can be delegated to
+  Cloudflare. TRABIS delegated `tracemail.com.tr` after its document check;
+  Cloudflare then reported the zone active.
+
+## Verified (2026-10-14)
+
+Requests from outside to `tracemail.com.tr`:
+
+- `https://` answers through Cloudflare (`Server: cloudflare`); the root
+  sends a visitor to the health panel (307), unknown paths return 404, and
+  the API refuses a private list without a session (401).
+- `http://` is redirected to `https://` (301) by Cloudflare's "Always Use
+  HTTPS", with no redirect loop, since the app issues no HTTPS redirect of
+  its own.
+- Responses carry the headers of ADR-0038: CSP with a nonce, HSTS,
+  `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, and
+  `Permissions-Policy`.
+- Google sign-in redirects to the production OAuth client with the
+  callback `https://tracemail.com.tr/api/v1/auth/google/callback`, and the
+  owner signed in.
+
+Not re-checked on this date: the VM's ingress rules, which had no inbound
+rule when checked on 2026-10-11 and 2026-10-12 (`infra/vm/README.md`).
+`www.tracemail.com.tr` has no DNS record and does not resolve.
 
 ## References
 
