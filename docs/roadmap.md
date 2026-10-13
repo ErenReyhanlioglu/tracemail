@@ -10,8 +10,9 @@ waits for the LinkedIn data export (checklist F). In 1.11, deploys from
 ([infra/vm](../infra/vm/README.md#continuous-deployment)), and prod has run
 hourly since 2026-10-12 with its history backfilled (ADR-0036); every push
 runs a dbt build on dev data through Workload Identity Federation
-(ADR-0037). Still open: web security headers; Cloudflare Tunnel and the
-production OAuth client once the domain is active.
+(ADR-0037); the web app sends security headers and a nonce-based CSP
+(ADR-0038). Still open: Cloudflare Tunnel and the production OAuth client
+once the domain is active.
 
 Each step is one branch and one or more pull requests. A step is done when its
 "Done when" line is true on `main`.
