@@ -27,7 +27,7 @@ jobs:
       - name: Test
         run: uv run pytest
       - name: Shell lint
-        run: shellcheck infra/vm/*.sh
+        run: shellcheck infra/vm/*.sh infra/gcp/*.sh
       # The VM's deploy user restrictions (ADR-0035): login shell gate,
       # sudoers syntax, deploy script argument check.
       - name: Deploy access test
@@ -58,13 +58,51 @@ jobs:
       - name: Build
         run: npm run build
 
+  # dbt build and data tests on the dev project's data, into ci_* datasets
+  # (ADR-0037). GitHub's OIDC token is exchanged through Workload Identity
+  # Federation for the CI service account; no key is stored. Pull requests
+  # from forks get no OIDC token, so the job runs only for this repository's
+  # own branches. Runs one at a time: they share the ci_* datasets.
+  dbt:
+    name: dbt build (CI target)
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: dbt-ci
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      TRACEMAIL_GCP_PROJECT: ${{ vars.GCP_DEV_PROJECT }}
+      TRACEMAIL_BQ_LOCATION: us-central1
+      TRACEMAIL_BQ_LANDING_DATASET: landing
+      TRACEMAIL_BQ_OPS_DATASET: ops
+      TRACEMAIL_BQ_MAX_BYTES_BILLED: "1073741824"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_CI_SERVICE_ACCOUNT }}
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+      - name: Install dbt
+        run: uv sync --project dbt --locked
+      - name: Install dbt packages
+        run: uv run --project dbt dbt deps --project-dir dbt --profiles-dir dbt
+      # A full refresh, so the result never depends on an earlier CI run.
+      - name: dbt build
+        run: uv run --project dbt dbt build --project-dir dbt --profiles-dir dbt --target ci --full-refresh
+
   # The three images for the arm64 VM (ADR-0012), built natively on an arm64
   # runner after every check passes. Pull requests only build them, so a
   # Dockerfile that breaks on arm64 never reaches main; a push to main also
   # publishes them to GHCR, tagged with the commit SHA.
   images:
     name: Image (${{ matrix.image }})
-    needs: [check, web]
+    needs: [check, web, dbt]
     runs-on: ubuntu-24.04-arm
     permissions:
       contents: read
