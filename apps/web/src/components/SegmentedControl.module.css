@@ -1,0 +1,51 @@
+/* A recessed track holding the segments; the selected one is raised onto
+   the surface with stronger text, so two cues mark it (NN/g). */
+.control {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin: 0;
+  padding: var(--segment-inset);
+  border-radius: var(--radius-sm);
+  background: var(--color-page);
+  list-style: none;
+}
+
+.segment {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--segment-height);
+  padding: 0 var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.segment:hover {
+  color: var(--color-text);
+}
+
+.selected,
+.selected:hover {
+  border-color: var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-weight: var(--weight-medium);
+}
+
+.count {
+  min-width: var(--counter-min-width);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-neutral-bg);
+  color: var(--color-neutral-text);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-regular);
+  line-height: var(--counter-line-height);
+  text-align: center;
+}

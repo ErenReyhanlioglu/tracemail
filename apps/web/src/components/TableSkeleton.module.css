@@ -1,0 +1,97 @@
+/*
+ * Loading skeleton of a list (ADR-0039): the list panel's own toolbar,
+ * columns, and row heights, so nothing moves when the data arrives. The
+ * placeholders stay hidden for --skeleton-delay, so a fast response never
+ * flashes them; the real headers show at once. The pulse stops under
+ * reduced motion.
+ */
+.delayed {
+  animation: appear 0s linear var(--skeleton-delay) both;
+}
+
+@keyframes appear {
+  from {
+    visibility: hidden;
+  }
+
+  to {
+    visibility: visible;
+  }
+}
+
+.segments {
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--segment-inset);
+  border-radius: var(--radius-sm);
+  background: var(--color-page);
+}
+
+.segment,
+.menu {
+  display: block;
+  width: var(--skeleton-segment-width);
+  height: var(--segment-height);
+  border-radius: var(--radius-sm);
+  background: var(--color-neutral-bg);
+}
+
+.menu {
+  width: var(--skeleton-menu-width);
+}
+
+.search {
+  display: block;
+  flex: 1;
+  max-width: var(--search-max-width);
+  height: var(--segment-height);
+  border-radius: var(--radius-sm);
+  background: var(--color-neutral-bg);
+}
+
+.bar {
+  display: block;
+  height: var(--skeleton-bar-height);
+  border-radius: var(--radius-sm);
+  background: var(--color-neutral-bg);
+}
+
+.segment,
+.menu,
+.search,
+.bar {
+  animation: pulse var(--skeleton-pulse) ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+  to {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .segment,
+  .menu,
+  .search,
+  .bar {
+    animation: none;
+  }
+}
+
+.wide {
+  width: 45%;
+}
+
+.wider {
+  width: 65%;
+  margin-top: var(--space-2);
+}
+
+.short {
+  width: 60%;
+}
+
+.footer {
+  height: var(--pagination-height);
+  border-top: var(--border);
+}

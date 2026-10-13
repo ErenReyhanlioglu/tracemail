@@ -9,6 +9,9 @@
   padding: var(--space-10) var(--space-12);
 }
 
+/* Capped for readable rows and centered, so space beyond the cap (a wide
+   screen, or a collapsed sidebar) splits evenly on both sides. */
 .main > * {
   max-width: var(--content-max-width);
+  margin-inline: auto;
 }

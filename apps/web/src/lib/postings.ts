@@ -1,4 +1,6 @@
 // Incoming postings as the API returns them, and the list's filters.
+import { SEARCH_PARAM } from "@/lib/search";
+import { type Sort, sortQuery } from "@/lib/sorting";
 
 export type PostingStatus = "new" | "saved" | "applied";
 
@@ -44,9 +46,25 @@ export function parsePeriod(value: string | undefined): Period {
   return PERIODS.find((period) => period === value) ?? DEFAULT_PERIOD;
 }
 
+// Date columns the list can be sorted by (ADR-0042); the API sorts.
+export type PostingSortKey = "first_seen" | "last_seen";
+export const POSTING_SORT_KEYS: readonly PostingSortKey[] = ["first_seen", "last_seen"];
+export const DEFAULT_POSTING_SORT: Sort<PostingSortKey> = { key: "first_seen", order: "desc" };
+
+// Everything that selects and orders the list's rows.
+export interface PostingFilters {
+  status: StatusFilter;
+  period: Period;
+  search: string;
+  sort: Sort<PostingSortKey>;
+}
+
 // The page's own query, without defaults, for list URLs.
-export function postingsQuery(status: StatusFilter, period: Period): Record<string, string> {
-  const query: Record<string, string> = {};
+export function postingsQuery({ status, period, search, sort }: PostingFilters): Record<string, string> {
+  const query: Record<string, string> = sortQuery(sort, DEFAULT_POSTING_SORT);
+  if (search) {
+    query[SEARCH_PARAM] = search;
+  }
   if (status !== "all") {
     query.status = status;
   }

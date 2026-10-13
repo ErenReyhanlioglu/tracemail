@@ -1,22 +1,37 @@
 // Login: a single link into the API's Google Sign-In (ADR-0015). The page
-// holds no authentication logic; the API sets the session.
+// holds no authentication logic; the API sets the session, or sends the
+// browser back here with a reason this page explains (ADR-0040). Only the
+// owner can sign in and there is no sign-up, which the page says up front.
+import type { Metadata } from "next";
+import Link from "next/link";
+
+import { actionClass, CenteredPage } from "@/components/CenteredPage";
+import { GoogleSignInButton } from "@/components/GoogleSignInButton";
+import { PANEL_PATH } from "@/lib/paths";
 import { strings } from "@/lib/strings";
 
-import styles from "./page.module.css";
-
 const GOOGLE_LOGIN_URL = "/api/v1/auth/google/login";
+const text = strings.login;
 
-export default function LoginPage() {
+export const metadata: Metadata = { title: strings.pageTitle(strings.account.signIn) };
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
   return (
-    <main className={styles.page}>
-      <section className={styles.panel}>
-        <span className={styles.brandName}>{strings.appName}</span>
-        <h1 className={styles.title}>{strings.login.title}</h1>
-        <p className={styles.body}>{strings.login.body}</p>
-        <a className={styles.button} href={GOOGLE_LOGIN_URL}>
-          {strings.login.google}
-        </a>
-      </section>
-    </main>
+    <CenteredPage
+      title={text.title}
+      notice={error ? text.errors[error] : undefined}
+      action={<GoogleSignInButton href={GOOGLE_LOGIN_URL} label={text.google} />}
+      footnote={text.footnote}
+      links={
+        <Link className={actionClass.secondary} href={PANEL_PATH}>
+          {text.backToPanel}
+        </Link>
+      }
+    />
   );
 }

@@ -22,6 +22,7 @@ from tracemail_api.routes.deps import (
     get_posting_cache,
     local_today,
 )
+from tracemail_api.search import MAX_QUERY_LENGTH, matches
 from tracemail_api.warehouse import POSTINGS_TABLE, MartsReader, PostingRow
 
 DEFAULT_PAGE_SIZE = 20
@@ -49,6 +50,20 @@ class StatusFilter(StrEnum):
     APPLIED = "applied"
     SAVED = "saved"
     NEW = "new"
+
+
+class SortKey(StrEnum):
+    """The date column the list is ordered by (ADR-0042)."""
+
+    FIRST_SEEN = "first_seen"
+    LAST_SEEN = "last_seen"
+
+
+class SortOrder(StrEnum):
+    """Newest first (default) or oldest first."""
+
+    DESC = "desc"
+    ASC = "asc"
 
 
 class Posting(PostingRow):
@@ -96,6 +111,24 @@ def counts_of(postings: list[Posting]) -> PostingCounts:
     )
 
 
+def sorted_postings(
+    postings: list[Posting], sort: SortKey, order: SortOrder
+) -> list[Posting]:
+    """Postings by the chosen date; the stable sort keeps the warehouse order
+    (newest first, then by key) among equal dates."""
+    if sort is SortKey.FIRST_SEEN:
+        return sorted(
+            postings,
+            key=lambda posting: posting.first_seen_date,
+            reverse=order is SortOrder.DESC,
+        )
+    return sorted(
+        postings,
+        key=lambda posting: posting.last_seen_date,
+        reverse=order is SortOrder.DESC,
+    )
+
+
 @router.get("")
 async def list_postings(
     marts: Annotated[MartsReader, Depends(get_marts)],
@@ -104,21 +137,31 @@ async def list_postings(
     days: Annotated[int | None, Query(ge=1, le=MAX_PERIOD_DAYS)] = None,
     page: Annotated[int, Query(ge=1)] = 1,
     page_size: Annotated[int, Query(ge=1, le=MAX_PAGE_SIZE)] = DEFAULT_PAGE_SIZE,
+    q: Annotated[str | None, Query(max_length=MAX_QUERY_LENGTH)] = None,
+    sort: SortKey = SortKey.FIRST_SEEN,
+    order: SortOrder = SortOrder.DESC,
 ) -> PostingPage:
-    """Postings first seen in the last ``days`` days (all if omitted),
-    newest first, filtered by status, one page at a time."""
+    """Postings first seen in the last ``days`` days (all if omitted) whose
+    title or company matches ``q``, filtered by status, ordered by ``sort``
+    and ``order``, one page at a time. Counts cover the period and the
+    search."""
     rows = await cache.rows(await marts.modified(POSTINGS_TABLE), marts.postings)
     since = None if days is None else local_today() - timedelta(days=days - 1)
     in_period = [
         Posting(**row.model_dump(), status=status_of(row))
         for row in rows
-        if since is None or row.first_seen_date >= since
+        if (since is None or row.first_seen_date >= since)
+        and matches(q, row.title, row.company)
     ]
-    matching = [
-        posting
-        for posting in in_period
-        if status is StatusFilter.ALL or posting.status.value == status.value
-    ]
+    matching = sorted_postings(
+        [
+            posting
+            for posting in in_period
+            if status is StatusFilter.ALL or posting.status.value == status.value
+        ],
+        sort,
+        order,
+    )
     start = (page - 1) * page_size
     return PostingPage(
         items=matching[start : start + page_size],

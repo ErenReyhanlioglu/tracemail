@@ -46,10 +46,14 @@ written at the moment the decision is made — not drafted ahead of time.
 | [0029](0029-cosmos-watcher-execution-mode.md) | Run dbt through Cosmos in Watcher Execution Mode | Accepted |
 | [0030](0030-gcs-class-a-headroom.md) | Keeping Class A Headroom as Mail Volume Grows | Accepted (option 2 implemented) |
 | [0031](0031-sent-mail-is-a-phase-4-option.md) | Sent Mail Is Not Ingested; Direct Applications Are a Phase 4 Option | Accepted |
-| [0032](0032-owner-login-implementation.md) | Owner Login Implementation — Authlib, a Signed Session Cookie, and Fixed Routes | Accepted |
+| [0032](0032-owner-login-implementation.md) | Owner Login Implementation — Authlib, a Signed Session Cookie, and Fixed Routes | Accepted; refusal page superseded by [0040](0040-viewer-routing-and-public-landing.md) |
 | [0033](0033-ui-copy-in-turkish.md) | User-Facing UI Copy Is Turkish | Accepted |
 | [0034](0034-web-ui-design-system.md) | Web UI Design System — Mockup Tokens, Semantic Status Colors, Light and Dark Themes | Accepted |
 | [0035](0035-deploy-user-restricted-by-login-shell-and-sudo.md) | Deploy User Restricted by Login Shell and One Sudo Rule | Accepted |
 | [0036](0036-dev-and-prod-share-the-free-tier.md) | Dev and Prod Share One Free Tier | Accepted |
 | [0037](0037-dbt-build-in-ci-on-dev-data.md) | dbt Build in CI on Dev Data through Workload Identity Federation | Accepted |
 | [0038](0038-web-security-headers-and-nonce-csp.md) | Web Security Headers and a Nonce-Based Content Security Policy | Accepted |
+| [0039](0039-web-ux-baseline.md) | Web UX Baseline — States, Mobile, and Accessibility | Accepted (not yet implemented) |
+| [0040](0040-viewer-routing-and-public-landing.md) | Viewer Routing — the Health Panel as the Public Landing Page | Accepted |
+| [0041](0041-collapsible-sidebar-with-icons.md) | Collapsible Sidebar with Section Icons | Accepted |
+| [0042](0042-list-toolbar-and-status-groups.md) | List Toolbar — Status Groups, Segmented Filter, Search, Period Menu, and Sorting | Accepted |

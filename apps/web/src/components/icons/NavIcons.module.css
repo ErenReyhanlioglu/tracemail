@@ -1,0 +1,11 @@
+/* Lucide's drawing rules: 24 px grid, 2 px round strokes, no fill. */
+.icon {
+  flex-shrink: 0;
+  width: var(--nav-icon);
+  height: var(--nav-icon);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

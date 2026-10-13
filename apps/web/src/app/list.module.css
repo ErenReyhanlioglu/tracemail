@@ -1,4 +1,4 @@
-/* Shared layout of the list pages: title row, filter rows, messages. */
+/* Shared layout of the list pages: title row and notes. */
 .header {
   display: flex;
   align-items: baseline;
@@ -11,23 +11,6 @@
   font-size: var(--text-2xl);
   font-weight: var(--weight-semibold);
   line-height: 1.2;
-}
-
-.summary {
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
-}
-
-.filters {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.message {
-  margin-top: var(--space-6);
-  color: var(--color-text-secondary);
 }
 
 .note {

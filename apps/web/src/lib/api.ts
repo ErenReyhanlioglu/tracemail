@@ -28,11 +28,18 @@ async function sessionHeader(): Promise<Record<string, string>> {
   return session ? { cookie: `${SESSION_COOKIE}=${session.value}` } : {};
 }
 
+async function request(path: string): Promise<Response> {
+  const headers = await sessionHeader();
+  try {
+    return await fetch(apiUrl(path), { headers, cache: "no-store" });
+  } catch (error) {
+    // The API is down or unreachable: the same state as an error answer.
+    throw new ApiUnavailableError("API unreachable", { cause: error });
+  }
+}
+
 async function getJson<T>(path: string): Promise<T> {
-  const response = await fetch(apiUrl(path), {
-    headers: await sessionHeader(),
-    cache: "no-store",
-  });
+  const response = await request(path);
   if (response.status === 401) {
     throw new NotSignedInError();
   }
@@ -40,6 +47,25 @@ async function getJson<T>(path: string): Promise<T> {
     throw new ApiUnavailableError(`API answered ${response.status}`);
   }
   return (await response.json()) as T;
+}
+
+// Roles that hold a session (ADR-0005); a visitor holds none.
+export type Role = "owner";
+
+interface Me {
+  role: Role;
+}
+
+// The session's role, or null without a valid session.
+export async function fetchRole(): Promise<Role | null> {
+  try {
+    return (await getJson<Me>("/api/v1/auth/me")).role;
+  } catch (error) {
+    if (error instanceof NotSignedInError) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 export async function fetchAllApplications(): Promise<Application[]> {
@@ -58,6 +84,9 @@ export async function fetchAllApplications(): Promise<Application[]> {
 export interface PostingsRequest {
   status: string;
   days: number | null;
+  query: string;
+  sort: string;
+  order: string;
   page: number;
   pageSize: number;
 }
@@ -65,11 +94,16 @@ export interface PostingsRequest {
 export async function fetchPostings(request: PostingsRequest): Promise<PostingPage> {
   const params = new URLSearchParams({
     status: request.status,
+    sort: request.sort,
+    order: request.order,
     page: String(request.page),
     page_size: String(request.pageSize),
   });
   if (request.days !== null) {
     params.set("days", String(request.days));
+  }
+  if (request.query) {
+    params.set("q", request.query);
   }
   return getJson<PostingPage>(`/api/v1/postings?${params.toString()}`);
 }

@@ -1,4 +1,10 @@
-# TraceMail
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-mark-dark.svg">
+    <img src="docs/assets/logo-mark-light.svg" alt="" width="36" height="36">
+  </picture>
+  TraceMail
+</h1>
 
 [![CI](https://github.com/ErenReyhanlioglu/tracemail/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ErenReyhanlioglu/tracemail/actions/workflows/ci.yml)
 ![Python 3.12](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)

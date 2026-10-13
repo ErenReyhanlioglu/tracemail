@@ -1,0 +1,160 @@
+/* The list panel (ADR-0042): toolbar, table (or message), pagination bar,
+   all on one surface and separated by lines. Not clipped, so the period
+   menu can open over the rows. */
+.panel {
+  background: var(--color-surface);
+  border: var(--border);
+  border-radius: var(--radius-md);
+}
+
+/* Filters on the left; clearing and search on the right, the search taking
+   the remaining width up to its cap. */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--border);
+}
+
+.start {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.end {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-4);
+}
+
+.clear {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
+.clear:hover {
+  color: var(--color-text);
+}
+
+/* Search: a field with a magnifier inside. */
+.search {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  max-width: var(--search-max-width);
+  color: var(--color-text-muted);
+}
+
+.search svg {
+  position: absolute;
+  left: var(--space-3);
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  min-width: var(--search-min-width);
+  height: var(--segment-height);
+  padding: 0 var(--space-3) 0 var(--space-8);
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+
+.searchInput::placeholder {
+  color: var(--color-text-muted);
+}
+
+.searchInput:hover {
+  border-color: var(--color-text-muted);
+}
+
+/* Period menu: a button with the current period, and a list of periods
+   opening below it. */
+.menu {
+  position: relative;
+}
+
+.menuButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--segment-height);
+  padding: 0 var(--space-3);
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.menuButton:hover {
+  border-color: var(--color-text-muted);
+}
+
+.menuButton svg,
+.menuItem svg {
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+  color: var(--color-text-muted);
+}
+
+.menuList {
+  position: absolute;
+  z-index: var(--layer-menu);
+  top: calc(100% + var(--space-1));
+  left: 0;
+  min-width: 100%;
+  margin: 0;
+  padding: var(--space-1);
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-menu);
+  list-style: none;
+}
+
+.menuList[hidden] {
+  display: none;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-2);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.menuItem:hover {
+  background: var(--color-row-hover);
+}
+
+.menuItem[aria-current] {
+  font-weight: var(--weight-medium);
+}
+
+.menuCheck {
+  display: inline-flex;
+  width: var(--icon-sm);
+}

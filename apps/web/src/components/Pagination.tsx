@@ -32,8 +32,10 @@ function Step({
   label: string;
 }) {
   if (href === null) {
+    // Kept for a stable layout; it does nothing, so assistive technology
+    // skips it rather than announcing a control that cannot be used.
     return (
-      <span className={`${styles.step} ${styles.disabled}`} aria-disabled="true" aria-label={label}>
+      <span className={`${styles.step} ${styles.disabled}`} aria-hidden="true">
         <Chevron direction={direction} />
       </span>
     );

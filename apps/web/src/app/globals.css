@@ -29,6 +29,18 @@
   --color-accent: #1f4fd8;
   --color-on-accent: #ffffff;
 
+  /* Logo dot: the accent on light surfaces, a lighter blue on dark ones
+     (the sidebar is dark in both themes). From the owner's logo set. */
+  --logo-accent: light-dark(#1f4fd8, #7ea0ff);
+  --logo-accent-on-dark: #7ea0ff;
+  --logo-size: 1.5rem;
+  --logo-size-lg: 3rem;
+  /* Health panel introduction (ADR-0040): readable line length. */
+  --prose-width: 46rem;
+
+  /* Login, not found, and error pages: one narrow column. */
+  --centered-column-width: 22rem;
+
   /* Chips */
   --color-chip-active: light-dark(#14181f, #e6e9ee);
   --color-on-chip-active: light-dark(#ffffff, #14181f);
@@ -73,6 +85,11 @@
   --radius-pill: 999px;
   --border: 1px solid var(--color-border);
   --sidebar-width: 16rem;
+  /* Collapsed: the icon column, wide enough for the theme switch. */
+  --sidebar-collapsed-width: 4.5rem;
+  --sidebar-transition: 150ms;
+  --nav-icon: 1.125rem;
+  --nav-control: 2rem;
   /* Wide enough to use a large screen, narrow enough to keep rows readable. */
   --content-max-width: 100rem;
   /* List tables: fixed columns (the first takes the rest), fixed heights so
@@ -89,7 +106,16 @@
   --col-last-seen: 11rem;
   --col-posting-status: 14rem;
   --postings-min-width: 72rem;
-  --chip-label-width: 4rem;
+  /* List toolbar (ADR-0042): segmented filter, counters, period menu. */
+  --segment-height: 2rem;
+  --segment-inset: 0.1875rem;
+  --counter-min-width: 1.5rem;
+  --counter-line-height: 1.25rem;
+  --icon-sm: 1rem;
+  --search-min-width: 14rem;
+  --search-max-width: 28rem;
+  --layer-menu: 10;
+  --shadow-menu: 0 0.25rem 0.75rem light-dark(rgb(20 24 31 / 0.12), rgb(0 0 0 / 0.45));
   --table-header-height: 2.75rem;
   --table-row-height: 4.75rem;
   --pagination-height: 3.25rem;
@@ -100,6 +126,29 @@
   --toggle-inset: 0.125rem;
   --toggle-travel: 1.5rem;
   --focus-ring: 2px solid var(--color-accent);
+
+  /* "Sign in with Google" button: Google's light and dark themes, sizes,
+     and padding, fixed by its branding guidelines (ADR-0039), not ours. */
+  --google-fill: light-dark(#ffffff, #131314);
+  --google-stroke: light-dark(#747775, #8e918f);
+  --google-text: light-dark(#1f1f1f, #e3e3e3);
+  --google-height: 2.5rem;
+  --google-radius: 0.25rem;
+  --google-logo: 1.25rem;
+  --google-pad-start: 0.75rem;
+  --google-logo-gap: 0.625rem;
+  --google-pad-end: 0.75rem;
+  --google-text-size: 0.875rem;
+  --google-line-height: 1.25rem;
+
+  /* Loading skeleton (ADR-0039). The delay sits between a warm-cache
+     response (under 0.5 s) and a cold one (1.5 s or more), measured
+     2026-10-13, so only slow loads show it. */
+  --skeleton-delay: 600ms;
+  --skeleton-pulse: 1.2s;
+  --skeleton-bar-height: 0.75rem;
+  --skeleton-segment-width: 6rem;
+  --skeleton-menu-width: 9rem;
 }
 
 :root[data-theme="light"] {
@@ -145,4 +194,14 @@ h2,
 h3,
 p {
   margin: 0;
+}
+
+/* Text for screen readers only, such as a loading announcement. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }

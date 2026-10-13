@@ -1,0 +1,47 @@
+/* Google's branding guidelines: theme colors, a 1 px inside stroke, the G
+   at 20 px with fixed padding, Google Sans Medium 14/20. */
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--google-logo-gap);
+  height: var(--google-height);
+  padding: 0 var(--google-pad-end) 0 var(--google-pad-start);
+  border: 1px solid var(--google-stroke);
+  border-radius: var(--google-radius);
+  background: var(--google-fill);
+  color: var(--google-text);
+  font-size: var(--google-text-size);
+  font-weight: var(--weight-medium);
+  line-height: var(--google-line-height);
+  text-decoration: none;
+}
+
+.logo {
+  width: var(--google-logo);
+  height: var(--google-logo);
+}
+
+/* The G is shown on its own theme's background: the light asset by
+   default, the dark one when the page is dark (system or chosen). */
+.dark {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme="light"])) .light {
+    display: none;
+  }
+
+  :global(:root:not([data-theme="light"])) .dark {
+    display: block;
+  }
+}
+
+:global(:root[data-theme="dark"]) .light {
+  display: none;
+}
+
+:global(:root[data-theme="dark"]) .dark {
+  display: block;
+}

@@ -1,0 +1,241 @@
+/*
+ * The health panel's introduction (ADR-0040). Text stays at a readable line
+ * length; the pipeline and the roadmap are panels divided into cells by
+ * hairlines rather than rows of boxes; principles are plain text; the stack
+ * is one panel of rows. Sections are separated by space, not fills. Column
+ * counts follow the content width (a container query), so rows always split
+ * evenly, with the sidebar expanded or collapsed.
+ */
+.overview {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+}
+
+.lead {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.intro {
+  max-width: var(--prose-width);
+  color: var(--color-text-secondary);
+  font-size: var(--text-lg);
+  line-height: 1.6;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  text-decoration: underline;
+  text-decoration-color: var(--color-border);
+  text-underline-offset: 0.25em;
+}
+
+.link:hover {
+  text-decoration-color: currentColor;
+}
+
+/* Live metrics are on their way: a quiet note, not an empty dashboard. */
+.live {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-width: var(--prose-width);
+  padding: var(--space-4) var(--space-5);
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-surface);
+}
+
+.liveTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.liveBody {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.heading {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+
+.note {
+  max-width: var(--prose-width);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+/* A panel split into cells by single hairlines: each cell draws its right
+   and bottom line one pixel outside itself, and the clipped panel hides
+   the lines that would fall on its own edge. */
+.grid {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: var(--border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  list-style: none;
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0 -1px -1px 0;
+  padding: var(--space-5);
+  border-right: var(--border);
+  border-bottom: var(--border);
+}
+
+.cellTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.cellNumber {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.cellName {
+  font-weight: var(--weight-semibold);
+}
+
+.cellBody {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+/* Six pipeline steps: 6, 3, 2, or 1 per row; four phases: 4, 2, or 1.
+   The breakpoints keep every cell wide enough for its text. */
+.pipeline,
+.roadmap {
+  grid-template-columns: 1fr;
+}
+
+@container (min-width: 26rem) {
+  .pipeline,
+  .roadmap {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@container (min-width: 40rem) {
+  .pipeline {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@container (min-width: 60rem) {
+  .roadmap {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@container (min-width: 90rem) {
+  .pipeline {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+/* Five principles: 5 per row, or 3 and 2, or one column; never 4 and 1. */
+.principles {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6) var(--space-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.principleName {
+  margin-bottom: var(--space-1);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+}
+
+.principleBody {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+@container (min-width: 48rem) {
+  .principles {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@container (min-width: 90rem) {
+  .principles {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* Stack: one panel of name and tool rows, in two columns when wide. */
+.stack {
+  display: grid;
+  grid-template-columns: 1fr;
+  column-gap: var(--space-10);
+  margin: 0;
+  /* No bottom padding: the last rows' lines fall outside and are clipped,
+     so no line doubles the panel's own edge. */
+  padding: var(--space-2) var(--space-6) 0;
+  overflow: hidden;
+  border: var(--border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+@container (min-width: 48rem) {
+  .stack {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: -1px;
+  padding: var(--space-3) 0;
+  border-bottom: var(--border);
+}
+
+.rowName {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.rowValue {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  text-align: right;
+}

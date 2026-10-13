@@ -83,15 +83,22 @@ These are recorded as unverified in ADRs; each is checked at the step named.
   optimize later.
 - Alert yield metric (which alerts lead to saved / applied postings) — after
   1.5, not urgent.
-- Web polish (owner-requested, nice-to-have, after the core works):
-  - **Error handling.** Tell failures apart instead of one "data
-    unavailable" message: session expired (to login), API down (retry
-    message), unknown route (not-found page), unexpected error (error
-    boundary). Pages answer with the matching HTTP status, not 200 with a
-    message. Seen 2026-10-11: an API 404 after a half-applied reload showed
-    as "data unavailable".
-  - **Loading states.** Skeleton rows while a list loads (Next.js
-    `loading.tsx`), in the table's own layout so nothing jumps.
+- Web UX baseline before the site goes public: every state designed
+  (loading, empty, error, not found), "last checked" time on the lists,
+  WCAG 2.2 AA; desktop first, then a mobile layout as polished as the
+  desktop; measured with Lighthouse and a manual pass before and after
+  ([ADR-0039](adr/0039-web-ux-baseline.md)). Desktop done on 2026-10-13:
+  page states, visitor routing to the health panel
+  ([ADR-0040](adr/0040-viewer-routing-and-public-landing.md)), the
+  collapsible sidebar ([ADR-0041](adr/0041-collapsible-sidebar-with-icons.md)),
+  and the list toolbar with search and sorting
+  ([ADR-0042](adr/0042-list-toolbar-and-status-groups.md)). Still open:
+  the "last checked" time, the Lighthouse and manual pass after the
+  changes, and the mobile layout. Seen 2026-10-11: an
+  API 404 after a half-applied reload showed as "data unavailable".
+  With the mobile layout: a web app manifest using the owner's 192, 512,
+  and maskable 512 px icons (kept outside the repository until then); the
+  standalone image must then also copy `public/`.
 
 ### Decisions still needed in Phase 1
 

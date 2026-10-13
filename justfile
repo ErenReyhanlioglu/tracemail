@@ -42,10 +42,13 @@ api port="8000":
 web:
     uv run --env-file .env node apps/web/node_modules/next/dist/bin/next dev apps/web --port 3000
 
-# Lint, typecheck, and build the web app (what CI runs)
+# Lint, typecheck, and build the web app (what CI runs). Typecheck first
+# generates Next.js's types (next-env.d.ts, route types) without a build, as
+# `npm run typecheck` does in CI; it loads next.config.ts, hence the .env.
 web-check:
     npm --prefix apps/web run lint
-    npm --prefix apps/web run typecheck
+    uv run --env-file .env node apps/web/node_modules/next/dist/bin/next typegen apps/web
+    uv run --env-file .env node apps/web/node_modules/typescript/bin/tsc --noEmit -p apps/web
     uv run --env-file .env node apps/web/node_modules/next/dist/bin/next build apps/web
 
 # List mailbox folder names (to set TRACEMAIL_IMAP_MAILBOX)

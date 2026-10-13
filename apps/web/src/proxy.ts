@@ -39,11 +39,13 @@ export function proxy(request: NextRequest): NextResponse {
   return response;
 }
 
-// Pages only: not the API (JSON), static files, or link prefetches.
+// Pages only: not the API (JSON), static files, app icons, or link
+// prefetches. The icons are static images; icon.svg carries its own <style>
+// for the dark theme, which a page's nonce-based policy would block.
 export const config = {
   matcher: [
     {
-      source: "/((?!api|_next/static|_next/image|favicon.ico).*)",
+      source: "/((?!api|_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png).*)",
       missing: [
         { type: "header", key: "next-router-prefetch" },
         { type: "header", key: "purpose", value: "prefetch" },
