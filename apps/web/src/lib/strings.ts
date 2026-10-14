@@ -176,7 +176,7 @@ export const strings = {
       closed: "Yanıtsız kapandı",
     },
     columns: {
-      application: "Şirket ve pozisyon",
+      application: "Pozisyon ve şirket",
       channel: "Kanal",
       location: "Konum",
       appliedOn: "Başvuru",
