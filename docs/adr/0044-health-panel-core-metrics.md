@@ -148,9 +148,10 @@ The core panel, before Phase 2:
 1. **Status line**: whether the last hourly run succeeded and how long ago,
    in the owner's time zone, and the running version.
 2. **Stage rows**: one row per pipeline stage (collection, parsing,
-   loading, modeling, serving) with its last 24 hourly cells, last run, and
-   median duration. The serving row names where it runs, the Oracle Cloud
-   ARM VM.
+   loading, modeling) with its last 24 hourly cells, last processing run,
+   and median duration. Serving has no row: the measurements render only
+   when the API answers, so such a row could only ever say "up". The table's
+   caption names where everything runs, Oracle Cloud.
 3. **Freshness against a target**: the SLO "every hourly interval is
    processed within 2 hours", measured end to end from collection to the
    dbt build [1], with a 99% objective, its compliance over 30 days, and
@@ -172,9 +173,10 @@ at the right, a full-width strip, and the window under it.
 
 The presentation follows the tools above: a status line rather than a
 banner; one row per pipeline stage (collection, parsing, loading,
-modeling, serving) with its state as a word, the last 24 hourly cells, the
-last run, and the median duration; normal cells in a quiet neutral and
-color only for late, missed, or failed; every percentage with its count and
+modeling) with its state as a word, the last 24 hourly cells, the
+last run, and the median duration; successful cells in a muted green, as
+status pages draw them, skipped ones in grey, and strong color only for
+late, missed, or failed; every percentage with its count and
 window; and incidents as dated timelines. Each cell's state is available as
 text, not only as color.
 
@@ -251,6 +253,11 @@ Alternatives considered:
 - `tm-api` still reads only `marts`: `marts` is an authorized dataset on
   `landing`, `ops`, `staging`, and `intermediate`, and `staging` on `ops`
   ([infra/gcp](../../infra/gcp/README.md)).
+- A stage with no record yet is pending, not missed, until the hour's
+  deadline, and the SLO judges the hour only after that. Without it, a read
+  between a run's start and its record showed the latest hour as missed
+  (seen on 2026-10-14, when the panel was read seconds before a dbt build
+  recorded itself).
 - The prod schedule started on 2026-10-12 15:00 UTC; with the dev start
   date, prod counted 67 hours before it existed as missed. The start is now
   set per dbt target.
