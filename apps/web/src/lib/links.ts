@@ -3,3 +3,5 @@
 
 export const REPOSITORY_URL = "https://github.com/ErenReyhanlioglu/tracemail";
 export const DECISIONS_URL = `${REPOSITORY_URL}/blob/main/docs/adr/README.md`;
+// Incident reports (CLAUDE.md, Incidents); the panel links each summary.
+export const INCIDENTS_URL = `${REPOSITORY_URL}/blob/main/docs/incidents`;
