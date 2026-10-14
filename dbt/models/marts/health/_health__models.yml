@@ -40,8 +40,9 @@ models:
 
   - name: fct_free_tier_usage
     description: >
-      Current month's free-tier use per allowance from run records, projected
-      to month end; flags allowances over the 85% rule (CLAUDE.md).
+      Current month's free-tier use per allowance from run records,
+      projected to month end; GCS storage counts everything stored, not the
+      month's use. Flags allowances over the 85% rule (CLAUDE.md).
     columns:
       - name: allowance
         data_tests:
@@ -49,10 +50,42 @@ models:
           - not_null
           - accepted_values:
               arguments:
-                values: [gcs_class_a, gcs_class_b, bigquery_query_bytes]
+                values:
+                  - gcs_class_a
+                  - gcs_class_b
+                  - gcs_storage_bytes
+                  - bigquery_query_bytes
 
   - name: fct_dbt_builds
     description: One row per recorded dbt build with tests, cost, and coverage.
     columns:
       - name: run_id
+        data_tests: [unique, not_null]
+
+  - name: fct_hourly_stages
+    description: >
+      Each pipeline stage's outcome per expected hourly interval: ok, late,
+      failed, skipped (nothing new to process), or missed (ADR-0044).
+    columns:
+      - name: stage_hour_key
+        data_tests: [unique, not_null]
+      - name: stage_state
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [ok, late, failed, skipped, missed]
+
+  - name: fct_hourly_freshness
+    description: >
+      The end-to-end freshness SLO per hourly interval: on time when every
+      stage finished within the target (ADR-0044).
+    columns:
+      - name: hour_start
+        data_tests: [unique, not_null]
+
+  - name: fct_bigquery_storage
+    description: Current BigQuery storage in logical bytes against its free tier (one row).
+    columns:
+      - name: allowance
         data_tests: [unique, not_null]

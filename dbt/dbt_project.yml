@@ -43,15 +43,27 @@ vars:
   volume_drop_ratio: 0.5
   # Job name of dbt builds in ops.pipeline_runs (set by record-dbt-build).
   dbt_build_job: "dbt_build"
-  # First hour the scheduled DAG covered (step 1.7); hours before it are not
-  # expected, so they are never counted as missed.
-  hourly_schedule_start: "2026-10-09 20:00:00+00"
+  # First hour the scheduled DAG covered, per target (dev and CI share the
+  # dev project; prod's first hourly interval, step 1.11). Hours before it
+  # are not expected, so they are never counted as missed.
+  hourly_schedule_start:
+    dev: "2026-10-09 20:00:00+00"
+    ci: "2026-10-09 20:00:00+00"
+    prod: "2026-10-12 15:00:00+00"
+  # Freshness SLO (ADR-0044): every hourly interval reaches the marts within
+  # this many hours of its start.
+  freshness_target_hours: 2
   # Monthly free tiers, per billing account (checked 2026-10-10):
   # https://docs.cloud.google.com/free/docs/free-cloud-features and
   # https://cloud.google.com/bigquery/pricing (1 TiB of query bytes).
   free_tier_gcs_class_a: 5000
   free_tier_gcs_class_b: 50000
   free_tier_bigquery_query_bytes: 1099511627776
+  # Storage (rechecked 2026-10-14, first link): "5 GB-months" of Cloud
+  # Storage in us-east1, us-west1, or us-central1, taken as decimal GB, the
+  # smaller reading; "10 GiB" of BigQuery storage.
+  free_tier_gcs_storage_bytes: 5000000000
+  free_tier_bigquery_storage_bytes: 10737418240
   # Projected use above this share of a free tier makes optimization
   # mandatory (CLAUDE.md, 85% rule).
   free_tier_action_share: 0.85

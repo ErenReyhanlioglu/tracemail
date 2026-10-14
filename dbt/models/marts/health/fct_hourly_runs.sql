@@ -8,7 +8,7 @@
 with expected as (
     select hour_start
     from unnest(generate_timestamp_array(
-        timestamp('{{ var("hourly_schedule_start") }}'),
+        timestamp('{{ var("hourly_schedule_start")[target.name] }}'),
         timestamp_sub(timestamp_trunc(current_timestamp(), hour), interval 1 hour),
         interval 1 hour
     )) as hour_start

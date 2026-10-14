@@ -8,6 +8,12 @@
 -- parsing GCS operations (ADR-0017) and dbt's billed bytes (ADR-0023).
 -- Ad-hoc queries and other tools are not included; the billing report remains
 -- the ground truth. A read-time view.
+--
+-- Storage does not reset monthly (ADR-0044). GCS storage is every byte the
+-- pipeline wrote: exact for the write-once raw zone, an upper bound for the
+-- parsed zone, whose files are rewritten whole and counted at every write
+-- (ADR-0018). Its projection carries the recent growth to month end.
+-- BigQuery storage is in fct_bigquery_storage.
 
 with runs as (
     select
@@ -40,6 +46,10 @@ unpivoted as (
     select started_at, allowance, amount
     from runs
     unpivot (amount for allowance in (gcs_class_a, gcs_class_b, bigquery_query_bytes))
+    union all
+    select started_at, 'gcs_storage_bytes', coalesce(int64(metrics.bytes_written), 0)
+    from {{ ref('stg_ops__pipeline_runs') }}
+    where job_name in ('ingest_mail', 'parse_mail')
 ),
 
 window_bounds as (
@@ -60,6 +70,8 @@ allowances as (
     select 'gcs_class_b', {{ var('free_tier_gcs_class_b') }}
     union all
     select 'bigquery_query_bytes', {{ var('free_tier_bigquery_query_bytes') }}
+    union all
+    select 'gcs_storage_bytes', {{ var('free_tier_gcs_storage_bytes') }}
 ),
 
 totals as (
