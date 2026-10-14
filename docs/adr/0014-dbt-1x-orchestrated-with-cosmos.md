@@ -75,7 +75,10 @@ Alternatives considered:
 - Starts on the previous dbt generation; a migration to 2.0 is expected
   later.
 - Cosmos parses the dbt project when building the DAG, adding load to DAG
-  processing; to be observed once running.
+  processing; to be observed once running. Observed 2026-10-12: on the VM
+  the DAG file parses in 1.6 s (6.6 s locally on amd64), and the DAG
+  processor uses about 5% of a core re-parsing it every 30 s; no change
+  needed.
 - One more library in the Airflow environment that must stay compatible with
   Airflow's constraints.
 

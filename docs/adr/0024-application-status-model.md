@@ -92,6 +92,9 @@ Alternatives considered:
 - In Phase 1 every application is `applied`; the hand-checked sample of step
   1.5 exercises only that status and the silence indicator.
 - Whether `application_viewed` / `resume_downloaded` mails exist, and under
-  which LinkedIn template ids, is not yet verified.
+  which LinkedIn template ids, is not yet verified. Verified 2026-10-09: in
+  90 days of raw mail, 6 application-viewed and 4 rejection mails, both
+  HTML-only templates, parsed since parser version 3; no resume-downloaded
+  mail was seen.
 - Without a "reply" concept, the overview cannot say how many
   companies answered; revisit if that becomes a question the owner asks.

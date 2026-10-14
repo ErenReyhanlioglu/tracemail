@@ -39,113 +39,112 @@ export const strings = {
       failed: "Giriş tamamlanamadı. Tekrar deneyebilirsin.",
     } as Record<string, string>,
   },
-  // The public health panel's introduction (ADR-0040): what the system is
-  // and how it works, with no numbers until live metrics arrive.
+  // The public health panel (ADR-0040, ADR-0044): what the system is, then
+  // its live measurements. One state vocabulary in every strip and legend.
   health: {
     title: "Sağlık paneli",
     intro:
-      "TraceMail, bir iş arama sürecini izleyen kişisel bir veri sistemidir. Başvuru mail kutusunu saatte bir okur, başvuruların ve gelen ilanların durumunu çıkarır. Bu sayfa sistemin kendi çalışmasını anlatır ve kişisel veri içermez.",
-    liveTitle: "Canlı ölçümler yolda",
-    liveBody:
-      "Çalışma geçmişi, ayrıştırma kalitesi ve veri testleri bu sayfada canlı olarak yayınlanacak. Burada görünecek her sayı sistemin gerçek kayıtlarından gelecek.",
-    pipelineTitle: "Veri nasıl akıyor",
-    pipeline: [
-      {
-        name: "Gmail",
-        body: "Mail kutusu saatte bir ve salt okunur olarak okunur. Hiçbir mail okundu olarak işaretlenmez.",
-      },
-      {
-        name: "Cloud Storage",
-        body: "Her mail değiştirilmeden ve yalnızca bir kez yazılır. Sonraki her katman buradan yeniden üretilebilir.",
-      },
-      {
-        name: "Ayrıştırıcılar",
-        body: "Kural tabanlı ve sürümlü ayrıştırıcılar her mailden yapılandırılmış bir kayıt çıkarır.",
-      },
-      {
-        name: "BigQuery",
-        body: "Kayıtlar veri ambarına günlük bölümler halinde yüklenir.",
-      },
-      {
-        name: "dbt",
-        body: "Başvurular, ilanlar ve olaylar modellenir. Her model veri testlerinden geçer.",
-      },
-      {
-        name: "FastAPI ve Next.js",
-        body: "Modellenmiş veri bu sitede gösterilir.",
-      },
-    ],
-    pipelineNote:
-      "Tüm adımları Airflow saatte bir çalıştırır. Her adım süresini, işlediği hacmi ve bulut işlemlerini kaydeder.",
-    principlesTitle: "İlkeler",
-    principles: [
-      {
-        name: "Kaynak değişmez",
-        body: "Posta kutusu yalnızca okunur. Ham veri bir kez yazılır ve üzerine yazılmaz.",
-      },
-      {
-        name: "Gizlilik girişte",
-        body: "Kişisel hesaplardan ve bültenlerden gelen mailler hiç saklanmaz. Kayıtlarda yalnızca sayıları tutulur.",
-      },
-      {
-        name: "Tekrar çalıştırmak güvenli",
-        body: "Aynı zaman aralığı yeniden işlendiğinde sonuç değişmez. Geçmiş günler aynı yoldan yeniden işlenebilir.",
-      },
-      {
-        name: "Her adım ölçülür",
-        body: "Süre, hacim ve bulut işlem sayıları her çalışmada kaydedilir. Maliyet ücretsiz kota içinde izlenir.",
-      },
-      {
-        name: "Kararlar kayıtlı",
-        body: "Her önemli teknik karar, gerekçesi ve reddedilen seçenekleriyle birlikte yazılıdır.",
-      },
-    ],
-    stackTitle: "Altyapı",
-    stack: [
-      { name: "Orkestrasyon", value: "Apache Airflow" },
-      { name: "Ham depolama", value: "Google Cloud Storage" },
-      { name: "Veri ambarı", value: "BigQuery" },
-      { name: "Modelleme", value: "dbt" },
-      { name: "API", value: "FastAPI" },
-      { name: "Arayüz", value: "Next.js" },
-      { name: "Çalışma ortamı", value: "Oracle Cloud ARM, Docker Compose" },
-      { name: "Ağ", value: "Cloudflare Tunnel, Tailscale" },
-      { name: "Test ve dağıtım", value: "GitHub Actions" },
-      { name: "Diller", value: "Python, SQL, TypeScript" },
-    ],
-    roadmapTitle: "Yol haritası",
-    roadmap: [
-      {
-        phase: "Faz 1",
-        name: "Çekirdek",
-        body: "Mail toplama, ham depolama, veri modeli ve başvuru durumları. Üretimde saatte bir çalışıyor.",
-        current: true,
-      },
-      {
-        phase: "Faz 2",
-        name: "Zekâ",
-        body: "Yanıtların sınıflandırılması ve ilanlarla profil arasında kanıta dayalı eşleşme raporu.",
-        current: false,
-      },
-      {
-        phase: "Faz 3",
-        name: "Arayüz",
-        body: "Bu panelin canlı ölçümleri ve misafirler için paylaşım bağlantıları.",
-        current: false,
-      },
-      {
-        phase: "Faz 4",
-        name: "İsteğe bağlı",
-        body: "Başlık benzerliğiyle kaba uygunluk sıralaması ve küçük eklemeler.",
-        current: false,
-      },
-    ],
-    phaseCurrent: "Sürüyor",
-    phasePlanned: "Planlandı",
+      "TraceMail, bir iş arama sürecini izleyen kişisel bir veri sistemidir. Başvuru mail kutusunu saatte bir okur, başvuruların ve gelen ilanların durumunu çıkarır. Bu sayfa sistemin kendi çalışmasını gösterir ve kişisel veri içermez.",
     linksLabel: "Bağlantılar",
     sourceCode: "Kaynak kodu",
     decisions: "Mimari kararlar",
     opensInNewTab: "yeni sekmede açılır",
+    status: {
+      running: "Sistem çalışıyor",
+      late: "Çalışma gecikti",
+      failed: "Son çalışma başarısız",
+      noRun: "Henüz çalışma yok",
+      lastRun: (time: string, ago: string) => `son çalışma ${time}, ${ago}`,
+      minutesAgo: (minutes: number) => `${minutes} dk önce`,
+      hoursAgo: (hours: number) => `${hours} saat önce`,
+      daysAgo: (days: number) => `${days} gün önce`,
+      streak: (hours: number) => `${hours} saattir kesintisiz`,
+      version: "sürüm",
+    },
+    cells: {
+      ok: "sorunsuz",
+      skipped: "atlandı, yeni veri yok",
+      late: "gecikme",
+      failed: "hata",
+      none: "kayıt yok",
+    },
+    stages: {
+      title: "Veri nasıl akıyor",
+      aside: "Airflow · tracemail_hourly · saatlik",
+      stage: "Aşama",
+      state: "Durum",
+      window: "son 24 saat",
+      lastProcessed: "Son işlem",
+      median: "Medyan süre",
+      medianWindow: "son 7 gün",
+      running: "Çalışıyor",
+      late: "Gecikti",
+      failed: "Hata",
+      rows: {
+        ingest_mail: { name: "Toplama", detail: "Gmail, ham depo" },
+        parse_mail: { name: "Ayrıştırma", detail: "kural tabanlı" },
+        load_landing: { name: "Yükleme", detail: "BigQuery" },
+        dbt_build: { name: "Modelleme", detail: "dbt" },
+      } as Record<string, { name: string; detail: string }>,
+      models: (count: number) => `dbt, ${count} model`,
+      serving: {
+        name: "Sunum",
+        detail: "FastAPI, Oracle Cloud",
+        state: "Ayakta",
+        note: "geçmiş tutulmuyor, anlık kontrol",
+        now: "şimdi",
+      },
+    },
+    history: {
+      title: "Son 30 gün",
+      aside: "gün başına bir kutu",
+      from: "30 gün önce",
+      today: "bugün",
+      freshnessName: "Zamanında işlenen saatler",
+      freshnessDetail: (hours: number) =>
+        `Her saatin verisi en geç ${hours} saat içinde panele ulaştı mı.`,
+      objective: (percent: string) => `hedef ${percent}`,
+      onTime: (onTime: number, hours: number) => `${onTime} / ${hours} saat zamanında`,
+      dbtName: "dbt build",
+      dbtDetail: (models: number, tests: number) =>
+        `${models} model kuruldu ve ${tests} test geçti mi.`,
+      buildsOk: "build başarılı",
+      lastBuild: (passed: number, tests: number, documented: number, models: number) =>
+        `son build ${passed} / ${tests} test, ${documented} / ${models} model belgeli`,
+    },
+    resources: {
+      title: "Kaynak kullanımı",
+      rows: {
+        gcs_class_a: "Cloud Storage, A sınıfı işlem",
+        gcs_class_b: "Cloud Storage, B sınıfı işlem",
+        gcs_storage_bytes: "Cloud Storage, depolama",
+        bigquery_query_bytes: "BigQuery sorgu",
+        bigquery_storage_bytes: "BigQuery depolama",
+      } as Record<string, string>,
+      monthEnd: "ay sonu",
+      now: "şu an",
+      used: "kullanılan",
+      projected: "ay sonu tahmini",
+      limit: "aylık kotanın %85'i",
+    },
+    incidents: {
+      title: "Olay kaydı",
+      aside: "raporlar GitHub'da",
+      open: "Raporu aç",
+      solution: "Çözüm.",
+      // Owner-approved summaries of docs/incidents (CLAUDE.md, Incidents).
+      items: [
+        {
+          date: "2026-10-12",
+          title: "Bir manuel çalıştırma başarısız oldu.",
+          body: "Tarih verilmeden başlatılan çalıştırmaların zaman aralığı yoktu. Bu yüzden çalıştırma başarısız oldu, zamanlanmış çalıştırmalar ve veri etkilenmedi.",
+          solution: "Bu tür çalıştırmalar artık tetiklendikleri zamanı kullanıyor.",
+          report: "2026-10-12-manual-runs-without-a-logical-date.md",
+        },
+      ],
+    },
+    footer: (time: string) =>
+      `Veriler saatlik çalışma kayıtlarından · ${time} itibarıyla · saatler Türkiye saati`,
   },
   search: {
     label: "Ara",

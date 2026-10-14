@@ -5,6 +5,10 @@
 # TRACEMAIL_API_URL is the API's address inside the Compose network. It is
 # fixed at build time because the /api rewrite is compiled into the build;
 # server-side data requests read the same variable at run time.
+#
+# TRACEMAIL_VERSION is the commit SHA CI builds from, shown on the health
+# panel (ADR-0002); nothing calls git at run time. Set last, so a new commit
+# rebuilds only the final layer.
 
 ARG NODE_VERSION=22
 
@@ -31,5 +35,7 @@ ENV NODE_ENV=production \
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static
 USER node
+ARG TRACEMAIL_VERSION=""
+ENV TRACEMAIL_VERSION=${TRACEMAIL_VERSION}
 EXPOSE 3000
 CMD ["node", "server.js"]

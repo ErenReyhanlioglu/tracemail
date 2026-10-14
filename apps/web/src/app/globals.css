@@ -55,6 +55,19 @@
   --color-neutral-bg: light-dark(#eceef1, #262d37);
   --color-neutral-text: light-dark(#3d4450, #c9cfd8);
 
+  /* Health panel (ADR-0044): one meaning per color in every strip. Success
+     is a muted tone of the success text, as status pages color their bars;
+     grey means skipped, never success. Resource bars are quantities, not
+     states, so they stay neutral. */
+  --color-success-text: light-dark(#0b6b57, #5fd3a8);
+  --cell-ok: light-dark(#4a9e86, #3b9a7d);
+  --cell-skipped: light-dark(#e3e6eb, #262d37);
+  --cell-late: light-dark(#c27a1a, #e0a24a);
+  --cell-failed: light-dark(#b42318, #f07167);
+  --cell-none-opacity: 0.3;
+  --bar-used: light-dark(#6b7684, #8792a2);
+  --bar-projected-opacity: 0.35;
+
   /* Type */
   --font-sans: var(--font-plex-sans), system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;

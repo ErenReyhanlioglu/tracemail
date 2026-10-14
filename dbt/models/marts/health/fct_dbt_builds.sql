@@ -18,6 +18,7 @@ select
     int64(metrics.tests) as tests,
     coalesce(int64(metrics.nodes_by_status.pass), 0) as tests_passed,
     int64(metrics.bytes_billed) as bytes_billed,
+    int64(metrics.coverage.models) as project_models,
     int64(metrics.coverage.models_tested) as models_tested,
     int64(metrics.coverage.models_documented) as models_documented
 from builds

@@ -3,12 +3,16 @@
 // (CLAUDE.md, Frontend). Next.js holds no authentication logic of its own.
 import "server-only";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 import type { Application, ApplicationPage } from "@/lib/applications";
+import type { HealthPanel } from "@/lib/panel";
 import type { PostingPage } from "@/lib/postings";
 
 const SESSION_COOKIE = "tracemail_session";
+// Cloudflare's visitor address, forwarded so the API rate-limits each
+// visitor rather than the web server as a whole.
+const CLIENT_IP_HEADER = "cf-connecting-ip";
 const PAGE_SIZE = 100;
 
 export class NotSignedInError extends Error {}
@@ -23,15 +27,19 @@ function apiUrl(path: string): string {
   return `${base}${path}`;
 }
 
-async function sessionHeader(): Promise<Record<string, string>> {
+async function forwardedHeaders(): Promise<Record<string, string>> {
   const session = (await cookies()).get(SESSION_COOKIE);
-  return session ? { cookie: `${SESSION_COOKIE}=${session.value}` } : {};
+  const client = (await headers()).get(CLIENT_IP_HEADER);
+  return {
+    ...(session ? { cookie: `${SESSION_COOKIE}=${session.value}` } : {}),
+    ...(client ? { [CLIENT_IP_HEADER]: client } : {}),
+  };
 }
 
 async function request(path: string): Promise<Response> {
-  const headers = await sessionHeader();
+  const forwarded = await forwardedHeaders();
   try {
-    return await fetch(apiUrl(path), { headers, cache: "no-store" });
+    return await fetch(apiUrl(path), { headers: forwarded, cache: "no-store" });
   } catch (error) {
     // The API is down or unreachable: the same state as an error answer.
     throw new ApiUnavailableError("API unreachable", { cause: error });
@@ -106,4 +114,9 @@ export async function fetchPostings(request: PostingsRequest): Promise<PostingPa
     params.set("q", request.query);
   }
   return getJson<PostingPage>(`/api/v1/postings?${params.toString()}`);
+}
+
+// The public health panel; the API caches it, so every visit may ask.
+export async function fetchHealthPanel(): Promise<HealthPanel> {
+  return getJson<HealthPanel>("/api/v1/public/health-panel");
 }

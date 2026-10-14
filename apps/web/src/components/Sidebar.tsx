@@ -1,7 +1,6 @@
-// Navigation as in the mockups, with an icon per section. The owner reaches
-// the application and incoming-posting lists; a visitor sees them locked,
-// and the public health panel is open to everyone (ADR-0040). Sections not
-// built yet are dimmed. The sidebar collapses to its icons; labels stay in
+// Navigation as in the mockups, with an icon per section. Every section but
+// the public health panel belongs to the owner; a visitor sees them locked
+// (ADR-0040). Sections not built yet are dimmed for the owner. The sidebar collapses to its icons; labels stay in
 // the markup for screen readers and show as a tooltip (ADR-0041).
 import { cookies } from "next/headers";
 import Link from "next/link";
@@ -40,7 +39,7 @@ interface NavItem {
 }
 
 const NAV: readonly NavItem[] = [
-  { label: strings.nav.overview, icon: OverviewIcon },
+  { label: strings.nav.overview, icon: OverviewIcon, ownerOnly: true },
   {
     label: strings.nav.postings,
     icon: PostingsIcon,
@@ -55,7 +54,7 @@ const NAV: readonly NavItem[] = [
     href: "/applications",
     ownerOnly: true,
   },
-  { label: strings.nav.reports, icon: ReportsIcon },
+  { label: strings.nav.reports, icon: ReportsIcon, ownerOnly: true },
   { label: strings.nav.health, icon: HealthIcon, section: "health", href: PANEL_PATH },
 ];
 

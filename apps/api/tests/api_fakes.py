@@ -17,6 +17,7 @@ from starlette.responses import RedirectResponse, Response
 
 from tracemail_api.config import ApiSettings
 from tracemail_api.main import create_app
+from tracemail_api.panel import HealthPanel
 from tracemail_api.routes.auth import get_google
 from tracemail_api.warehouse import ApplicationRow, MartsReader, PostingRow
 
@@ -102,6 +103,59 @@ def posting(
     )
 
 
+def health_panel_row() -> HealthPanel:
+    """A small panel: one stage, one day of each strip, one allowance."""
+    started = datetime(2026, 10, 14, 0, 0, 3, tzinfo=UTC)
+    return HealthPanel.model_validate(
+        {
+            "read_at": started,
+            "freshness_target_hours": 2,
+            "freshness_objective_percent": 99.0,
+            "last_ingest": {
+                "started_at": started,
+                "duration_seconds": 4.2,
+                "run_status": "COMPLETE",
+            },
+            "on_time_streak_hours": 31,
+            "stages": [
+                {
+                    "job_name": "ingest_mail",
+                    "last_run_at": started,
+                    "last_run_status": "COMPLETE",
+                    "last_duration_seconds": 4.2,
+                    "median_duration_seconds": 4.0,
+                    "hours": ["ok", "skipped"],
+                }
+            ],
+            "freshness_days": [
+                {
+                    "local_date": date(2026, 10, 13),
+                    "state": "ok",
+                    "hours": 24,
+                    "on_time": 24,
+                }
+            ],
+            "dbt_days": [
+                {
+                    "local_date": date(2026, 10, 12),
+                    "state": "failed",
+                    "builds": 3,
+                    "builds_ok": 2,
+                }
+            ],
+            "last_build": None,
+            "resources": [
+                {
+                    "allowance": "gcs_class_a",
+                    "used_to_date": 1273,
+                    "projected_month": 1975.0,
+                    "monthly_free": 5000,
+                }
+            ],
+        }
+    )
+
+
 class FakeMarts(MartsReader):
     """Serves fixed rows and counts queries; can simulate an outage."""
 
@@ -136,13 +190,19 @@ class FakeMarts(MartsReader):
         self.queries += 1
         return self.posting_rows
 
+    async def health_panel(self) -> list[HealthPanel]:
+        self.queries += 1
+        return [health_panel_row()]
+
 
 @contextmanager
 def api_client(
-    google: FakeGoogle | None = None, marts: FakeMarts | None = None
+    google: FakeGoogle | None = None,
+    marts: FakeMarts | None = None,
+    settings: ApiSettings | None = None,
 ) -> Iterator[TestClient]:
     """A test client for an app wired to fakes; the lifespan runs."""
-    app = create_app(make_settings(), marts or FakeMarts())
+    app = create_app(settings or make_settings(), marts or FakeMarts())
     fake_google = google or FakeGoogle()
     app.dependency_overrides[get_google] = lambda: fake_google
     with TestClient(app, base_url=BASE_URL, follow_redirects=False) as client:
