@@ -14,7 +14,7 @@ from collections.abc import Sequence
 from datetime import date
 from pathlib import Path
 
-from tracemail_pipeline import jobs
+from tracemail_pipeline import delivery, jobs
 from tracemail_pipeline.config import PipelineSettings
 from tracemail_pipeline.dates import day_start_utc, days_between
 from tracemail_pipeline.ingest.imap_client import open_mailbox
@@ -33,6 +33,7 @@ DATE_RANGE_COMMANDS = {
     "parse-mail": "Parse stored raw mail into the parsed zone",
     "load-landing": "Load the parsed zone into BigQuery landing tables",
     "landing-check": "Row counts and content fingerprints of landing tables",
+    "ingest-deployments": "Ingest, parse, and load GitHub deployments (ADR-0045)",
 }
 
 
@@ -113,6 +114,12 @@ def run_raw_inventory(settings: PipelineSettings, start: date, end: date) -> Non
         logger.info("%5d  %s", count, domain)
 
 
+def run_ingest_deployments(start: date, end: date) -> None:
+    """Store, parse, and load the deployments created in ``[start, end)``."""
+    days = delivery.deliver_window(day_start_utc(start), day_start_utc(end))
+    logger.info("Deployment days loaded: %d", len(days))
+
+
 def run_record_dbt_build(
     settings: PipelineSettings,
     run_results: list[Path],
@@ -156,6 +163,8 @@ def main(argv: Sequence[str] | None = None) -> None:
             run_load_landing(settings, args.start_date, args.end_date)
         case "landing-check":
             run_landing_check(settings, args.start_date, args.end_date)
+        case "ingest-deployments":
+            run_ingest_deployments(args.start_date, args.end_date)
         case "record-dbt-build":
             run_record_dbt_build(
                 settings, args.run_results, args.manifest, args.job_name

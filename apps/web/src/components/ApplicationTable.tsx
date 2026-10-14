@@ -47,8 +47,8 @@ function Row({ application }: { application: Application }) {
   return (
     <tr className={rowClass}>
       <td>
-        <Clipped value={company} className={styles.company} />
-        <Clipped value={application.title ?? text.noTitle} className={styles.title} />
+        <Clipped value={application.title ?? text.noTitle} className={styles.lead} />
+        <Clipped value={company} className={styles.sub} />
       </td>
       <td>
         <Clipped value={channelLabel(application.channel)} className={styles.mono} />

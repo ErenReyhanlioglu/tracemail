@@ -133,13 +133,20 @@ def record_dbt_node_retry(project_dir: str, **kwargs: Any) -> None:
     tags=["tracemail"],
 )
 def tracemail_hourly() -> None:
-    """Ingest the hour's mail, parse and load the days it changed, build dbt."""
+    """Ingest the hour's mail, parse and load the days it changed, build dbt;
+    beside it, store and load the hour's finished deployments."""
 
     @task.external_python(python=PIPELINE_PYTHON, expect_airflow=False)
     def ingest_mail(interval_start: str, interval_end: str, run_type: str) -> list[str]:
         from tracemail_pipeline.jobs import ingest_for_interval
 
         return ingest_for_interval(interval_start, interval_end, run_type)
+
+    @task.external_python(python=PIPELINE_PYTHON, expect_airflow=False)
+    def deliveries(interval_start: str, interval_end: str, run_type: str) -> list[str]:
+        from tracemail_pipeline.delivery import deliver_for_interval
+
+        return deliver_for_interval(interval_start, interval_end, run_type)
 
     @task.short_circuit
     def has_new_days(days: list[str]) -> bool:
@@ -180,6 +187,9 @@ def tracemail_hourly() -> None:
         operator_args={"install_deps": False, "callback": record_dbt_node_retry},
     )
 
+    # Deployments (ADR-0045) run beside the mail chain: neither waits for
+    # nor gates the other, and the delivery views read landing directly.
+    deliveries(INTERVAL_START, INTERVAL_END, RUN_TYPE)
     days = ingest_mail(INTERVAL_START, INTERVAL_END, RUN_TYPE)
     parsed = parse_mail(days)
     has_new_days(days) >> parsed

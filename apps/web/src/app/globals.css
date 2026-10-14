@@ -64,7 +64,8 @@
   --cell-skipped: light-dark(#e3e6eb, #262d37);
   --cell-late: light-dark(#c27a1a, #e0a24a);
   --cell-failed: light-dark(#b42318, #f07167);
-  --cell-none-opacity: 0.3;
+  /* No record: hatched, so it never reads as skipped. */
+  --cell-none-line: light-dark(#cfd4db, #3a424e);
   --bar-used: light-dark(#6b7684, #8792a2);
   --bar-projected-opacity: 0.35;
 

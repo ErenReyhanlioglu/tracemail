@@ -39,8 +39,8 @@ function Row({ posting }: { posting: Posting }) {
   return (
     <tr>
       <td>
-        <Clipped value={posting.title ?? strings.applications.noTitle} className={styles.company} />
-        <Clipped value={company} className={styles.title} />
+        <Clipped value={posting.title ?? strings.applications.noTitle} className={styles.lead} />
+        <Clipped value={company} className={styles.sub} />
       </td>
       <td>
         <Clipped value={posting.location ?? strings.applications.unknown} className={styles.secondary} />

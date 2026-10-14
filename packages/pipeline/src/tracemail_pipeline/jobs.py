@@ -160,7 +160,7 @@ def ingest_for_interval(
     interval_start: str, interval_end: str, run_type: str
 ) -> list[str]:
     """DAG entry point: ingest, then return the days later tasks must process."""
-    settings = _settings()
+    settings = load_settings()
     start = datetime.fromisoformat(interval_start)
     end = datetime.fromisoformat(interval_end)
     result = ingest_interval(settings, start, end)
@@ -174,15 +174,16 @@ def ingest_for_interval(
 
 def parse_days(days: Sequence[str]) -> None:
     """DAG entry point: parse the given ISO days."""
-    parse_mail_days(_settings(), [date.fromisoformat(day) for day in days])
+    parse_mail_days(load_settings(), [date.fromisoformat(day) for day in days])
 
 
 def load_days(days: Sequence[str]) -> None:
     """DAG entry point: load the given ISO days into landing."""
-    load_landing_days(_settings(), [date.fromisoformat(day) for day in days])
+    load_landing_days(load_settings(), [date.fromisoformat(day) for day in days])
 
 
-def _settings() -> PipelineSettings:
+def load_settings() -> PipelineSettings:
+    """Settings from the environment, with logging set up for a task."""
     logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
     return PipelineSettings()  # type: ignore[call-arg]  # values come from env
 

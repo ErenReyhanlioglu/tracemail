@@ -586,6 +586,13 @@ detection, action items, lessons learned, timeline. It ends with the two-line
 panel summary for the health panel's incident log, in the same tone as the
 health panel mockup; the owner approves it before it is published.
 
+When a pull request repairs something a production deployment broke and
+that needed immediate intervention, it adds one row to
+`dbt/seeds/deployment_failures.csv` in the same change (ADR-0045): the
+failing deployment's commit, when the failure was detected, the fixing
+commit, and the incident report. A deploy job that fails before reaching
+production is not a row; it shows as a failed attempt.
+
 ---
 
 ## Deployment

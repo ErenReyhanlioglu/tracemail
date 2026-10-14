@@ -95,13 +95,30 @@ def test_health_panel_reads_null_sections_as_empty_lists() -> None:
             "dbt_days": None,
             "last_build": None,
             "resources": None,
+            **{
+                key: PANEL_ROW[key]
+                for key in ("delivery", "delivery_days", "recent_deployments")
+            },
         }
     )
     assert panel.stages == [] and panel.resources == []
+    assert panel.recent_deployments == [] and panel.delivery.deployments == 0
 
 
 PANEL_ROW: dict[str, Any] = {
     "last_ingest": None,
+    "delivery": {
+        "deployments": 0,
+        "failed_attempts": 0,
+        "median_lead_time_seconds": None,
+        "changes_with_lead_time": 0,
+        "change_failures": 0,
+        "median_recovery_seconds": None,
+        "rework_deployments": 0,
+        "last_deployed_at": None,
+    },
+    "delivery_days": None,
+    "recent_deployments": None,
     "on_time_streak_hours": 0,
     "stages": None,
     "freshness_days": None,
@@ -144,4 +161,5 @@ def test_reader_runs_the_panel_and_storage_queries_with_parameters() -> None:
         "window_days": 30,
         "stage_hours": 24,
         "median_days": 7,
+        "recent_deployments": 5,
     }

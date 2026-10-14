@@ -106,12 +106,13 @@
   white-space: nowrap;
 }
 
-.company {
+/* A row's two lines: the position first, the company under it. */
+.lead {
   font-size: var(--text-base);
   font-weight: var(--weight-semibold);
 }
 
-.title {
+.sub {
   margin-top: var(--space-1);
   color: var(--color-text-secondary);
 }
@@ -146,7 +147,7 @@
 }
 
 /* Closed without reply: quieter, without lowering text contrast. */
-.closed .company {
+.closed .lead {
   color: var(--color-text-secondary);
   font-weight: var(--weight-medium);
 }

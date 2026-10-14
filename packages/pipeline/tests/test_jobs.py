@@ -20,7 +20,7 @@ WINDOW_DAYS = ["2026-10-07", "2026-10-08", "2026-10-09"]
 def recorded(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, Any]]:
     """Replace settings and the step functions; record what each step got."""
     calls: list[tuple[str, Any]] = []
-    monkeypatch.setattr(jobs, "_settings", lambda: "settings")
+    monkeypatch.setattr(jobs, "load_settings", lambda: "settings")
 
     def fake_ingest(settings: Any, start: datetime, end: datetime) -> MailIngestResult:
         calls.append(("ingest", (start, end)))

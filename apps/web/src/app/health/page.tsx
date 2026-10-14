@@ -4,6 +4,7 @@
 import type { Metadata } from "next";
 
 import { AppShell } from "@/components/AppShell";
+import { Delivery } from "@/components/health/Delivery";
 import { History } from "@/components/health/History";
 import styles from "@/components/health/HealthPanel.module.css";
 import { Incidents } from "@/components/health/Incidents";
@@ -51,6 +52,7 @@ function Measurements({ panel }: { panel: HealthPanel }) {
       <StageTable panel={panel} />
       <History panel={panel} />
       <Resources panel={panel} />
+      <Delivery panel={panel} />
       <Incidents />
       <p className={styles.footer}>{text.footer(formatDayMonthTime(new Date(panel.read_at)))}</p>
     </>

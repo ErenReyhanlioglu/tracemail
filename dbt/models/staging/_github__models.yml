@@ -1,0 +1,16 @@
+models:
+  - name: stg_github__deployments
+    description: One finished production deployment attempt (ADR-0045).
+    columns:
+      - name: deployment_id
+        data_tests: [unique, not_null]
+      - name: commit_sha
+        data_tests: [not_null]
+      - name: finished_at
+        data_tests: [not_null]
+      - name: deployment_state
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [success, failure, error]

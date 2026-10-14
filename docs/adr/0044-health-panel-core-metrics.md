@@ -1,7 +1,7 @@
 # ADR-0044: Health Panel Core — What to Measure and Show before Phase 2
 
 **Date:** 2026-10-14
-**Status:** Accepted (not yet implemented)
+**Status:** Accepted
 
 ## Context
 
@@ -175,8 +175,9 @@ The presentation follows the tools above: a status line rather than a
 banner; one row per pipeline stage (collection, parsing, loading,
 modeling) with its state as a word, the last 24 hourly cells, the
 last run, and the median duration; successful cells in a muted green, as
-status pages draw them, skipped ones in grey, and strong color only for
-late, missed, or failed; every percentage with its count and
+status pages draw them, skipped ones in solid grey, hours with no record
+hatched (so they never read as skipped, with or without color), and strong
+color only for late, missed, or failed; every percentage with its count and
 window; and incidents as dated timelines. Each cell's state is available as
 text, not only as color.
 

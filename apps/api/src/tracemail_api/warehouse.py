@@ -19,6 +19,7 @@ from pydantic import BaseModel
 from tracemail_api.config import ApiSettings
 from tracemail_api.panel import (
     MEDIAN_DAYS,
+    RECENT_DEPLOYMENTS,
     STAGE_HOURS,
     WINDOW_DAYS,
     HealthPanel,
@@ -111,8 +112,9 @@ class MartsReader:
         return [PostingRow.model_validate(row) for row in rows]
 
     async def health_panel(self) -> list[HealthPanel]:
-        """The public health panel: one query for run history (billed the
-        10 MiB minimum) and one for storage metadata (billed 0, ADR-0044)."""
+        """The public health panel: one query for run history and deployments
+        (billed 10 MiB per table it reads: 30 MiB, measured) and one for
+        storage metadata (billed 0, ADR-0044, ADR-0045)."""
         params = [
             bigquery.ScalarQueryParameter(
                 "display_timezone", "STRING", DISPLAY_TIMEZONE_NAME
@@ -120,6 +122,9 @@ class MartsReader:
             bigquery.ScalarQueryParameter("window_days", "INT64", WINDOW_DAYS),
             bigquery.ScalarQueryParameter("stage_hours", "INT64", STAGE_HOURS),
             bigquery.ScalarQueryParameter("median_days", "INT64", MEDIAN_DAYS),
+            bigquery.ScalarQueryParameter(
+                "recent_deployments", "INT64", RECENT_DEPLOYMENTS
+            ),
         ]
         rows = await asyncio.to_thread(self._query, HEALTH_PANEL_SQL, params)
         storage = await asyncio.to_thread(self._query, BIGQUERY_STORAGE_SQL)

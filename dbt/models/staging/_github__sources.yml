@@ -1,0 +1,17 @@
+sources:
+  - name: github
+    description: >
+      Production deployments read from GitHub's REST API, loaded from the
+      parsed zone into `landing` with one partition per creation date
+      (ADR-0045). Every row carries its raw object key and parser version.
+    database: "{{ env_var('TRACEMAIL_GCP_PROJECT') }}"
+    schema: "{{ env_var('TRACEMAIL_BQ_LANDING_DATASET') }}"
+    tables:
+      - name: github_deployments
+        description: One finished production deployment and the change it shipped.
+        config:
+          loaded_at_field: finished_at
+          freshness:
+            # Deployments follow merges, days apart at times; a fortnight
+            # without one means the step or the deploy pipeline stopped.
+            warn_after: {count: 14, period: day}

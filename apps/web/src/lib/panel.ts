@@ -53,6 +53,30 @@ export interface Resource {
   monthly_free: number;
 }
 
+export interface Delivery {
+  deployments: number;
+  failed_attempts: number;
+  median_lead_time_seconds: number | null;
+  changes_with_lead_time: number;
+  change_failures: number;
+  median_recovery_seconds: number | null;
+  rework_deployments: number;
+  last_deployed_at: string | null;
+}
+
+export interface DeliveryDay {
+  local_date: string;
+  state: DayState;
+}
+
+export interface RecentDeployment {
+  deployed_at: string;
+  pull_request_number: number | null;
+  pull_request_title: string | null;
+  lead_time_seconds: number | null;
+  is_change_failure: boolean;
+}
+
 export interface HealthPanel {
   read_at: string;
   freshness_target_hours: number;
@@ -64,6 +88,9 @@ export interface HealthPanel {
   dbt_days: BuildDay[];
   last_build: LastBuild | null;
   resources: Resource[];
+  delivery: Delivery;
+  delivery_days: DeliveryDay[];
+  recent_deployments: RecentDeployment[];
 }
 
 export const STAGE_HOURS = 24;
@@ -76,6 +103,7 @@ const TIME_ZONE = "Europe/Istanbul";
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
 const MINUTE_SECONDS = 60;
+const HOUR_SECONDS = 60 * MINUTE_SECONDS;
 
 // A missed hour is a failure of the system; it shows as one. A pending hour
 // has no record yet and shows as such, until its deadline judges it.
@@ -115,6 +143,14 @@ export function dayCells(days: { local_date: string; state: DayState }[], today:
     const offset = WINDOW_DAYS - 1 - index;
     return byDate.get(localDate(new Date(today.getTime() - offset * DAY_MS))) ?? "none";
   });
+}
+
+// Delivery days: a day without deployments after the first one is a quiet
+// day ("skipped"), not a gap; before the first, there is no history.
+export function deliveryCells(days: { local_date: string; state: DayState }[], today: Date): CellState[] {
+  const cells = dayCells(days, today);
+  const first = cells.findIndex((cell) => cell !== "none");
+  return cells.map((cell, index) => (first >= 0 && index > first && cell === "none" ? "skipped" : cell));
 }
 
 export function countCells(cells: CellState[]): Record<CellState, number> {
@@ -159,11 +195,15 @@ export function axisRunTimes(readAt: Date): { first: Date; last: Date } {
   return { first: new Date(last.getTime() - (STAGE_HOURS - 1) * HOUR_MS), last };
 }
 
-// A stage's state now: its latest hour, or its last run before any history.
+// A stage's state now: its latest judged hour (cells without a record, such
+// as an hour still pending, are passed over), or its last run before any
+// history.
 export function currentStageState(cells: CellState[], lastRunStatus: string | null): CellState {
-  const latest = cells.at(-1) ?? "none";
-  if (latest !== "none") {
-    return latest;
+  for (let index = cells.length - 1; index >= 0; index -= 1) {
+    const cell = cells[index];
+    if (cell !== undefined && cell !== "none") {
+      return cell;
+    }
   }
   return lastRunStatus === COMPLETE ? "ok" : "failed";
 }
@@ -172,10 +212,17 @@ export function minutesBetween(earlier: Date, later: Date): number {
   return Math.max(0, Math.floor((later.getTime() - earlier.getTime()) / (MINUTE_SECONDS * 1000)));
 }
 
+// Seconds and minutes for step durations; hours and minutes once a duration
+// passes an hour (lead and recovery times), where seconds add nothing.
 export function formatDuration(seconds: number): string {
   const whole = Math.round(seconds);
   if (whole < MINUTE_SECONDS) {
     return `${whole} sn`;
+  }
+  if (whole >= HOUR_SECONDS) {
+    const hours = Math.floor(whole / HOUR_SECONDS);
+    const minutes = Math.floor((whole % HOUR_SECONDS) / MINUTE_SECONDS);
+    return minutes === 0 ? `${hours} sa` : `${hours} sa ${minutes} dk`;
   }
   const minutes = Math.floor(whole / MINUTE_SECONDS);
   const rest = whole % MINUTE_SECONDS;
