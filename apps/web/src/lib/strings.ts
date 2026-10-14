@@ -70,7 +70,7 @@ export const strings = {
     },
     stages: {
       title: "Veri nasıl akıyor",
-      aside: "Airflow · tracemail_hourly · saatlik",
+      aside: "Oracle Cloud · Airflow · tracemail_hourly · saatlik",
       stage: "Aşama",
       state: "Durum",
       window: "son 24 saat",
@@ -87,13 +87,6 @@ export const strings = {
         dbt_build: { name: "Modelleme", detail: "dbt" },
       } as Record<string, { name: string; detail: string }>,
       models: (count: number) => `dbt, ${count} model`,
-      serving: {
-        name: "Sunum",
-        detail: "FastAPI, Oracle Cloud",
-        state: "Ayakta",
-        note: "geçmiş tutulmuyor, anlık kontrol",
-        now: "şimdi",
-      },
     },
     history: {
       title: "Son 30 gün",

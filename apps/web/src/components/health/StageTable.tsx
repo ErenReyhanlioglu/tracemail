@@ -1,6 +1,7 @@
 // One row per pipeline stage (ADR-0044): its state as a word, the last 24
 // hourly cells under one shared axis, the last processing run, and the
-// median duration. Serving has no history; the page answering is its check.
+// median duration. Serving has no row: the measurements render only when the
+// API answers, so a row for it could never say anything but "up".
 import type { CellState, HealthPanel, StageRow } from "@/lib/panel";
 import {
   axisRunTimes,
@@ -66,22 +67,6 @@ function Stage({ stage, models }: { stage: StageRow; models: number | null }) {
   );
 }
 
-function Serving() {
-  const serving = text.serving;
-  return (
-    <div className={styles.row}>
-      <div>
-        <span className={styles.name}>{serving.name}</span>
-        <span className={styles.detail}>{serving.detail}</span>
-      </div>
-      <span className={`${styles.word} ${styles.wordOk}`}>{serving.state}</span>
-      <span className={`${styles.note} ${styles.cellsColumn}`}>{serving.note}</span>
-      <span className={styles.num}>{serving.now}</span>
-      <span className={styles.num}>–</span>
-    </div>
-  );
-}
-
 export function StageTable({ panel }: { panel: HealthPanel }) {
   const axis = axisRunTimes(new Date(panel.read_at));
   const models = panel.last_build?.project_models ?? null;
@@ -108,7 +93,6 @@ export function StageTable({ panel }: { panel: HealthPanel }) {
         {panel.stages.map((stage) => (
           <Stage key={stage.job_name} stage={stage} models={models} />
         ))}
-        <Serving />
       </div>
       <CellLegend />
     </section>
