@@ -9,6 +9,15 @@ on:
 permissions:
   contents: read
 
+# One run per commit and ref. GitHub delivered the same push to main twice on
+# 2026-10-14 (#24): two runs built the same SHA, the Airflow image came out
+# with a different digest under the same tag, and the second deploy restarted
+# Airflow. A duplicate arrives within seconds, while the first run is still
+# in its checks, so the newer run cancels it before any deploy starts.
+concurrency:
+  group: ci-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: true
+
 jobs:
   check:
     name: Lint, typecheck, test
