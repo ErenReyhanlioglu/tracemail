@@ -17,7 +17,9 @@ from starlette.middleware.sessions import SessionMiddleware
 from tracemail_api.auth.google import google_client
 from tracemail_api.cache import MartCache
 from tracemail_api.config import ApiSettings
-from tracemail_api.routes import applications, auth, health, postings
+from tracemail_api.panel import HealthPanel
+from tracemail_api.rate_limit import RateLimiter
+from tracemail_api.routes import applications, auth, health, postings, public
 from tracemail_api.warehouse import (
     ApplicationRow,
     MartsReader,
@@ -62,6 +64,8 @@ def create_app(
         app.state.marts = marts or marts_reader(resolved)
         app.state.application_cache = MartCache[ApplicationRow]()
         app.state.posting_cache = MartCache[PostingRow]()
+        app.state.panel_cache = MartCache[HealthPanel]()
+        app.state.rate_limiter = RateLimiter(resolved.public_requests_per_minute)
         try:
             yield
         finally:
@@ -81,6 +85,7 @@ def create_app(
     app.middleware("http")(_no_referrer)
     app.include_router(auth.router)
     app.include_router(health.router)
+    app.include_router(public.router)
     app.include_router(applications.router)
     app.include_router(postings.router)
     return app

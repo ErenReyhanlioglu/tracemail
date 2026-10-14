@@ -13,6 +13,12 @@ ENV_PREFIX = "TRACEMAIL_API_"
 SHARED_PREFIX = "TRACEMAIL_"
 # ADR-0015: the owner session lasts 90 days unless configured otherwise.
 DEFAULT_SESSION_DAYS = 90
+# ADR-0044: every hourly interval reaches the marts within 2 hours (the dbt
+# var freshness_target_hours computes it; this is the label), 99% of them.
+DEFAULT_FRESHNESS_TARGET_HOURS = 2
+DEFAULT_FRESHNESS_OBJECTIVE_PERCENT = 99.0
+# Requests per client and minute on the public endpoints (CLAUDE.md, API).
+DEFAULT_PUBLIC_REQUESTS_PER_MINUTE = 60
 
 
 class ApiSettings(BaseSettings):
@@ -44,3 +50,6 @@ class ApiSettings(BaseSettings):
     # from the request, which is not the public one behind the tunnel.
     public_url: str
     session_days: int = DEFAULT_SESSION_DAYS
+    freshness_target_hours: int = DEFAULT_FRESHNESS_TARGET_HOURS
+    freshness_objective_percent: float = DEFAULT_FRESHNESS_OBJECTIVE_PERCENT
+    public_requests_per_minute: int = DEFAULT_PUBLIC_REQUESTS_PER_MINUTE
