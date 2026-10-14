@@ -65,7 +65,8 @@ models:
   - name: fct_hourly_stages
     description: >
       Each pipeline stage's outcome per expected hourly interval: ok, late,
-      failed, skipped (nothing new to process), or missed (ADR-0044).
+      failed, skipped (nothing new to process), missed, or pending (no record
+      yet, before the hour's deadline) (ADR-0044).
     columns:
       - name: stage_hour_key
         data_tests: [unique, not_null]
@@ -74,12 +75,13 @@ models:
           - not_null
           - accepted_values:
               arguments:
-                values: [ok, late, failed, skipped, missed]
+                values: [ok, late, failed, skipped, missed, pending]
 
   - name: fct_hourly_freshness
     description: >
       The end-to-end freshness SLO per hourly interval: on time when every
-      stage finished within the target (ADR-0044).
+      stage finished within the target; null while a stage is pending
+      (ADR-0044).
     columns:
       - name: hour_start
         data_tests: [unique, not_null]

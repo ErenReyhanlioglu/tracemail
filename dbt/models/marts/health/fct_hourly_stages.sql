@@ -10,6 +10,11 @@
 -- otherwise its absence is a skip. dbt's outcome is its last record in the
 -- hour, a build or a node retry (ADR-0029), so a node that failed and passed
 -- on retry counts as built.
+--
+-- Until the hour's deadline (freshness_target_hours after its start) a stage
+-- with no record yet is pending, not missed: the run may still be going, or
+-- writing its record. It is pending when it is expected or when a stage
+-- before it is still pending; the SLO judges the hour only after that.
 
 with hours as (
     select hour_start, is_missed
@@ -66,20 +71,35 @@ per_hour as (
         on dbt.hour_start = hours.hour_start and dbt.job_name = 'dbt_build'
 ),
 
+open_stages as (
+    select
+        *,
+        ingest is null as ingest_open,
+        parse is null
+        and (ingest is null or coalesce(ingest.records_out > 0, false)) as parse_open
+    from per_hour
+),
+
+open_later as (
+    select *, load is null and (parse is not null or parse_open) as load_open
+    from open_stages
+),
+
 stages as (
     select hour_start, 'ingest_mail' as job_name, 1 as stage_order,
-        ingest as last_run, true as is_expected
-    from per_hour
+        ingest as last_run, true as is_expected, ingest_open as is_open
+    from open_later
     union all
     select hour_start, 'parse_mail', 2, parse,
-        coalesce(ingest.records_out > 0, false) or parse is not null
-    from per_hour
+        coalesce(ingest.records_out > 0, false) or parse is not null, parse_open
+    from open_later
     union all
-    select hour_start, 'load_landing', 3, load, parse is not null
-    from per_hour
+    select hour_start, 'load_landing', 3, load, parse is not null, load_open
+    from open_later
     union all
-    select hour_start, 'dbt_build', 4, dbt, load is not null
-    from per_hour
+    select hour_start, 'dbt_build', 4, dbt, load is not null,
+        dbt is null and (load is not null or load_open)
+    from open_later
 )
 
 select
@@ -90,6 +110,10 @@ select
     last_run.run_status,
     last_run.finished_at,
     case
+        when last_run.run_status is null and is_open
+            and current_timestamp() <= timestamp_add(
+                hour_start, interval {{ var('freshness_target_hours') }} hour
+            ) then 'pending'
         when last_run.run_status is null and is_expected then 'missed'
         when last_run.run_status is null then 'skipped'
         when last_run.run_status != 'COMPLETE' then 'failed'

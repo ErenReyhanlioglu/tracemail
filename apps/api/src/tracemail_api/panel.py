@@ -28,6 +28,8 @@ class StageState(StrEnum):
     FAILED = "failed"
     SKIPPED = "skipped"
     MISSED = "missed"
+    # No record yet, before the hour's deadline: not judged.
+    PENDING = "pending"
 
 
 class DayState(StrEnum):

@@ -2,7 +2,7 @@
 // the pure helpers that turn them into cells, numbers, and times. Times are
 // shown in the owner's time zone; numbers in Turkish formatting.
 
-export type StageState = "ok" | "late" | "failed" | "skipped" | "missed";
+export type StageState = "ok" | "late" | "failed" | "skipped" | "missed" | "pending";
 export type DayState = "ok" | "late" | "failed";
 // What a cell shows; "none" pads the strips where no history exists yet.
 export type CellState = "ok" | "skipped" | "late" | "failed" | "none";
@@ -77,13 +77,15 @@ const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
 const MINUTE_SECONDS = 60;
 
-// A missed hour is a failure of the system; it shows as one.
+// A missed hour is a failure of the system; it shows as one. A pending hour
+// has no record yet and shows as such, until its deadline judges it.
 const STAGE_CELL: Record<StageState, CellState> = {
   ok: "ok",
   late: "late",
   failed: "failed",
   skipped: "skipped",
   missed: "failed",
+  pending: "none",
 };
 
 // Oldest first, padded at the start to `length` cells.

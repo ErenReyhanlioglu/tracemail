@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 import pytest
 from api_fakes import FakeMarts, api_client, make_settings
 
-from tracemail_api.panel import HealthPanel
+from tracemail_api.panel import HealthPanel, StageRow, StageState
 from tracemail_api.rate_limit import WINDOW_SECONDS, RateLimiter
 from tracemail_api.routes.public import refresh_window
 from tracemail_api.warehouse import MartsReader
@@ -66,6 +66,20 @@ def test_rate_limiter_starts_counting_again_in_the_next_window() -> None:
     assert not limiter.allow("a", 1.0)
     assert limiter.allow("b", 1.0)
     assert limiter.allow("a", float(WINDOW_SECONDS))
+
+
+def test_stage_rows_accept_pending_hours() -> None:
+    row = StageRow.model_validate(
+        {
+            "job_name": "ingest_mail",
+            "last_run_at": None,
+            "last_run_status": None,
+            "last_duration_seconds": None,
+            "median_duration_seconds": None,
+            "hours": ["ok", "pending"],
+        }
+    )
+    assert row.hours[-1] is StageState.PENDING
 
 
 def test_health_panel_reads_null_sections_as_empty_lists() -> None:

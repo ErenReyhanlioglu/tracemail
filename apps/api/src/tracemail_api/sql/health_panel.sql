@@ -60,7 +60,9 @@ freshness_days as (
             else 'ok'
         end as state
     from fct_hourly_freshness
-    where local_date
+    -- Hours still pending are not judged yet (null is_on_time).
+    where is_on_time is not null
+        and local_date
         >= date_sub(current_date(@display_timezone), interval @window_days - 1 day)
     group by local_date
 ),
@@ -87,8 +89,11 @@ streak as (
     select count(*) as on_time_streak_hours
     from fct_hourly_freshness
     cross join last_miss
-    where last_miss.hour_start is null
-        or fct_hourly_freshness.hour_start > last_miss.hour_start
+    where fct_hourly_freshness.is_on_time
+        and (
+            last_miss.hour_start is null
+            or fct_hourly_freshness.hour_start > last_miss.hour_start
+        )
 ),
 
 -- Every section below is one row, so the final select joins them 1:1.
