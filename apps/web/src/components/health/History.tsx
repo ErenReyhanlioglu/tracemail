@@ -8,39 +8,41 @@ import type { CellState, HealthPanel } from "@/lib/panel";
 import { dayCells, formatPercent } from "@/lib/panel";
 import { strings } from "@/lib/strings";
 
-import { CellLegend, Strip, summary } from "./Cells";
+import { CellLegend, type CellWords, Strip, summary } from "./Cells";
 import styles from "./HealthPanel.module.css";
 
 const text = strings.health.history;
 
-function HistoryRow({
+export function HistoryRow({
   name,
   detail,
   score,
   caption,
   cells,
   window,
+  words,
 }: {
   name: string;
-  detail: string;
+  detail?: string;
   score: ReactNode;
   caption: string;
   cells: CellState[];
   window: string;
+  words?: CellWords;
 }) {
   return (
     <div className={styles.history}>
       <div className={styles.historyHead}>
         <div>
           <span className={styles.name}>{name}</span>
-          <span className={styles.detail}>{detail}</span>
+          {detail ? <span className={styles.detail}>{detail}</span> : null}
         </div>
         <div className={styles.score}>
           {score}
           <span className={styles.sub}>{caption}</span>
         </div>
       </div>
-      <Strip cells={cells} label={summary(`${name}, ${text.title}`, cells)} tall />
+      <Strip cells={cells} label={summary(`${name}, ${text.title}`, cells, words)} tall />
       <div className={styles.window}>
         <span>{text.from}</span>
         <span className={styles.rule} />

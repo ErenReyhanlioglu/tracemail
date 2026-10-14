@@ -7,13 +7,15 @@ import { strings } from "@/lib/strings";
 
 import styles from "./HealthPanel.module.css";
 
-const words = strings.health.cells;
 const ORDER: CellState[] = ["ok", "skipped", "late", "failed", "none"];
+// The words a strip's states read as; a section may name them its own way.
+export type CellWords = Partial<Record<CellState, string>>;
+const defaultWords: CellWords = strings.health.cells;
 
-export function summary(window: string, cells: CellState[]): string {
+export function summary(window: string, cells: CellState[], words = defaultWords): string {
   const counts = countCells(cells);
   const parts = ORDER.filter((state) => counts[state] > 0).map(
-    (state) => `${counts[state]} ${words[state]}`,
+    (state) => `${counts[state]} ${words[state] ?? ""}`,
   );
   return [window, ...parts].join(", ");
 }
@@ -36,10 +38,10 @@ export function Strip({
   );
 }
 
-export function CellLegend() {
+export function CellLegend({ words = defaultWords }: { words?: CellWords }) {
   return (
     <ul className={styles.legend}>
-      {ORDER.map((state) => (
+      {ORDER.filter((state) => words[state] !== undefined).map((state) => (
         <li key={state}>
           <span className={`${styles.swatch} ${styles[state]}`} aria-hidden="true" />
           {words[state]}

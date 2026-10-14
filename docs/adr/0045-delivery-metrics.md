@@ -64,8 +64,10 @@ building measurement tooling [1].
   request as the fix.
 - **Lead time** runs from the first commit of the change's pull request to
   its successful deployment.
-- The panel shows counts and medians over weekly windows, never a rate
-  without its count.
+- The panel shows counts and medians over the last 30 days, never a rate
+  without its count. Weekly windows were the first plan; with a few
+  deployments a week they would show noise, so the window is the panel's
+  other 30-day strips'.
 
 The first row, from the history on 2026-10-14: `8cd9bca` (the first
 production deployment) shipped the DAG defect of the 2026-10-12 incident,
@@ -97,6 +99,24 @@ itself; fixed by a planned change).
   2026-10-11, with no new credential.
 - A change failure is a reviewed decision with its incident report, not a
   guess from a status.
+
+**Implemented and measured on 2026-10-14 (dev project):**
+
+- A scheduled run reads deployments created since an hour before its
+  interval; the daily full-window run and manual runs look back a day.
+  Steady state is one list request plus three per new deployment.
+- The backfill of all 17 records since 2026-10-11 took 52 requests (three
+  per deployment plus the list), so one hour's unauthenticated limit covers
+  about 19 deployments: a longer history is backfilled in steps or with a
+  token. The raw records were 716,157 bytes, about 42 KB each, mostly the
+  pull request objects.
+- The results match the hand count: 14 commits deployed, 1 failed attempt,
+  change failure and rework 1 of 14, recovery 5 h 43 min, median lead time
+  11 min 46 s (BigQuery's approximate median picks a middle value).
+- The panel query now reads three tables (run records, deployments, the
+  failure seed) and was billed 30 MiB, three times the 10 MiB before:
+  about 42 GiB a month at two reads an hour, 3.9% of the query free tier
+  (an expectation until a month is measured).
 
 **Negative / trade-offs:**
 
