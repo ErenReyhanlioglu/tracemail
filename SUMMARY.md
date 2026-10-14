@@ -109,7 +109,9 @@ clean URL.
   LLM call log, and the evaluation gate in CI.
 - **Phase three, interface:** public health panel, the full four sections
   behind login, share links for guests, and blurred skeletons for visitors.
-  Read-only.
+  Read-only. The panel's core (run history, freshness, parse quality, tests,
+  cost, incidents) and delivery metrics come before phase two
+  ([ADR-0044](docs/adr/0044-health-panel-core-metrics.md)).
 - **Phase four, optional:** rough fit ranking for alert postings (title
   similarity to a profile summary, local embedding model), automatic
   text completion from companies' public job pages, follow-up email draft,

@@ -57,3 +57,5 @@ written at the moment the decision is made — not drafted ahead of time.
 | [0040](0040-viewer-routing-and-public-landing.md) | Viewer Routing — the Health Panel as the Public Landing Page | Accepted |
 | [0041](0041-collapsible-sidebar-with-icons.md) | Collapsible Sidebar with Section Icons | Accepted |
 | [0042](0042-list-toolbar-and-status-groups.md) | List Toolbar — Status Groups, Segmented Filter, Search, Period Menu, and Sorting | Accepted |
+| [0043](0043-phase-1-exit-criterion.md) | Phase 1 Exit — 48 Hours of Uninterrupted Hourly Runs, LinkedIn History after `v0.1.0` | Accepted |
+| [0044](0044-health-panel-core-metrics.md) | Health Panel Core — What to Measure and Show before Phase 2 | Accepted (not yet implemented) |

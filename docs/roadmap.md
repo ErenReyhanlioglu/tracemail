@@ -1,172 +1,85 @@
 # Roadmap
 
-Build order and current position. Scope per phase is defined in
-[SUMMARY.md](../SUMMARY.md); decisions in [adr/](adr/README.md).
+Where the project stands and what comes next. Scope per phase is in
+[SUMMARY.md](../SUMMARY.md), decisions in [adr/](adr/README.md), and the
+evidence for finished work in the ADRs and READMEs they link. Each step is
+one branch and one or more pull requests.
 
-**Current phase:** Phase 1 — Core
-**Current step:** 1.12 (phase exit) — 1.0 to 1.5 and 1.7 to 1.11 done; 1.6
-waits for the LinkedIn data export (checklist F). Deploys from `main` run in
-production since 2026-10-11
-([infra/vm](../infra/vm/README.md#continuous-deployment)), prod has run
-hourly since 2026-10-12 with its history backfilled (ADR-0036), every push
-runs a dbt build on dev data through Workload Identity Federation
-(ADR-0037), and the web app sends security headers and a nonce-based CSP
-(ADR-0038). 1.11 done on 2026-10-14: the site is public at
-[tracemail.com.tr](https://tracemail.com.tr) through Cloudflare Tunnel,
-with the production OAuth client (ADR-0016).
+## Now
 
-Each step is one branch and one or more pull requests. A step is done when its
-"Done when" line is true on `main`.
+**Phase 1, step 1.12: phase exit.** Done when production runs 48 consecutive
+hourly intervals with no missed run and no failed step; the owner then cuts
+`v0.1.0` ([ADR-0043](adr/0043-phase-1-exit-criterion.md), ADR-0002). The
+streak started at the 2026-10-12 17:00 UTC interval.
 
----
+## Next
 
-## Phase 1 — Core
+In this order ([ADR-0044](adr/0044-health-panel-core-metrics.md)):
 
-Goal: real mail flows from the mailbox to an application list the owner can
-open from any device, running hourly in production. No LLM.
+1. **Health panel core**, ahead of Phase 2: one row per pipeline stage with
+   its last 24 hours, the 2-hour freshness SLO against a 99% objective over
+   30 days, dbt builds over 30 days, all five free-tier allowances against
+   the 85% line, and the incident log. It needs `marts` authorized on
+   `staging` and `ops`, a public API router with whitelisted schemas and the
+   privacy test, caching, and rate limiting. Application, posting, and mail
+   counts stay private.
+2. **Delivery metrics (DORA)**: GitHub deployment records into `ops`, shown
+   beside the run history.
+3. **VM usage on the panel**: the Oracle VM's CPU, memory, and network over
+   7 days against the 20% idle-reclamation threshold
+   ([infra/vm](../infra/vm/README.md)), read from Oracle's monitoring. It
+   needs new access to Oracle, so it starts with an ADR.
+4. **Phase 2.**
 
-| Step | Branch | What | Done when |
-|---|---|---|---|
-| 1.0 | — | Owner setup (local): see checklist A | Public repo exists with branch protection |
-| 1.1 | `chore/skeleton` | Full tree with stubs (ADR-0004), uv workspace, `dbt/` as its own uv project, ruff/mypy/pytest config, justfile, `.gitignore`, `.env.example`, CI (lint, typecheck, test) | `just check` passes locally and in CI |
-| 1.2 | `feat/imap-ingest` | Read-only IMAP fetch by date window (ADR-0007), sender allowlist (replaced by an exclusion list, ADR-0025), write-once raw objects to the dev bucket (ADR-0006) | A real day of mail lands in `raw/`; rerunning the same day writes nothing new; mailbox shows no change |
-| 1.3 | `feat/parsers-linkedin` | LinkedIn parser for all five templates seen in real mail (alert, application confirmation, viewed / saved reminders, suggestions), `parsed/` JSONL with partition overwrite (ADR-0018), `message_parse_outcomes`, redacted fixtures, raw inventory command | Parser tests pass, including a "changed template" fixture |
-| 1.4 | `feat/landing-load` | BigQuery load jobs into `landing` (partition replace), run-record rows in `ops` | Loading the same interval twice leaves identical tables |
-| 1.5 | `feat/dbt-core-models` | Sources, staging, intermediate dedup, marts: applications (with a channel column), events, postings, companies; application status, waiting time, silence indicator (ADR-0024); dbt test results to `ops` (ADR-0023) | `dbt build` passes on dev with tests; an application's stage is correct for a hand-checked sample |
-| 1.6 | `feat/linkedin-history` | LinkedIn export through the same raw → parsed → landing path, merged with mail-derived applications | Historical applications appear once, not duplicated against mail |
-| 1.7 | `feat/airflow-stack` | Airflow image with three environments (ADR-0003), hourly DAG with `external_python` tasks and Cosmos (ADR-0013, ADR-0014), local Compose stack; dirty-day gating of parse, load, and dbt (ADR-0021, ADR-0022); missed-runs metric (ADR-0020) | Stack runs locally end-to-end; a backfill of past days works; hourly runs stay within the GCS free tier |
-| 1.8 | `feat/more-parsers` | Further LinkedIn templates seen in real mail; a parser for another source only where the raw inventory shows enough volume; sent mail (direct applications) deferred to Phase 4 ([ADR-0031](adr/0031-sent-mail-is-a-phase-4-option.md)) | Parse health is recorded per LinkedIn template and for other senders combined; unclaimed mail is counted as "other" |
-| 1.9 | `feat/api-owner-auth` | FastAPI: Google Sign-In (ADR-0015), owner session, read endpoint for applications, `/health`, public/private privacy test | Owner logs in on localhost; any other account is refused; privacy test passes |
-| 1.10 | `feat/web-application-list` | Next.js standalone app: login, read-only application list, design tokens (ADR-0034); incoming postings list moved forward from Phase 3 without its later-phase columns (role type, rough fit, match report) | Owner sees real applications and incoming postings in the browser locally |
-| 1.11 | `ci/deploy` | Prod GCP project, Oracle VM, Tailscale, Cloudflare Tunnel, `arm64` build to GHCR, deploy workflow, GitHub → GCP via WIF (ADR-0009, ADR-0010, ADR-0012, ADR-0016) | A merge to `main` deploys; the site is reachable on the domain with no open inbound ports |
-| 1.12 | — | Phase exit | Hourly runs succeed in production for a sustained period; owner cuts `v0.1.0` (ADR-0002) |
+Alongside:
 
-### To verify during Phase 1
+- **Web before Phase 3** ([ADR-0039](adr/0039-web-ux-baseline.md)): the
+  "last checked" time on the lists, which shares the health panel core's
+  authorization; the Lighthouse and manual pass after the desktop changes;
+  the mobile layout, with a web app manifest for the owner's 192, 512, and
+  maskable icons (the image must then copy `public/`).
+- **Watch the VM:** until the panel shows it (Next, item 3), read the 95th
+  percentiles of CPU, network, and memory by hand after a week of hourly
+  runs; if all stay below 20%, Oracle may reclaim the instance, so record
+  the options in an ADR ([infra/vm](../infra/vm/README.md)). Oracle's
+  web-console emergency access is still untested.
 
-These are recorded as unverified in ADRs; each is checked at the step named.
+## Follow-ups
 
-- ~~IMAP `SINCE` / `BEFORE` and `BODY.PEEK` behave as expected on Gmail — 1.2~~
-  Verified 2026-10-07: a 2026-10-01..07 run listed 114 messages, wrote 62, and
-  unread mail stayed unread in the mail client.
-- ~~LinkedIn sends application-viewed and rejection mails (ADR-0024) — 1.8~~
-  Verified 2026-10-09 and moved ahead of 1.5: in 90 days of raw mail, 6 viewed
-  and 4 rejection mails; both are HTML-only templates, parsed since parser
-  version 3. No "resume downloaded" mail was seen.
-- ~~`external_python` subprocess inherits environment variables — 1.7~~
-  Verified 2026-10-09: a `dags test` run of the hourly DAG read IMAP, GCS, and
-  BigQuery settings from the scheduler's environment inside `pipeline_venv`.
-- ~~Cosmos DAG-parsing load is acceptable on the VM — 1.7 / 1.11~~
-  Verified 2026-10-12: on the VM the DAG file parses in 1.6 s (6.6 s locally
-  on amd64), and the DAG processor uses about 5% of a core re-parsing it
-  every 30 s. No change needed.
-- Oracle web-console emergency access works when Tailscale is down — 1.11
-- ~~Free Ampere capacity in `eu-frankfurt-1` — 1.11~~
-  Verified 2026-10-11: AD-3 had none; another availability domain did
-  (`infra/vm/README.md`).
-- The VM stays above Oracle's idle-reclamation threshold — 1.11
-  After the first deploy (2026-10-11) the stack used about 16% of memory,
-  below the 20% that, together with low CPU and network, marks an instance
-  idle. Read the 95th percentiles from the instance metrics after a week of
-  hourly runs; if all three stay below 20%, record the options in an ADR.
-  With prod running (2026-10-12, one snapshot): memory about 24% in use
-  (total minus available), CPU about 24% busy over a quiet minute.
+Not urgent; each is picked up when it starts to matter.
 
-### Follow-ups
+- Every merge restarts the stack, documentation-only merges included
+  ([infra/vm](../infra/vm/README.md)); narrow the deploy trigger if restarts
+  start to interrupt runs.
+- The landing load spends about 5 s per run checking tables (ADR-0019).
+- Alert yield metric: which alerts lead to saved or applied postings.
+- The production OAuth client is in Google's Testing mode, so accounts that
+  are not test users stop at Google's page instead of the login page's
+  refusal (ADR-0040); publish it when that matters.
+- `www.tracemail.com.tr` has no DNS record.
 
-- ~~OpenSSH on the VM listens on every interface~~ Fixed 2026-10-12:
-  disabled and masked, nothing listens on port 22, Tailscale SSH unaffected
-  (`infra/vm/README.md`, OpenSSH off).
-- Every merge restarts the whole stack, documentation-only merges included,
-  because each commit gets a new image tag (`infra/vm/README.md`). Harmless
-  while tasks are idempotent; narrow the deploy trigger if restarts start to
-  interrupt runs.
-- Landing load spends ~5 s per run checking tables (ADR-0019) — monitor,
-  optimize later.
-- Alert yield metric (which alerts lead to saved / applied postings) — after
-  1.5, not urgent.
-- Web UX baseline before the site goes public: every state designed
-  (loading, empty, error, not found), "last checked" time on the lists,
-  WCAG 2.2 AA; desktop first, then a mobile layout as polished as the
-  desktop; measured with Lighthouse and a manual pass before and after
-  ([ADR-0039](adr/0039-web-ux-baseline.md)). Desktop done on 2026-10-13:
-  page states, visitor routing to the health panel
-  ([ADR-0040](adr/0040-viewer-routing-and-public-landing.md)), the
-  collapsible sidebar ([ADR-0041](adr/0041-collapsible-sidebar-with-icons.md)),
-  and the list toolbar with search and sorting
-  ([ADR-0042](adr/0042-list-toolbar-and-status-groups.md)). Still open:
-  the "last checked" time, the Lighthouse and manual pass after the
-  changes, and the mobile layout. Seen 2026-10-11: an
-  API 404 after a half-applied reload showed as "data unavailable".
-  With the mobile layout: a web app manifest using the owner's 192, 512,
-  and maskable 512 px icons (kept outside the repository until then); the
-  standalone image must then also copy `public/`.
+## Phase 1: Core
 
-### Decisions still needed in Phase 1
+Real mail flows from the mailbox to an application list the owner can open
+from any device, running hourly in production. No LLM.
 
-None open. GCS Class A headroom was decided in
-[ADR-0030](adr/0030-gcs-class-a-headroom.md) (option 2 implemented, option 1
-deferred until the projection approaches 85% again).
+| Step | What | State |
+|---|---|---|
+| 1.0 | Public repository with branch protection | Done |
+| 1.1 | Skeleton, tooling, CI (ADR-0004) | Done |
+| 1.2 | Read-only IMAP ingestion into write-once raw storage (ADR-0006, ADR-0007, ADR-0025) | Done |
+| 1.3 | LinkedIn parsers, parsed zone, parse outcomes (ADR-0018) | Done |
+| 1.4 | BigQuery landing loads and run records (ADR-0019, ADR-0020) | Done |
+| 1.5 | dbt models: applications, events, postings, companies, status (ADR-0023, ADR-0024, ADR-0027) | Done |
+| 1.6 | LinkedIn history | After `v0.1.0` |
+| 1.7 | Airflow stack, hourly DAG, dirty-day gating (ADR-0003, ADR-0013, ADR-0021, ADR-0022, ADR-0029) | Done |
+| 1.8 | More LinkedIn templates, parse health per template (ADR-0031) | Done |
+| 1.9 | API with Google sign-in and the privacy test (ADR-0015, ADR-0032) | Done |
+| 1.10 | Web app: login, application and posting lists (ADR-0033, ADR-0034) | Done |
+| 1.11 | Production: VM, deploys, Cloudflare Tunnel, domain (ADR-0010, ADR-0012, ADR-0016, ADR-0035 to ADR-0038) | Done 2026-10-14 |
+| 1.12 | Phase exit, `v0.1.0` (ADR-0043) | In progress |
 
----
-
-## Owner checklists
-
-Things only the owner can do. Each lists the first step that needs it.
-
-### A. Before 1.1
-
-- [x] `git init`, create a **public** GitHub repository
-- [x] Branch protection on `main`: pull requests required, required status
-      checks (added once CI exists), no bypass for admins, no approval
-      requirement (ADR-0002)
-- [x] Actions policy: require actions pinned to full commit SHAs (ADR-0012)
-
-### B. Before 1.2
-
-- [x] Gmail app password for IMAP
-- [x] Initial sender allowlist (domains / addresses of job platforms and
-      companies); replaced by the sender exclusion list (ADR-0025)
-- [x] GCP billing account and the **dev** project (`us-central1`), budget
-      alert (ADR-0010, ADR-0011)
-- [x] Two-step verification or a passkey on the Google account
-
-### C. Before 1.3
-
-- [x] A few real sample mails per template, redacted together before they
-      enter the repository
-
-### F. Before 1.6
-
-- [ ] LinkedIn full data archive (Settings → Data privacy → Get a copy of
-      your data → the full archive; job applications are not offered as a
-      separate file). Download it outside the repository; only the job
-      application file will be ingested.
-
-### D. Before 1.9
-
-- [x] OAuth client in the dev project (redirect URI on `localhost`)
-
-### E. Before 1.11
-
-- [x] Domain (`.com` or `.com.tr`, cheapest first year); if `.com.tr`, confirm
-      nameserver delegation to Cloudflare first (ADR-0016). `tracemail.com.tr`,
-      delegated to Cloudflare after the registry's document check (2026-10-14).
-- [x] Cloudflare account, domain DNS moved to Cloudflare; "Always Use HTTPS"
-      on
-- [x] Oracle Cloud account, home region `eu-frankfurt-1` (ADR-0016)
-- [x] Tailscale account (free Personal plan); federated identity for the
-      deploy job (`infra/vm/README.md`)
-- [x] GCP **prod** project and budget alert (`infra/gcp/README.md`)
-- [x] OAuth client for the production domain (prod project). Left in
-      Google's Testing mode with the owner as test user, so accounts that
-      are not test users stop at Google's own page before reaching the
-      login page's refusal (ADR-0040); publishing it is deferred.
-- [x] GitHub `production` environment limited to `main`; image checks
-      required on `main`
-
----
-
-## Phase 2 — Intelligence (outline)
+## Phase 2: Intelligence
 
 Reply classification for unclaimed mail; master profile (owner-written);
 capture button and endpoint; two-step match report with verbatim quotes and
@@ -174,16 +87,13 @@ substring verification; golden set (owner-labeled); model and prompt
 comparison in MLflow; LLM call log and monthly budget cap; CI eval gate.
 Open decision: which models to compare. Ends with `v0.2.0`.
 
-## Phase 3 — Interface (outline)
+## Phase 3: Interface
 
-Public health panel (24-hour and 30-day run views, parse quality, tests, LLM
-section, incident log); the remaining private sections (the application
-and incoming-posting lists exist since step 1.10); share links for guests;
-visitor skeletons. Ends with `v0.3.0`. The incident log is built from the
-approved panel summaries in [incidents/](incidents/README.md), translated
-into the Turkish UI strings (ADR-0033); one is waiting (2026-10-12).
+The health panel's LLM section and whatever its core left out (the core
+comes before Phase 2, ADR-0044); the remaining private sections; share
+links for guests; visitor skeletons. Ends with `v0.3.0`.
 
-## Phase 4 — Optional (outline)
+## Phase 4: Optional
 
 Rough fit ranking with local embeddings (ADR-0001); text completion from
 public job pages; follow-up drafts; manual events and notes; a "correct"
