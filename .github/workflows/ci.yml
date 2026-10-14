@@ -145,6 +145,8 @@ jobs:
           platforms: linux/arm64
           push: ${{ github.event_name == 'push' }}
           tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          # Shown on the health panel; only the web image reads it.
+          build-args: TRACEMAIL_VERSION=${{ github.sha }}
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,scope=${{ matrix.image }},mode=max
 
