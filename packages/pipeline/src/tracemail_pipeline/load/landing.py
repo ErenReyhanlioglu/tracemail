@@ -11,7 +11,7 @@ any range leaves identical tables; ``landing_fingerprints`` checks exactly that.
 import hashlib
 import logging
 import time
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date, timedelta
 
@@ -87,15 +87,24 @@ def landing_schema_version() -> str:
 
 
 def load_landing(
-    warehouse: Warehouse, dataset: str, bucket: str, days: Sequence[date]
+    warehouse: Warehouse,
+    dataset: str,
+    bucket: str,
+    days: Sequence[date],
+    models: Mapping[str, type[BaseModel]] = LANDING_MODELS,
 ) -> LoadLandingResult:
-    """Replace the given days' partitions of every landing table."""
+    """Replace the given days' partitions of every table in ``models``: the
+    mail tables by default, the deployments table for delivery (ADR-0045)."""
     started = time.perf_counter()
     result = LoadLandingResult()
-    for record_type, model in LANDING_MODELS.items():
+    for record_type, model in models.items():
         warehouse.ensure_table(dataset, record_type, schema_for(model), PARTITION_FIELD)
     result.seconds_ensure_tables = time.perf_counter() - started
-    partitions = [(record_type, day) for day in days for record_type in LANDING_MODELS]
+    partitions = [
+        (record_type, model, day)
+        for day in days
+        for record_type, model in models.items()
+    ]
     started_load = time.perf_counter()
     with ThreadPoolExecutor(max_workers=LOAD_CONCURRENCY) as pool:
         outcomes = list(
@@ -120,12 +129,17 @@ def load_landing(
 
 
 def _load_partition(
-    warehouse: Warehouse, dataset: str, bucket: str, record_type: str, day: date
+    warehouse: Warehouse,
+    dataset: str,
+    bucket: str,
+    record_type: str,
+    model: type[BaseModel],
+    day: date,
 ) -> tuple[LoadStats, bool]:
     """Load one day of one record type; return its stats and whether the
     partition was emptied."""
     uri = f"gs://{bucket}/{parsed_object_key(record_type, day)}"
-    schema = schema_for(LANDING_MODELS[record_type])
+    schema = schema_for(model)
     stats = warehouse.load_partition(uri, dataset, record_type, day, schema)
     if stats.rows > 0:
         return stats, False

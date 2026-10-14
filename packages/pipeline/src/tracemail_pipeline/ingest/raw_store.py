@@ -27,7 +27,9 @@ class RawStore(Protocol):
 
     def read(self, key: str) -> bytes: ...
 
-    def write_once(self, key: str, data: bytes) -> bool: ...
+    def write_once(
+        self, key: str, data: bytes, content_type: str = EML_CONTENT_TYPE
+    ) -> bool: ...
 
 
 def mail_partition_prefix(received_date: date) -> str:
@@ -73,13 +75,15 @@ class GcsRawStore:
         """Return an object's original bytes."""
         return bytes(self._bucket.blob(key).download_as_bytes())
 
-    def write_once(self, key: str, data: bytes) -> bool:
+    def write_once(
+        self, key: str, data: bytes, content_type: str = EML_CONTENT_TYPE
+    ) -> bool:
         """Create the object; return ``False`` if it already existed."""
         blob = self._bucket.blob(key)
         try:
             blob.upload_from_string(
                 data,
-                content_type=EML_CONTENT_TYPE,
+                content_type=content_type,
                 if_generation_match=CREATE_ONLY_GENERATION,
             )
         except PreconditionFailed:

@@ -74,6 +74,7 @@ class FakeRawStore:
 
     def __init__(self) -> None:
         self.objects: dict[str, bytes] = {}
+        self.content_types: dict[str, str] = {}
 
     def exists(self, key: str) -> bool:
         return key in self.objects
@@ -84,7 +85,10 @@ class FakeRawStore:
     def read(self, key: str) -> bytes:
         return self.objects[key]
 
-    def write_once(self, key: str, data: bytes) -> bool:
+    def write_once(
+        self, key: str, data: bytes, content_type: str = "message/rfc822"
+    ) -> bool:
+        self.content_types[key] = content_type
         if key in self.objects:
             return False
         self.objects[key] = data
