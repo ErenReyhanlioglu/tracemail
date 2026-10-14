@@ -1,7 +1,7 @@
 # ADR-0044: Health Panel Core — What to Measure and Show before Phase 2
 
 **Date:** 2026-10-14
-**Status:** Accepted (not yet implemented)
+**Status:** Accepted
 
 ## Context
 
