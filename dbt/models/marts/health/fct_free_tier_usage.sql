@@ -5,7 +5,8 @@
 -- and a newly started steady state is not diluted by quieter earlier days.
 --
 -- Counts only what the pipeline records in its run records: ingestion and
--- parsing GCS operations (ADR-0017) and dbt's billed bytes (ADR-0023).
+-- parsing GCS operations of mail and deployments (ADR-0017, ADR-0045) and
+-- dbt's billed bytes (ADR-0023).
 -- Ad-hoc queries and other tools are not included; the billing report remains
 -- the ground truth. A read-time view.
 --
@@ -19,14 +20,16 @@ with runs as (
     select
         started_at,
         case
-            when job_name in ('ingest_mail', 'parse_mail')
+            when job_name in (
+                'ingest_mail', 'parse_mail', 'ingest_deployments', 'parse_deployments'
+            )
                 then coalesce(int64(metrics.gcs_lists), 0)
                 + coalesce(int64(metrics.gcs_writes), 0)
         end as gcs_class_a,
         case
             -- Object downloads, and metadata reads of existing parsed files
             -- before a skipped or replaced write (ADR-0030, option 2).
-            when job_name = 'parse_mail'
+            when job_name in ('parse_mail', 'parse_deployments')
                 then coalesce(int64(metrics.gcs_reads), 0)
                 + coalesce(int64(metrics.gcs_metadata_reads), 0)
             -- Existence checks before large uploads (ADR-0036). Writes
@@ -49,7 +52,9 @@ unpivoted as (
     union all
     select started_at, 'gcs_storage_bytes', coalesce(int64(metrics.bytes_written), 0)
     from {{ ref('stg_ops__pipeline_runs') }}
-    where job_name in ('ingest_mail', 'parse_mail')
+    where job_name in (
+        'ingest_mail', 'parse_mail', 'ingest_deployments', 'parse_deployments'
+    )
 ),
 
 window_bounds as (

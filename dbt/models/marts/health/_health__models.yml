@@ -91,3 +91,12 @@ models:
     columns:
       - name: allowance
         data_tests: [unique, not_null]
+
+  - name: fct_deployments
+    description: >
+      One row per commit sent to production, with its first successful
+      deployment, failed attempts, lead time, and whether it was a change
+      failure or a fix (ADR-0045).
+    columns:
+      - name: commit_sha
+        data_tests: [unique, not_null]
