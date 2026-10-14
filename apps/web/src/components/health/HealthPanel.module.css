@@ -151,9 +151,15 @@
   background: var(--cell-failed);
 }
 
+/* No record: an outline with diagonal hatching, unlike the solid grey of a
+   skip, and readable without color. */
 .none {
-  background: var(--cell-skipped);
-  opacity: var(--cell-none-opacity);
+  box-shadow: inset 0 0 0 1px var(--cell-none-line);
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--cell-none-line) 0 1px,
+    transparent 1px 5px
+  );
 }
 
 .legend {

@@ -159,11 +159,15 @@ export function axisRunTimes(readAt: Date): { first: Date; last: Date } {
   return { first: new Date(last.getTime() - (STAGE_HOURS - 1) * HOUR_MS), last };
 }
 
-// A stage's state now: its latest hour, or its last run before any history.
+// A stage's state now: its latest judged hour (cells without a record, such
+// as an hour still pending, are passed over), or its last run before any
+// history.
 export function currentStageState(cells: CellState[], lastRunStatus: string | null): CellState {
-  const latest = cells.at(-1) ?? "none";
-  if (latest !== "none") {
-    return latest;
+  for (let index = cells.length - 1; index >= 0; index -= 1) {
+    const cell = cells[index];
+    if (cell !== undefined && cell !== "none") {
+      return cell;
+    }
   }
   return lastRunStatus === COMPLETE ? "ok" : "failed";
 }
