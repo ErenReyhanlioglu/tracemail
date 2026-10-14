@@ -20,3 +20,25 @@ seeds:
           - accepted_values:
               arguments:
                 values: [applied, in_progress, rejected]
+
+  - name: deployment_failures
+    description: >
+      Production deployments that needed immediate intervention (ADR-0045),
+      one row each, added in the pull request that fixes them (CLAUDE.md,
+      Incidents): the failing deployment's commit, when the failure was
+      detected, the commit whose deployment fixed it, and the incident report.
+    config:
+      column_types:
+        failed_sha: string
+        detected_at: timestamp
+        fixed_sha: string
+        incident_report: string
+    columns:
+      - name: failed_sha
+        data_tests: [unique, not_null]
+      - name: detected_at
+        data_tests: [not_null]
+      - name: fixed_sha
+        data_tests: [not_null]
+      - name: incident_report
+        data_tests: [not_null]

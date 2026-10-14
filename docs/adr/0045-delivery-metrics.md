@@ -1,7 +1,7 @@
 # ADR-0045: Delivery Metrics (DORA) — Source, Failure Definition, and Lead Time
 
 **Date:** 2026-10-14
-**Status:** Proposed
+**Status:** Accepted (not yet implemented)
 
 ## Context
 
@@ -46,48 +46,66 @@ building measurement tooling [1].
   that fails never reached production, and a deploy that succeeds can still
   break the site.
 
-## Options
+## Decision
 
-**Where the data comes from:**
+- **Source:** an hourly pipeline step reads GitHub's REST API without
+  authentication and writes each finished deployment, with its statuses and
+  its pull request's commits, once to `raw/github/`; parse, landing, and dbt
+  follow as for mail.
+- **A deployment** counts once per commit: re-runs of the deploy job and
+  duplicate pushes collapse. A deploy job that ends in `failure` is a failed
+  attempt, shown separately, not a change failure.
+- **A change failure** is a row in `dbt/seeds/deployment_failures.csv`, kept
+  in the repository: the commit of the deployment that needed immediate
+  intervention, when the failure was detected, the commit whose deployment
+  fixed it, and the incident report. Change fail rate, recovery time (from
+  detection to the fixing deployment), and rework rate (fixing deployments
+  over all) come from it. CLAUDE.md requires the row in the same pull
+  request as the fix.
+- **Lead time** runs from the first commit of the change's pull request to
+  its successful deployment.
+- The panel shows counts and medians over weekly windows, never a rate
+  without its count.
 
-1. **An hourly pipeline step reads GitHub's API** and writes each finished
-   deployment (with its statuses and pull request) to `raw/github/` once,
-   then parse, landing, and dbt as for mail. Reads the whole history,
-   replayable from raw, no new credential (unauthenticated; a few requests
-   an hour).
-2. **The deploy job writes its own record to `ops`** through workload
-   identity federation. Needs GitHub trusted to write to prod BigQuery
-   (today it is trusted only on the dev project, ADR-0037), records only
-   future deployments, and has no raw copy.
-3. **The API reads GitHub live** for the panel. Simplest, but the panel is
-   built from `ops` rows, not live calls (CLAUDE.md, Airflow), and GitHub
-   availability would become the panel's.
+The first row, from the history on 2026-10-14: `8cd9bca` (the first
+production deployment) shipped the DAG defect of the 2026-10-12 incident,
+detected at 16:11 UTC and fixed by the deployment of `eb03680` (#15).
+Considered and left out: the failed first attempt of `8cd9bca`'s deploy job
+(re-run, never in production), #20 (the tunnel had never worked; the site
+was not public yet), and #24 (a wrong cell for half an hour that corrected
+itself; fixed by a planned change).
 
-**What counts as a failed deployment:**
+## Rationale
 
-1. **A deploy job that ended in `failure`.** Automatic, but measures the
-   deploy mechanism, not changes that broke production.
-2. **An owner-kept seed** in the dbt project, one row per deployment that
-   needed immediate intervention: the failing commit, when it was found,
-   the commit that fixed it, and the incident report. Change fail rate,
-   recovery time, and rework rate all follow from it; it is reviewed in
-   pull requests and rebuilt like any seed.
-3. **A pull request label** (`hotfix`) on the fixing change. Gives rework
-   rate, but not which deployment failed or when recovery started.
+- **The deploy job writing to `ops` itself** was rejected: GitHub would need
+  write access to prod BigQuery (it is trusted only on the dev project,
+  ADR-0037), history would be lost, and there would be no raw copy.
+- **The API reading GitHub live** was rejected: the panel is built from `ops`
+  rows, and GitHub's availability would become the panel's.
+- **Failed deploy jobs as change failures** was rejected: a failed job never
+  reached production, and a successful one can still break it.
+- **A `hotfix` label** was rejected: it gives rework but not which
+  deployment failed or when recovery started.
+- **Lead time from the merge** was rejected: it measures only CI and deploy,
+  not DORA's "committed to version control".
 
-**Where lead time starts:**
+## Consequences
 
-1. **The first commit of the change's pull request** (DORA's "committed to
-   version control"), to the successful deployment.
-2. **The merge** to the successful deployment: measures only the pipeline.
+**Positive:**
 
-## Recommendation (to be decided)
+- All five DORA metrics from data already recorded, including history since
+  2026-10-11, with no new credential.
+- A change failure is a reviewed decision with its incident report, not a
+  guess from a status.
 
-Data option 1, failure option 2, lead time option 1. Deployments count once
-per commit (re-runs and duplicate pushes collapse); a deploy job that fails
-is shown separately as a failed attempt, not as a change failure. With a
-handful of deployments a week, the panel shows counts and medians over
-weekly windows, never a rate without its count (CLAUDE.md, Logging).
+**Negative / trade-offs:**
+
+- The failure list depends on discipline: a fix merged without its row
+  understates the change fail rate. The CLAUDE.md rule and review guard it.
+- Unauthenticated requests share a 60-per-hour limit per address; a few an
+  hour are used. Revisit with a token if a run needs more.
+- Weekly counts are small; the metrics describe this project, not a team,
+  and are not compared with DORA's benchmarks.
 
 ## References
 
