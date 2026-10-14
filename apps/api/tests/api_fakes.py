@@ -143,6 +143,26 @@ def health_panel_row() -> HealthPanel:
                     "builds_ok": 2,
                 }
             ],
+            "delivery": {
+                "deployments": 14,
+                "failed_attempts": 1,
+                "median_lead_time_seconds": 706.0,
+                "changes_with_lead_time": 14,
+                "change_failures": 1,
+                "median_recovery_seconds": 20571.0,
+                "rework_deployments": 1,
+                "last_deployed_at": started,
+            },
+            "delivery_days": [{"local_date": date(2026, 10, 13), "state": "ok"}],
+            "recent_deployments": [
+                {
+                    "deployed_at": started,
+                    "pull_request_number": 24,
+                    "pull_request_title": "fix: pending hours",
+                    "lead_time_seconds": 514.0,
+                    "is_change_failure": False,
+                }
+            ],
             "last_build": None,
             "resources": [
                 {

@@ -18,6 +18,8 @@ from pydantic import BaseModel, field_validator
 WINDOW_DAYS = 30
 STAGE_HOURS = 24
 MEDIAN_DAYS = 7
+# Latest deployments listed under the delivery metrics (ADR-0045).
+RECENT_DEPLOYMENTS = 5
 
 
 class StageState(StrEnum):
@@ -99,6 +101,37 @@ class Resource(BaseModel):
     monthly_free: int
 
 
+class Delivery(BaseModel):
+    """DORA's metrics over the window (ADR-0045); medians are null without
+    data, and every ratio is sent as its two counts."""
+
+    deployments: int
+    failed_attempts: int
+    median_lead_time_seconds: float | None
+    changes_with_lead_time: int
+    change_failures: int
+    median_recovery_seconds: float | None
+    rework_deployments: int
+    last_deployed_at: datetime | None
+
+
+class DeliveryDay(BaseModel):
+    """One local day with deployments: failed if one needed intervention."""
+
+    local_date: date
+    state: DayState
+
+
+class RecentDeployment(BaseModel):
+    """One of the latest deployments; the pull request is public on GitHub."""
+
+    deployed_at: datetime
+    pull_request_number: int | None
+    pull_request_title: str | None
+    lead_time_seconds: float | None
+    is_change_failure: bool
+
+
 class HealthPanel(BaseModel):
     """Everything the public health panel shows."""
 
@@ -112,8 +145,19 @@ class HealthPanel(BaseModel):
     dbt_days: list[BuildDay]
     last_build: LastBuild | None
     resources: list[Resource]
+    delivery: Delivery
+    delivery_days: list[DeliveryDay]
+    recent_deployments: list[RecentDeployment]
 
-    @field_validator("stages", "freshness_days", "dbt_days", "resources", mode="before")
+    @field_validator(
+        "stages",
+        "freshness_days",
+        "dbt_days",
+        "resources",
+        "delivery_days",
+        "recent_deployments",
+        mode="before",
+    )
     @classmethod
     def _null_is_empty(cls, value: Any) -> Any:
         return [] if value is None else value
