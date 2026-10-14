@@ -26,9 +26,12 @@ Notes:
 - Storage Object User includes deleting objects, which overwriting a parsed
   file requires (ADR-0018). Raw objects stay write-once through the
   create-only precondition in code (ADR-0006), not through IAM.
-- `tm-api` reads only `marts`. A mart view that selects from another dataset
-  (the Phase 3 health views read `staging`) needs that dataset authorized for
-  the view, or the API's access extended, when the health panel arrives.
+- `tm-api` reads only `marts`. The health views there select from other
+  datasets (ADR-0044), so `marts` is an authorized dataset on `landing`,
+  `ops`, `staging`, and `intermediate`, and `staging` on `ops`, whose views
+  the health views read through. Any view in `marts` can then read those
+  datasets; `tm-api` itself still cannot. The run-record views leave the
+  error message out (CLAUDE.md, Privacy).
 
 ## Verified (2026-10-11, `tracemail-prod`)
 

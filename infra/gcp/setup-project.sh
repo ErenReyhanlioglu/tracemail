@@ -23,6 +23,23 @@ sa_email() { echo "$1@${PROJECT}.iam.gserviceaccount.com"; }
 
 log() { echo "== $*"; }
 
+# A Python that runs: on Windows, "python3" can be the Microsoft Store stub,
+# which exists on PATH but only prints an error.
+find_python() {
+  local candidate
+  for candidate in python3 python; do
+    if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c "" >/dev/null 2>&1; then
+      echo "$candidate"
+      return
+    fi
+  done
+  echo "No working Python found" >&2
+  exit 1
+}
+
+# Exit code of the access-list edit when the entry is already there.
+ALREADY_AUTHORIZED=3
+
 enable_apis() {
   log "Enabling APIs"
   gcloud services enable --project "$PROJECT" \
@@ -84,6 +101,40 @@ grant_bucket() {
     --member "serviceAccount:$(sa_email "$1")" --role "$2" >/dev/null
 }
 
+# Authorizes every view in one dataset to read another (an authorized
+# dataset): the health views in marts read run records through staging, and
+# storage metadata in every dataset (ADR-0044), while tm-api reads marts
+# only. Adds the entry to the dataset's access list if it is missing.
+authorize_dataset() {
+  local reader="$1" source="$2" py file status=0
+  py="$(find_python)"
+  file="$(mktemp)"
+  bq --project_id "$PROJECT" show --format=prettyjson "${PROJECT}:${source}" >"$file"
+  "$py" - "$file" "$PROJECT" "$reader" "$ALREADY_AUTHORIZED" <<'EOF' || status=$?
+import json, sys
+path, project, reader, already = sys.argv[1:]
+dataset = json.load(open(path, encoding="utf-8"))
+entry = {"dataset": {"dataset": {"projectId": project, "datasetId": reader},
+                     "targetTypes": ["VIEWS"]}}
+access = dataset.setdefault("access", [])
+if any(e.get("dataset", {}).get("dataset") == entry["dataset"]["dataset"] for e in access):
+    sys.exit(int(already))
+access.append(entry)
+json.dump({"access": access}, open(path, "w", encoding="utf-8"))
+EOF
+  if [[ "$status" -eq "$ALREADY_AUTHORIZED" ]]; then
+    log "Views in ${reader} already authorized on ${source}"
+  elif [[ "$status" -eq 0 ]]; then
+    log "Authorizing views in ${reader} on ${source}"
+    bq --project_id "$PROJECT" update --source "$file" "${PROJECT}:${source}" >/dev/null
+  else
+    rm -f "$file"
+    echo "Editing the access list of ${source} failed (exit ${status})" >&2
+    exit 1
+  fi
+  rm -f "$file"
+}
+
 setup_roles() {
   create_service_account "$INGESTION" "IMAP ingestion, parsing, landing loads, run records"
   create_service_account "$TRANSFORM" "dbt builds"
@@ -104,9 +155,14 @@ setup_roles() {
     grant_dataset "$TRANSFORM" roles/bigquery.dataEditor "$dataset"
   done
 
-  # API: read the marts only.
+  # API: read the marts only. The health views reach further as authorized
+  # views; staging's views read ops on marts' behalf.
   grant_job_user "$API"
   grant_dataset "$API" roles/bigquery.dataViewer marts
+  for dataset in landing ops staging intermediate; do
+    authorize_dataset marts "$dataset"
+  done
+  authorize_dataset staging ops
 }
 
 enable_apis
