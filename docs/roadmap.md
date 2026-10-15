@@ -7,17 +7,16 @@ one branch and one or more pull requests.
 
 ## Now
 
-**VM usage on the panel**, the last step before Phase 2: the Oracle VM's
-CPU, memory, and network over 7 days against the 20% idle-reclamation
-threshold ([infra/vm](../infra/vm/README.md)), read from Oracle's
-monitoring. It needs new access to Oracle, so it starts with an ADR.
+**Phase 2** is next; the phone layout was the last step before it.
 
 Phase 1 ended with `v0.1.0` on 2026-10-14 ([ADR-0043](adr/0043-phase-1-exit-criterion.md)).
 Since then: the health panel core ([ADR-0044](adr/0044-health-panel-core-metrics.md))
 and delivery metrics ([ADR-0045](adr/0045-delivery-metrics.md),
 [ADR-0046](adr/0046-failure-list-by-pull-request-and-separate-delivery-query.md)),
-and locked pages for visitors in every private section (ahead of Phase 3,
-see the note in [ADR-0040](adr/0040-viewer-routing-and-public-landing.md)).
+locked pages for visitors in every private section (ahead of Phase 3,
+see the note in [ADR-0040](adr/0040-viewer-routing-and-public-landing.md)),
+the phone layout ([ADR-0047](adr/0047-mobile-layout.md)), and pressed
+states on every control ([ADR-0048](adr/0048-interaction-feedback.md)).
 
 ## Next
 
@@ -27,14 +26,16 @@ Alongside:
 
 - **Web before Phase 3** ([ADR-0039](adr/0039-web-ux-baseline.md)): the
   "last checked" time on the lists, which shares the health panel core's
-  authorization; the Lighthouse and manual pass after the desktop changes;
-  the mobile layout, with a web app manifest for the owner's 192, 512, and
-  maskable icons (the image must then copy `public/`).
-- **Watch the VM:** until the panel shows it (Next, item 3), read the 95th
-  percentiles of CPU, network, and memory by hand after a week of hourly
-  runs; if all stay below 20%, Oracle may reclaim the instance, so record
-  the options in an ADR ([infra/vm](../infra/vm/README.md)). Oracle's
-  web-console emergency access is still untested.
+  authorization; the Lighthouse and manual pass, desktop and phone; a web
+  app manifest for the owner's 192, 512, and maskable icons (the image must
+  then copy `public/`); loading and transition states: a loading boundary
+  on every route, when a skeleton shows, pending buttons (open in
+  [ADR-0048](adr/0048-interaction-feedback.md)).
+- **Watch the VM:** read the 95th percentiles of CPU, network, and memory
+  by hand after a week of hourly runs; if all stay below 20%, Oracle may
+  reclaim the instance, so record the options in an ADR
+  ([infra/vm](../infra/vm/README.md)). Oracle's web-console emergency
+  access is still untested.
 
 ## Follow-ups
 

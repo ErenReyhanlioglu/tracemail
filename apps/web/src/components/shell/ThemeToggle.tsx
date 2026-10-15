@@ -3,7 +3,9 @@
 // Light/dark switch with sun and moon icons. Without a stored choice the
 // page follows the system setting; a click stores the opposite of what is
 // shown now. The knob position and the accessible name are chosen by CSS,
-// so both are right on the first paint.
+// so both are right on the first paint. On phones it is an icon button the
+// size of its neighbours, the sun and moon turning into each other
+// (ADR-0047).
 import { strings } from "@/lib/strings";
 import { THEME_COOKIE, THEME_COOKIE_MAX_AGE_SECONDS, type Theme } from "@/lib/theme";
 
@@ -40,6 +42,33 @@ function MoonIcon() {
   );
 }
 
+function Labels() {
+  return (
+    <>
+      <span className={`${styles.srOnly} ${styles.labelForLight}`}>
+        {strings.account.themeToDark}
+      </span>
+      <span className={`${styles.srOnly} ${styles.labelForDark}`}>
+        {strings.account.themeToLight}
+      </span>
+    </>
+  );
+}
+
+export function ThemeIconButton({ className }: { className?: string }) {
+  return (
+    <button type="button" className={`${className ?? ""} ${styles.iconButton}`} onClick={toggle}>
+      <span className={styles.iconSun}>
+        <SunIcon />
+      </span>
+      <span className={styles.iconMoon}>
+        <MoonIcon />
+      </span>
+      <Labels />
+    </button>
+  );
+}
+
 export function ThemeToggle() {
   return (
     <button type="button" className={styles.toggle} onClick={toggle}>
@@ -51,12 +80,7 @@ export function ThemeToggle() {
           <MoonIcon />
         </span>
       </span>
-      <span className={`${styles.srOnly} ${styles.labelForLight}`}>
-        {strings.account.themeToDark}
-      </span>
-      <span className={`${styles.srOnly} ${styles.labelForDark}`}>
-        {strings.account.themeToLight}
-      </span>
+      <Labels />
     </button>
   );
 }

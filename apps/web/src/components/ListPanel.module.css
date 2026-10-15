@@ -39,8 +39,10 @@
   white-space: nowrap;
 }
 
-.clear:hover {
-  color: var(--color-text);
+@media (hover: hover) {
+  .clear:hover {
+    color: var(--color-text);
+  }
 }
 
 /* Search: a field with a magnifier inside. */
@@ -78,8 +80,10 @@
   color: var(--color-text-muted);
 }
 
-.searchInput:hover {
-  border-color: var(--color-text-muted);
+@media (hover: hover) {
+  .searchInput:hover {
+    border-color: var(--color-text-muted);
+  }
 }
 
 /* Period menu: a button with the current period, and a list of periods
@@ -104,8 +108,17 @@
   cursor: pointer;
 }
 
-.menuButton:hover {
-  border-color: var(--color-text-muted);
+@media (hover: hover) {
+  .menuButton:hover {
+    border-color: var(--color-text-muted);
+  }
+}
+
+/* A period narrows the list: accent border and text (owner's review). */
+.menuButton.menuButtonActive,
+.menuButton.menuButtonActive svg {
+  border-color: var(--logo-accent);
+  color: var(--logo-accent);
 }
 
 .menuButton svg,
@@ -146,8 +159,10 @@
   white-space: nowrap;
 }
 
-.menuItem:hover {
-  background: var(--color-row-hover);
+@media (hover: hover) {
+  .menuItem:hover {
+    background: var(--color-row-hover);
+  }
 }
 
 .menuItem[aria-current] {
@@ -157,4 +172,265 @@
 .menuCheck {
   display: inline-flex;
   width: var(--icon-sm);
+}
+
+/* The filter row's edge fades (phones): the left one appears as the row
+   leaves its start, the right one clears as it reaches its end. */
+@keyframes fade-left {
+  0% {
+    opacity: 0;
+  }
+
+  15%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-right {
+  0%,
+  85% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+/* The filters' wrapper takes no part in the wide layout. */
+.startWrap {
+  display: contents;
+}
+
+/* The clear link and the list's order: phones only (ADR-0047). */
+.summary {
+  display: none;
+}
+
+/* Phones (ADR-0047), after the owner's mockups: no card; the search first at
+   full width; under it one sideways-scrolling row with the period menu, a
+   divider, and the filter chips (SegmentedControl); then the summary line;
+   then rows edge to edge. The search text is 16 px so iOS does not zoom in
+   on focus. */
+@media (--phone) {
+  /* Edge to edge: out past the page gutter. Named with its element so it
+     outranks the shell's centring of every page child (AppShell). */
+  div.panel {
+    /* Up into the page's top room (AppShell), so the search sits as far
+       below the top bar as the chips sit below the search. */
+    margin-top: calc((var(--space-6) - var(--space-3)) * -1);
+    margin-inline: calc(var(--space-4) * -1);
+    /* Down into the page's room above the bottom bar (AppShell), so the
+       rows' surface meets the bar without a strip of page between. */
+    margin-bottom: calc(var(--space-8) * -1);
+  }
+
+  .panel {
+    border: 0;
+    border-radius: 0;
+    background: none;
+  }
+
+  /* One spacing rule for the toolbar and the summary (owner's review):
+     everything sits on the 16 px gutter; 12 px between the groups (search,
+     filters, summary), 8 px inside a group.
+
+     One column without wrapping: in a wrapping flex box each line takes
+     its content's width, and the chips' would push the page wider. */
+  .toolbar {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: var(--space-3);
+    padding: 0 var(--space-4);
+    border-bottom: 0;
+  }
+
+  .startWrap {
+    position: relative;
+    display: block;
+    min-width: 0;
+    timeline-scope: --filters;
+  }
+
+  .start {
+    flex-wrap: nowrap;
+    gap: var(--space-2);
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    scroll-timeline: --filters x;
+  }
+
+  .start > * {
+    flex-shrink: 0;
+  }
+
+  /* Where the browser ties animations to scrolling, an edge with more
+     filters beyond it fades into the page. The fades are layers over the
+     row's edges, not a mask on it, so they never cut off the open period
+     list and need not go when it opens (owner's review). Elsewhere there is
+     no fade: a fixed one would need room at the end that reads as a gap. */
+  @supports (animation-timeline: scroll()) {
+    .startWrap::before,
+    .startWrap::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: var(--filter-fade);
+      pointer-events: none;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: --filters;
+    }
+
+    .startWrap::before {
+      left: 0;
+      background: linear-gradient(to right, var(--color-page), transparent);
+      animation-name: fade-left;
+    }
+
+    .startWrap::after {
+      right: 0;
+      background: linear-gradient(to left, var(--color-page), transparent);
+      animation-name: fade-right;
+    }
+  }
+
+  /* The period menu last, set off from the chips by a hairline. */
+  .menu {
+    padding-left: var(--space-2);
+    border-left: var(--border);
+  }
+
+  .end {
+    order: -1;
+    flex-wrap: wrap;
+  }
+
+  /* The clear link moves to the summary line. */
+  .end .clear {
+    display: none;
+  }
+
+  .search {
+    max-width: none;
+  }
+
+  /* A slim field. Typed text stays 16 px, under which iOS zooms in on
+     focus; the hint, which does not trigger the zoom, is smaller. */
+  .searchInput {
+    min-width: 0;
+    height: var(--field-height);
+    border-radius: var(--radius-md);
+    font-size: var(--text-base);
+  }
+
+  .searchInput::placeholder {
+    font-size: var(--text-sm);
+  }
+
+  .menuButton {
+    gap: var(--space-1);
+    height: var(--chip-height);
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-2xs);
+  }
+
+  /* The period list under its button, placed from the button's measured
+     position (PeriodMenu): drawn inside the scrolling row, it would
+     otherwise be cut off by it. Never closer to the screen edge than the
+     page gutter. */
+  .menuList {
+    position: fixed;
+    top: var(--menu-top);
+    right: max(var(--space-4), var(--menu-right));
+    left: auto;
+    z-index: var(--layer-sheet);
+    min-width: 0;
+  }
+
+  /* The wide menu's items, in the chips' type size. */
+  .menuItem {
+    font-size: var(--text-xs);
+  }
+
+  .summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    /* 8 px plus the text's own line room reads as the 12 px between the
+       search and the chips. */
+    padding: var(--space-2) var(--space-4);
+    border-bottom: var(--border);
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+  }
+
+  .summaryClear {
+    color: var(--color-text-secondary);
+    text-decoration: underline;
+    text-decoration-color: var(--color-border);
+    text-underline-offset: 0.25em;
+  }
+
+  .sortToggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    color: var(--color-text-secondary);
+    text-decoration: none;
+  }
+
+  .sortToggle svg {
+    width: var(--icon-sm);
+    height: var(--icon-sm);
+  }
+}
+
+/* Pressed (ADR-0047): an answer the moment it is pressed. */
+.clear {
+  transition: opacity var(--press-duration) ease;
+}
+
+.clear:active {
+  opacity: var(--press-opacity);
+}
+
+.menuButton {
+  transition:
+    transform var(--press-duration) ease,
+    background-color var(--press-duration) ease;
+}
+
+.menuButton:active {
+  transform: scale(var(--press-scale));
+  background: var(--color-pressed);
+}
+
+.menuItem {
+  transition: background-color var(--press-duration) ease;
+}
+
+.menuItem:active {
+  background: var(--color-pressed);
+}
+
+.sortToggle {
+  transition: opacity var(--press-duration) ease;
+}
+
+.sortToggle:active {
+  opacity: var(--press-opacity);
+}
+
+.summaryClear {
+  transition: opacity var(--press-duration) ease;
+}
+
+.summaryClear:active {
+  opacity: var(--press-opacity);
 }

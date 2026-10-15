@@ -2,7 +2,7 @@
 // A visitor (no session cookie) sees the locked page straight away, the same
 // page that follows, so nothing of the owner's view ever flashes; the cookie
 // is read without asking the API.
-import { AppShell } from "@/components/AppShell";
+import { AppShell } from "@/components/shell/AppShell";
 import { LockedPage } from "@/components/locked/LockedPage";
 import { APPLICATION_TABLE } from "@/components/ApplicationTable";
 import { TableSkeleton } from "@/components/TableSkeleton";

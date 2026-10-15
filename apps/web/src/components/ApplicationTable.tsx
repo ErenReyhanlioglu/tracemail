@@ -1,5 +1,7 @@
 // The application list (ADR-0034): one column per field, fixed widths, one
-// line per cell, so every row has the same height.
+// line per cell, so every row has the same height. On phones each row
+// stacks into the position beside the last event's date, the company beside
+// the location, then the status (ADR-0047).
 import type { Application } from "@/lib/applications";
 import { formatDayMonth } from "@/lib/format";
 import { badgesFor, daysAgo } from "@/lib/status";
@@ -7,7 +9,14 @@ import { strings } from "@/lib/strings";
 
 import styles from "./DataTable.module.css";
 import { StatusBadge } from "./StatusBadge";
-import { Clipped, ExternalLink, TableHead, type TableShape, type TableSorting } from "./TableParts";
+import {
+  Clipped,
+  ExternalLink,
+  TableHead,
+  type TableShape,
+  type TableSorting,
+  tableStyle,
+} from "./TableParts";
 
 const text = strings.applications;
 
@@ -41,32 +50,40 @@ function StatusCell({ application }: { application: Application }) {
   );
 }
 
+
 function Row({ application }: { application: Application }) {
   const company = application.company ?? text.noCompany;
   const rowClass = application.is_closed_without_reply ? styles.closed : undefined;
   return (
     <tr className={rowClass}>
-      <td>
+      <td className={styles.cellMain}>
         <Clipped value={application.title ?? text.noTitle} className={styles.lead} />
         <Clipped value={company} className={styles.sub} />
       </td>
-      <td>
+      <td className={styles.cellExtra}>
         <Clipped value={channelLabel(application.channel)} className={styles.mono} />
       </td>
-      <td>
+      <td className={styles.cellExtra}>
         <Clipped value={application.location ?? text.unknown} className={styles.secondary} />
       </td>
-      <td>
+      <td className={styles.cellExtra}>
         <Clipped
           value={application.applied_on ? formatDayMonth(application.applied_on) : text.unknown}
           className={styles.mono}
         />
       </td>
-      <td>
+      <td className={styles.cellDate}>
         <Clipped value={formatDayMonth(application.last_event_date)} className={styles.mono} />
-        <Clipped value={daysAgo(application.days_since_last_event)} className={styles.ago} />
+        <Clipped
+          value={daysAgo(application.days_since_last_event)}
+          className={`${styles.ago} ${styles.wideOnly}`}
+        />
+        {/* Phones only: the location, under the date. */}
+        {application.location ? (
+          <Clipped value={application.location} className={`${styles.place} ${styles.phoneOnly}`} />
+        ) : null}
       </td>
-      <td>
+      <td className={styles.cellStatus}>
         <StatusCell application={application} />
       </td>
       <td className={styles.linkCell}>
@@ -85,7 +102,7 @@ export function ApplicationTable({
 }) {
   return (
     <div className={styles.scroll}>
-      <table className={styles.table} style={{ minWidth: `var(${APPLICATION_TABLE.minWidth})` }}>
+      <table className={styles.table} style={tableStyle(APPLICATION_TABLE)}>
         <TableHead shape={APPLICATION_TABLE} sorting={sorting} />
         <tbody>
           {applications.map((application) => (

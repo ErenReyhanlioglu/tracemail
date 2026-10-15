@@ -147,11 +147,15 @@ export function MailEasterEgg() {
         aria-label={text.muteOn}
       />
       <div ref={hint} className={`${styles.ui} ${styles.hint}`}>
-        {text.hint}
+        <span className={styles.keys}>{text.hint}</span>
+        <span className={styles.touch}>{text.hintTouch}</span>
       </div>
       <div ref={over} className={styles.over} hidden>
         <strong>{text.over}</strong>
-        <span>{text.restart}</span>
+        <span>
+          <span className={styles.keys}>{text.restart}</span>
+          <span className={styles.touch}>{text.restartTouch}</span>
+        </span>
       </div>
     </div>
   );

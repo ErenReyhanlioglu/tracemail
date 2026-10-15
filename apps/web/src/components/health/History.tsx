@@ -27,7 +27,7 @@ export function HistoryRow({
   score: ReactNode;
   caption: string;
   cells: CellState[];
-  window: string;
+  window?: string;
   words?: CellWords;
 }) {
   return (
@@ -46,8 +46,12 @@ export function HistoryRow({
       <div className={styles.window}>
         <span>{text.from}</span>
         <span className={styles.rule} />
-        <span className={styles.windowSummary}>{window}</span>
-        <span className={styles.rule} />
+        {window ? (
+          <>
+            <span className={styles.windowSummary}>{window}</span>
+            <span className={styles.rule} />
+          </>
+        ) : null}
         <span>{text.today}</span>
       </div>
     </div>
@@ -63,12 +67,12 @@ function Freshness({ panel, today }: { panel: HealthPanel; today: Date }) {
   return (
     <HistoryRow
       name={text.freshnessName}
-      detail={text.freshnessDetail(panel.freshness_target_hours)}
       score={
         <span className={`${styles.scoreValue} ${under ? styles.under : ""}`}>
           {share === null ? "–" : formatPercent(share)}
         </span>
       }
+      detail={text.freshnessDetail(panel.freshness_target_hours)}
       caption={text.objective(formatPercent(objective))}
       cells={dayCells(panel.freshness_days, today)}
       window={text.onTime(onTime, hours)}
@@ -84,7 +88,6 @@ function Builds({ panel, today }: { panel: HealthPanel; today: Date }) {
   return (
     <HistoryRow
       name={text.dbtName}
-      detail={text.dbtDetail(models, last?.tests ?? 0)}
       score={<span className={styles.scoreValue}>{`${ok} / ${builds}`}</span>}
       caption={text.buildsOk}
       cells={dayCells(panel.dbt_days, today)}
@@ -105,7 +108,6 @@ export function History({ panel }: { panel: HealthPanel }) {
         <h2 id="history-title" className={styles.heading}>
           {text.title}
         </h2>
-        <span className={styles.aside}>{text.aside}</span>
       </div>
       <div className={styles.card}>
         <Freshness panel={panel} today={today} />

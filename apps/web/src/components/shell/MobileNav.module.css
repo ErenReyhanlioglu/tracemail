@@ -1,0 +1,187 @@
+/*
+ * Phone navigation (ADR-0047), shown below the phone width (--phone, media.css)
+ * in place of the sidebar. Both bars use the sidebar's colours, dark in both
+ * themes, so the chrome looks the same as on the desktop.
+ */
+.header,
+.bar {
+  display: none;
+}
+
+@media (--phone) {
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    min-height: var(--mobile-header-height);
+    padding: env(safe-area-inset-top, 0) calc(var(--space-4) + env(safe-area-inset-right, 0)) 0
+      calc(var(--space-4) + env(safe-area-inset-left, 0));
+    background: var(--color-sidebar);
+    color: var(--color-sidebar-text);
+  }
+
+  .bar {
+    display: block;
+    position: fixed;
+    inset: auto 0 0;
+    z-index: var(--layer-nav);
+    /* The iPhone's home indicator sits below the items, not on them. */
+    padding: 0 env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0)
+      env(safe-area-inset-left, 0);
+    border-top: 1px solid var(--color-sidebar-rule);
+    background: var(--color-sidebar);
+  }
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-sidebar-text-strong);
+  --logo-accent: var(--logo-accent-on-dark);
+}
+
+.logo {
+  flex-shrink: 0;
+  width: var(--logo-size);
+  height: var(--logo-size);
+}
+
+.brandName {
+  font-family: var(--font-mono);
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.action {
+  display: grid;
+  place-items: center;
+  width: var(--touch-target);
+  height: var(--touch-target);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-sidebar-text);
+  cursor: pointer;
+}
+
+/* Hover only where a pointer can hover: on touch screens a tapped button
+   would otherwise keep the hover colour until the next tap elsewhere. */
+@media (hover: hover) {
+  .action:hover {
+    background: var(--color-sidebar-track);
+    color: var(--color-sidebar-text-strong);
+  }
+}
+
+.items {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item,
+.itemActive,
+.itemDisabled {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-height: var(--bottom-nav-height);
+  padding-block: var(--space-2);
+  text-decoration: none;
+}
+
+.item {
+  color: var(--color-sidebar-text);
+}
+
+.itemActive {
+  color: var(--color-sidebar-text-strong);
+}
+
+.itemDisabled {
+  color: var(--color-sidebar-text-dim);
+}
+
+/* The active section's pill behind its icon, in the sidebar's accent. */
+.indicator {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--nav-bar-indicator-width);
+  height: var(--nav-bar-indicator-height);
+  border-radius: var(--radius-pill);
+}
+
+.indicator > svg {
+  width: var(--nav-bar-icon);
+  height: var(--nav-bar-icon);
+}
+
+.itemActive .indicator {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.lock {
+  position: absolute;
+  top: 0;
+  right: var(--space-2);
+  display: flex;
+  color: var(--color-sidebar-text-dim);
+}
+
+.itemActive .lock {
+  color: var(--color-on-accent);
+}
+
+.lock > svg {
+  width: var(--nav-bar-lock);
+  height: var(--nav-bar-lock);
+}
+
+.label {
+  font-size: var(--nav-bar-label);
+  font-weight: var(--weight-medium);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* Pressed (ADR-0047): an answer the moment it is pressed. */
+.action {
+  transition:
+    transform var(--press-duration) ease,
+    background-color var(--press-duration) ease;
+}
+
+.action:active {
+  transform: scale(var(--press-scale));
+  background: var(--color-sidebar-pressed);
+}
+
+.indicator {
+  transition:
+    transform var(--press-duration) ease,
+    background-color var(--press-duration) ease;
+}
+
+.item:active .indicator {
+  transform: scale(var(--press-scale));
+  background: var(--color-sidebar-pressed);
+}
+
+.itemActive:active .indicator {
+  transform: scale(var(--press-scale));
+}

@@ -91,8 +91,74 @@
   display: inline;
 }
 
+/* Phones (ADR-0047): an icon button showing the current theme; on a switch
+   the icon turns away and shrinks while the other turns in. Its size and
+   hover come from the place that renders it. */
+.iconButton {
+  position: relative;
+}
+
+.iconSun,
+.iconMoon {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  transition:
+    opacity var(--theme-icon-transition) ease,
+    transform var(--theme-icon-transition) ease;
+}
+
+.iconSun .icon,
+.iconMoon .icon {
+  width: var(--nav-icon);
+  height: var(--nav-icon);
+}
+
+.iconMoon .icon {
+  fill: currentColor;
+  stroke: none;
+}
+
+.iconMoon {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme="light"])) .iconSun {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.5);
+  }
+  :global(:root:not([data-theme="light"])) .iconMoon {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+:global(:root[data-theme="dark"]) .iconSun {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.5);
+}
+
+:global(:root[data-theme="dark"]) .iconMoon {
+  opacity: 1;
+  transform: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .knob {
+  .knob,
+  .iconSun,
+  .iconMoon {
     transition: none;
   }
+}
+
+/* Pressed (ADR-0047): an answer the moment it is pressed. */
+.toggle {
+  transition: transform var(--press-duration) ease;
+}
+
+.toggle:active {
+  transform: scale(var(--press-scale));
 }

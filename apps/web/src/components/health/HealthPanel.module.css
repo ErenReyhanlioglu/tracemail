@@ -44,8 +44,10 @@
   text-underline-offset: 0.25em;
 }
 
-.link:hover {
-  text-decoration-color: currentColor;
+@media (hover: hover) {
+  .link:hover {
+    text-decoration-color: currentColor;
+  }
 }
 
 /* Status line */
@@ -269,9 +271,10 @@
   border-bottom: 0;
 }
 
+/* Top-aligned, so a name without a description stays on the score's line. */
 .historyHead {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-4);
 }
@@ -310,6 +313,13 @@
 .windowSummary {
   color: var(--color-text-secondary);
   font-family: var(--font-mono);
+}
+
+/* A stage's detail line and the shared axis: narrow content only (see the
+   narrow rules). */
+.stageMeta,
+.narrowAxis {
+  display: none;
 }
 
 /* Delivery: DORA's measures in one row split by hairlines, not cards, and
@@ -364,8 +374,10 @@
   border-bottom: 0;
 }
 
-a.deployment:hover {
-  background: var(--color-row-hover);
+@media (hover: hover) {
+  a.deployment:hover {
+    background: var(--color-row-hover);
+  }
 }
 
 .deploymentHead {
@@ -384,6 +396,11 @@ a.deployment:hover {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* The pull request number in the accent blue marks the row as a link. */
+.pullNumber {
+  color: var(--logo-accent);
 }
 
 .unavailable {
@@ -486,8 +503,10 @@ a.deployment:hover {
   border-bottom: 0;
 }
 
-.incident:hover {
-  background: var(--color-row-hover);
+@media (hover: hover) {
+  .incident:hover {
+    background: var(--color-row-hover);
+  }
 }
 
 .incidentDate {
@@ -501,9 +520,14 @@ a.deployment:hover {
 }
 
 .incidentBody {
+  display: -webkit-box;
   margin-top: var(--space-1);
+  overflow: hidden;
   color: var(--color-text-secondary);
   font-size: var(--text-sm);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .incidentLink {
@@ -521,7 +545,10 @@ a.deployment:hover {
   font-size: var(--text-xs);
 }
 
-/* Narrow content: rows stack; strips keep the full width. */
+/* Narrow content (tablets and phones): rows stack; strips keep the full
+   width. Each stage is the card drawn in the owner's review (ADR-0047):
+   the axis once at the top; name and state, description, strip, and one
+   detail line per stage. Phones shrink its type further below. */
 @container (max-width: 52rem) {
   .row {
     grid-template-columns: 1fr auto;
@@ -532,8 +559,40 @@ a.deployment:hover {
     order: 1;
   }
 
-  .headRow {
+  .headRow,
+  .row > .num {
     display: none;
+  }
+
+  .narrowAxis {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--space-2) var(--space-5);
+    border-bottom: var(--border);
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+  }
+
+  .row .word {
+    align-self: start;
+    /* The name's line box, so both share a line. */
+    line-height: calc(var(--text-base) * 1.5);
+  }
+
+  .stageMeta {
+    display: flex;
+    grid-column: 1 / -1;
+    order: 2;
+    justify-content: space-between;
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+  }
+
+  .stageMeta b {
+    color: var(--color-text);
+    font-weight: var(--weight-medium);
   }
 
   .resource {
@@ -570,4 +629,310 @@ a.deployment:hover {
     grid-column: 1 / -1;
     order: 1;
   }
+
+  /* Stacked rows explain themselves; the column names no longer line up. */
+  .deploymentHead {
+    display: none;
+  }
+}
+
+/* Phone-only parts, shown by the phone-width rules below. */
+.resourcePercent {
+  display: none;
+}
+
+/* Phone width (ADR-0047), as drawn in the owner's review (Claude web's
+   concept): smaller type with the hierarchy carried by size, weight, and
+   colour; values in bold mono, labels muted; each card's facts on as few
+   lines as they fit. */
+@container (max-width: 30rem) {
+  /* Introduction and status */
+  .intro {
+    font-size: var(--text-xs);
+    line-height: 1.55;
+  }
+
+  .link {
+    font-size: var(--text-xs);
+  }
+
+  .status {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-1) var(--space-4);
+    padding: var(--space-3) 0;
+  }
+
+  .status > :first-child {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+  }
+
+  /* A dot in the state's colour before the state. */
+  .status > :first-child::before {
+    content: "";
+    width: var(--space-2);
+    height: var(--space-2);
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .meta {
+    font-size: var(--text-2xs);
+  }
+
+  /* Section heads: the heading, its note on the line below */
+  .head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+  }
+
+  .heading {
+    font-size: var(--text-base);
+  }
+
+  .aside {
+    font-size: var(--text-2xs);
+  }
+
+  /* Shared row type: name, muted description, small caption */
+  .name {
+    font-size: var(--text-xs);
+  }
+
+  .detail {
+    display: block;
+    color: var(--color-text-muted);
+    font-size: var(--text-2xs);
+  }
+
+  .sub {
+    font-size: var(--text-2xs);
+  }
+
+  .cell,
+  .tall .cell {
+    height: var(--cell-compact);
+  }
+
+  /* Stages: the narrow card (above) in phone type. */
+  .narrowAxis {
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--text-2xs);
+  }
+
+  .row {
+    gap: var(--space-2) var(--space-3);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .row .word {
+    font-size: var(--text-xs);
+    /* The name's line box (13 px at 1.5), so both share a line. */
+    line-height: calc(var(--text-xs) * 1.5);
+  }
+
+  .stageMeta {
+    font-size: var(--text-2xs);
+  }
+
+  /* 30-day rows: the strip's two ends, its summary centred below */
+  .history {
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .scoreValue {
+    font-size: var(--text-lg);
+  }
+
+  .window {
+    flex-wrap: wrap;
+    justify-content: space-between;
+    font-size: var(--text-2xs);
+    white-space: normal;
+  }
+
+  .rule {
+    display: none;
+  }
+
+  .windowSummary {
+    order: 1;
+    flex-basis: 100%;
+    text-align: center;
+  }
+
+  /* Resources: name and share, a thin bar, the amounts */
+  .resources {
+    padding: 0 var(--space-4);
+  }
+
+  .resource {
+    grid-template-columns: 1fr auto;
+    gap: var(--space-2) var(--space-3);
+    padding: var(--space-3) 0;
+  }
+
+  .resourceName {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+  }
+
+  .resourcePercent {
+    display: block;
+    color: var(--color-text-secondary);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+  }
+
+  .bar,
+  .resourceText {
+    grid-column: 1 / -1;
+  }
+
+  .bar {
+    height: var(--bar-compact);
+  }
+
+  .resourceText,
+  .resourceText b {
+    font-size: var(--text-2xs);
+  }
+
+  .resourceShare {
+    display: none;
+  }
+
+  /* Delivery: four measures in a 2 by 2 grid; the latest three
+     deployments, each its time, then its title beside its lead time. */
+  .measure {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .measure .detail {
+    color: var(--color-text-secondary);
+    font-size: var(--text-xs);
+  }
+
+  .measureValue {
+    font-size: var(--text-base);
+  }
+
+  .deployment {
+    gap: var(--space-1) var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--text-xs);
+  }
+
+  .deploymentTime {
+    grid-column: 1 / -1;
+    color: var(--color-text-muted);
+    font-size: var(--text-2xs);
+  }
+
+  /* One line, cut with an ellipsis as on wide screens; the pull request
+     has the rest (owner's review). */
+  .deploymentTitle {
+    grid-column: auto;
+    order: 0;
+  }
+
+  /* The lead time stays quiet beside the title. */
+  .deployment > .num {
+    align-self: start;
+    color: var(--color-text-secondary);
+    font-size: var(--text-2xs);
+    line-height: calc(var(--text-xs) * 1.5);
+  }
+
+  .deployment:nth-child(n + 5) {
+    display: none;
+  }
+
+  .deployment:nth-child(4) {
+    border-bottom: 0;
+  }
+
+  /* Incidents: date and the report link on top, then the story */
+  .incident {
+    grid-template-columns: 1fr auto;
+    gap: var(--space-1) var(--space-3);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .incident > div {
+    grid-column: 1 / -1;
+  }
+
+  .incidentDate {
+    font-size: var(--text-2xs);
+  }
+
+  .incidentLink {
+    grid-row: 1;
+    grid-column: 2;
+    color: var(--color-text);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+  }
+
+  .incidentTitle {
+    font-size: var(--text-sm);
+  }
+
+  .incidentBody {
+    font-size: var(--text-xs);
+  }
+
+  /* Legends: one line from 360 px up */
+  .legend {
+    column-gap: var(--space-2);
+    font-size: var(--text-2xs);
+  }
+
+  .legend li {
+    gap: var(--space-1);
+  }
+
+  .footer {
+    font-size: var(--text-2xs);
+    text-align: center;
+  }
+}
+
+/* The panel is the container above, so its own gap follows the screen. */
+@media (--phone) {
+  .panel {
+    gap: var(--space-8);
+  }
+}
+
+/* Pressed (ADR-0047): an answer the moment it is pressed. */
+.link {
+  transition: opacity var(--press-duration) ease;
+}
+
+.link:active {
+  opacity: var(--press-opacity);
+}
+
+a.deployment {
+  transition: background-color var(--press-duration) ease;
+}
+
+a.deployment:active {
+  background: var(--color-pressed);
+}
+
+.incident {
+  transition: background-color var(--press-duration) ease;
+}
+
+.incident:active {
+  background: var(--color-pressed);
 }

@@ -5,7 +5,14 @@
 // side of the current one, an ellipsis for longer gaps).
 import Link from "next/link";
 
-import { type ListLocation, listUrl, pageCount, pageItems, type PageSize } from "@/lib/paging";
+import {
+  type ListLocation,
+  listUrl,
+  pageCount,
+  type PageItem,
+  pageItems,
+  type PageSize,
+} from "@/lib/paging";
 import { strings } from "@/lib/strings";
 
 import { PageSizeSelect } from "./PageSizeSelect";
@@ -53,6 +60,43 @@ function Step({
   );
 }
 
+// One window of page links; the wide and the phone window are both rendered
+// and CSS shows one (ADR-0047).
+function PageLinks({
+  items,
+  page,
+  at,
+  className,
+}: {
+  items: PageItem[];
+  page: number;
+  at: (target: number) => string;
+  className: string | undefined;
+}) {
+  return (
+    <ol className={`${styles.pages} ${className ?? ""}`}>
+      {items.map((item) =>
+        item.kind === "gap" ? (
+          <li key={`gap-${item.after}`} className={styles.gap} aria-label={text.gap}>
+            …
+          </li>
+        ) : (
+          <li key={item.page}>
+            <Link
+              className={item.page === page ? `${styles.number} ${styles.current}` : styles.number}
+              href={at(item.page)}
+              aria-label={text.goToPage(item.page)}
+              aria-current={item.page === page ? "page" : undefined}
+            >
+              {item.page}
+            </Link>
+          </li>
+        ),
+      )}
+    </ol>
+  );
+}
+
 export function Pagination({
   location,
   page,
@@ -78,26 +122,13 @@ export function Pagination({
       </div>
       <div className={styles.side}>
         <Step href={page > 1 ? at(page - 1) : null} direction="left" label={text.previous} />
-        <ol className={styles.pages}>
-          {pageItems(page, pages).map((item) =>
-            item.kind === "gap" ? (
-              <li key={`gap-${item.after}`} className={styles.gap} aria-label={text.gap}>
-                …
-              </li>
-            ) : (
-              <li key={item.page}>
-                <Link
-                  className={item.page === page ? `${styles.number} ${styles.current}` : styles.number}
-                  href={at(item.page)}
-                  aria-label={text.goToPage(item.page)}
-                  aria-current={item.page === page ? "page" : undefined}
-                >
-                  {item.page}
-                </Link>
-              </li>
-            ),
-          )}
-        </ol>
+        <PageLinks items={pageItems(page, pages)} page={page} at={at} className={styles.wide} />
+        <PageLinks
+          items={pageItems(page, pages, true)}
+          page={page}
+          at={at}
+          className={styles.phone}
+        />
         <Step href={page < pages ? at(page + 1) : null} direction="right" label={text.next} />
       </div>
     </nav>

@@ -1,10 +1,11 @@
 // Root layout: fonts (self-hosted at build time), the theme and sidebar
 // width chosen by the viewer (or the defaults), and the global tokens.
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import { cookies } from "next/headers";
 import type { ReactNode } from "react";
 
+import { PressFeedback } from "@/components/shell/PressFeedback";
 import { isCollapsed, SIDEBAR_COLLAPSED, SIDEBAR_COOKIE } from "@/lib/sidebar";
 import { isTheme, THEME_COOKIE } from "@/lib/theme";
 import { strings } from "@/lib/strings";
@@ -29,6 +30,14 @@ export const metadata: Metadata = {
   referrer: "no-referrer",
 };
 
+// "cover" lets the page reach the screen's edges, so the bottom bar can pad
+// itself for the iPhone's home indicator (ADR-0047).
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const jar = await cookies();
   const stored = jar.get(THEME_COOKIE)?.value;
@@ -40,7 +49,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       data-theme={theme}
       data-sidebar={sidebar}
       className={`${plexSans.variable} ${plexMono.variable}`}>
-      <body>{children}</body>
+      <body>
+        <PressFeedback />
+        {children}
+      </body>
     </html>
   );
 }

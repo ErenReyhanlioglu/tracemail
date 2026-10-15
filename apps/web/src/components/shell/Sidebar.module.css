@@ -11,6 +11,8 @@
   flex-shrink: 0;
   width: var(--sidebar-width);
   height: 100vh;
+  /* The visible height, so the footer is never under a phone's toolbar. */
+  height: 100dvh;
   /* When zoomed, the sidebar scrolls on its own so its footer (theme,
      sign out) stays reachable (ADR-0039). */
   overflow-x: hidden;
@@ -66,9 +68,11 @@
   cursor: pointer;
 }
 
-.collapseButton:hover {
-  background: var(--color-sidebar-track);
-  color: var(--color-sidebar-text-strong);
+@media (hover: hover) {
+  .collapseButton:hover {
+    background: var(--color-sidebar-track);
+    color: var(--color-sidebar-text-strong);
+  }
 }
 
 .items {
@@ -110,9 +114,11 @@
   color: var(--color-sidebar-text);
 }
 
-.item:hover {
-  background: var(--color-sidebar-track);
-  color: var(--color-sidebar-text-strong);
+@media (hover: hover) {
+  .item:hover {
+    background: var(--color-sidebar-track);
+    color: var(--color-sidebar-text-strong);
+  }
 }
 
 /* Not built yet (the owner's view): dimmed and not a link. A visitor's locked
@@ -162,9 +168,11 @@
   cursor: pointer;
 }
 
-.footerAction:hover {
-  color: var(--color-sidebar-text-strong);
-  text-decoration: underline;
+@media (hover: hover) {
+  .footerAction:hover {
+    color: var(--color-sidebar-text-strong);
+    text-decoration: underline;
+  }
 }
 
 /* Collapsed: icons only, centered. */
@@ -209,8 +217,54 @@
   justify-content: center;
 }
 
+/* Phones use the top and bottom bars instead (MobileNav, ADR-0047). */
+@media (--phone) {
+  .sidebar {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sidebar {
     transition: none;
   }
+}
+
+/* Pressed (ADR-0047): an answer the moment it is pressed. */
+.item {
+  transition:
+    transform var(--press-duration) ease,
+    background-color var(--press-duration) ease;
+}
+
+.item:active {
+  transform: scale(var(--press-scale));
+  background: var(--color-sidebar-pressed);
+}
+
+.itemActive {
+  transition: transform var(--press-duration) ease;
+}
+
+.itemActive:active {
+  transform: scale(var(--press-scale));
+}
+
+.collapseButton {
+  transition:
+    transform var(--press-duration) ease,
+    background-color var(--press-duration) ease;
+}
+
+.collapseButton:active {
+  transform: scale(var(--press-scale));
+  background: var(--color-sidebar-pressed);
+}
+
+.footerAction {
+  transition: opacity var(--press-duration) ease;
+}
+
+.footerAction:active {
+  opacity: var(--press-opacity);
 }

@@ -1,6 +1,7 @@
 .shell {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .main {
@@ -14,4 +15,16 @@
 .main > * {
   max-width: var(--content-max-width);
   margin-inline: auto;
+}
+
+/* Phones: top bar, content, and room at the bottom for the fixed bar. */
+@media (--phone) {
+  .shell {
+    flex-direction: column;
+  }
+
+  .main {
+    padding: var(--space-6) var(--space-4)
+      calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0) + var(--space-8));
+  }
 }

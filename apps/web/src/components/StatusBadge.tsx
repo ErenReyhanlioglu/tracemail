@@ -5,5 +5,14 @@ import type { Badge } from "@/lib/status";
 import styles from "./StatusBadge.module.css";
 
 export function StatusBadge({ badge }: { badge: Badge }) {
-  return <span className={`${styles.badge} ${styles[badge.tone]}`}>{badge.label}</span>;
+  const className = `${styles.badge} ${styles[badge.tone]}`;
+  if (!badge.spoken) {
+    return <span className={className}>{badge.label}</span>;
+  }
+  return (
+    <span className={className} title={badge.spoken}>
+      <span aria-hidden="true">{badge.label}</span>
+      <span className="visually-hidden">{badge.spoken}</span>
+    </span>
+  );
 }

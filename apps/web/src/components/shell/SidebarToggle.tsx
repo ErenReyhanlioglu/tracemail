@@ -8,7 +8,7 @@ import { useState } from "react";
 import { SIDEBAR_COLLAPSED, SIDEBAR_COOKIE, SIDEBAR_COOKIE_MAX_AGE_SECONDS } from "@/lib/sidebar";
 import { strings } from "@/lib/strings";
 
-import { CollapseIcon, ExpandIcon } from "./icons/NavIcons";
+import { CollapseIcon, ExpandIcon } from "../icons/NavIcons";
 
 export function SidebarToggle({
   initialCollapsed,

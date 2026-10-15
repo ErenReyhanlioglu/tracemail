@@ -19,6 +19,42 @@
   box-sizing: border-box;
 }
 
+/* Phones (ADR-0047): still a fixed offset, for the reason above, but taken
+   from the screen's height: each state sits a little above the middle of
+   the room between the top and bottom bars, with --locked-rise of the free
+   space above it (owner's review). Opening lifts the block by part of what
+   the stage grows, on the stage's own timing (MailEasterEgg: 0.6 s, its
+   easing, 0.2 s late when closing), so the envelope stays inside the stage
+   and the text only ever moves down. Never closer to the top than the
+   page's own room. */
+@media (--phone) {
+  .locked {
+    --locked-free: calc(
+      100dvh - var(--mobile-header-height) - var(--bottom-nav-height) -
+        env(safe-area-inset-bottom, 0px) - var(--locked-closed-height)
+    );
+    min-height: 0;
+    padding-top: max(0px, calc(var(--locked-free) * var(--locked-rise) - var(--space-6)));
+    transition: padding-top 0.6s cubic-bezier(0.65, 0, 0.35, 1) 0.2s;
+  }
+
+  .locked:has([data-open]) {
+    padding-top: max(
+      0px,
+      calc(
+        (var(--locked-free) - var(--locked-open-growth)) * var(--locked-rise) - var(--space-6)
+      )
+    );
+    transition-delay: 0s;
+  }
+}
+
+@media (--phone) and (prefers-reduced-motion: reduce) {
+  .locked {
+    transition: none;
+  }
+}
+
 .lock {
   display: flex;
   font-size: var(--text-sm);
@@ -56,12 +92,23 @@
   text-decoration: none;
 }
 
-.link:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+@media (hover: hover) {
+  .link:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 }
 
 .link:focus-visible {
   outline: 2px solid var(--logo-accent);
   outline-offset: 2px;
+}
+
+/* Pressed (ADR-0047): an answer the moment it is pressed. */
+.link {
+  transition: opacity var(--press-duration) ease;
+}
+
+.link:active {
+  opacity: var(--press-opacity);
 }

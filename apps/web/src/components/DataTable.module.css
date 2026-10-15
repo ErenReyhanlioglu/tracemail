@@ -5,12 +5,16 @@
  * width the table scrolls sideways inside its panel (ListPanel) instead of
  * squeezing a column; the pagination bar stays below it.
  */
+/* Positioned, so text hidden for screen readers inside the cells stays
+   inside the scroller instead of widening the page. */
 .scroll {
+  position: relative;
   overflow-x: auto;
 }
 
 .table {
   width: 100%;
+  min-width: var(--table-min-width, 0);
   border-collapse: collapse;
   table-layout: fixed;
 }
@@ -50,8 +54,10 @@
   text-decoration: none;
 }
 
-.sortLink:hover {
-  color: var(--color-text);
+@media (hover: hover) {
+  .sortLink:hover {
+    color: var(--color-text);
+  }
 }
 
 .sortIcon {
@@ -67,9 +73,14 @@
   visibility: hidden;
 }
 
-.sortLink:hover .sortHint,
 .sortLink:focus-visible .sortHint {
   visibility: visible;
+}
+
+@media (hover: hover) {
+  .sortLink:hover .sortHint {
+    visibility: visible;
+  }
 }
 
 /* Column dividers in the header make the columns visible. */
@@ -94,8 +105,10 @@
   padding-left: var(--space-6);
 }
 
-.table tbody tr:hover {
-  background: var(--color-row-hover);
+@media (hover: hover) {
+  .table tbody tr:hover {
+    background: var(--color-row-hover);
+  }
 }
 
 /* One line of text, cut with an ellipsis; the full value is in the title. */
@@ -166,9 +179,11 @@
   color: var(--color-text-muted);
 }
 
-.link:hover {
-  background: var(--color-page);
-  color: var(--color-text);
+@media (hover: hover) {
+  .link:hover {
+    background: var(--color-page);
+    color: var(--color-text);
+  }
 }
 
 .icon {
@@ -179,4 +194,205 @@
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+/* A posting's status: a dot and the word, in the status's colour (owner's
+   review): new asks for a look, saved is in progress, applied is done. */
+.status {
+  font-weight: var(--weight-medium);
+}
+
+.status::before {
+  content: "";
+  display: inline-block;
+  width: var(--space-2);
+  height: var(--space-2);
+  margin-right: var(--space-2);
+  border-radius: 50%;
+  background: currentColor;
+  vertical-align: middle;
+}
+
+.statusNew {
+  color: var(--color-warning-text);
+}
+
+.statusSaved {
+  color: var(--color-progress-text);
+}
+
+.statusApplied {
+  color: var(--color-success-text);
+}
+
+/* Phone-only parts (ADR-0047). */
+.phoneOnly {
+  display: none;
+}
+
+/* Phones (ADR-0047), after the owner's mockup: no header; each row is the
+   position with its date on the right, the company line with how long ago,
+   then the status and channel with the posting link at the end. The other
+   columns fold into those lines or hide (NN/g: what matters, legible,
+   without sideways scrolling). Rules on cells name the cell element, so
+   they outrank the general cell rule they override. */
+@media (--phone) {
+  .scroll {
+    overflow-x: visible;
+  }
+
+  .table,
+  .table tbody {
+    display: block;
+    min-width: 0;
+  }
+
+  .table thead,
+  .table colgroup,
+  .table tbody td.cellExtra,
+  .wideOnly {
+    display: none;
+  }
+
+  .phoneOnly {
+    display: block;
+  }
+
+  .table tbody tr {
+    display: grid;
+    grid-template-areas:
+      "main date"
+      "status link";
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    border-bottom: var(--border);
+    /* The rows on the surface tone, the controls above them on the page,
+       as the wide list's card sits on the page (owner's review). */
+    background: var(--color-surface);
+  }
+
+  /* The pagination bar's top line closes the list. */
+  .table tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .table tbody td,
+  .table tbody td:first-child,
+  .table tbody td.linkCell {
+    display: block;
+    height: auto;
+    padding: 0;
+    border-bottom: 0;
+  }
+
+  .table tbody td.cellMain {
+    grid-area: main;
+    min-width: 0;
+  }
+
+  /* A row's lines on a fixed grid (owner's review): the first line 20 px
+     tall, the second 18 px and 2 px below it, the third 20 px. The right
+     column's text shares those line heights, so both sides sit on the same
+     baselines. */
+  .lead {
+    font-size: var(--text-sm);
+    line-height: var(--row-line-first);
+  }
+
+  .sub {
+    margin-top: var(--row-line-gap);
+    font-size: var(--text-xs);
+    line-height: var(--row-line-second);
+  }
+
+  .table tbody td.cellDate {
+    display: flex;
+    grid-area: date;
+    flex-direction: column;
+    align-items: flex-end;
+    align-self: start;
+    gap: 0;
+  }
+
+  .cellDate .mono {
+    color: var(--color-text);
+    font-weight: var(--weight-medium);
+    line-height: var(--row-line-first);
+  }
+
+  .cellDate .ago {
+    margin-top: var(--row-line-gap);
+    font-size: var(--text-2xs);
+    line-height: var(--row-line-second);
+  }
+
+  /* The location under the date, in the room the title leaves. */
+  .place {
+    max-width: var(--phone-place-width);
+    margin-top: var(--row-line-gap);
+    color: var(--color-text-muted);
+    font-size: var(--text-2xs);
+    line-height: var(--row-line-second);
+    text-align: right;
+  }
+
+  .table tbody td.cellStatus {
+    display: flex;
+    grid-area: status;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+    min-height: var(--row-line-first);
+  }
+
+  .cellStatus .status {
+    flex-shrink: 0;
+    font-size: var(--text-xs);
+    line-height: var(--row-line-first);
+  }
+
+  /* A posting's location, beside its status, in the same plain type as an
+     application's location (owner's review). */
+  .cellStatus .place {
+    min-width: 0;
+    max-width: none;
+    margin-top: 0;
+    line-height: var(--row-line-first);
+    text-align: left;
+  }
+
+  /* A flex box, so the icon's cell takes no text line of its own. */
+  .table tbody td.linkCell {
+    display: flex;
+    grid-area: link;
+    justify-self: end;
+  }
+
+  .link {
+    width: var(--touch-target);
+    height: var(--touch-target);
+    margin: calc(var(--space-3) * -1);
+  }
+}
+
+/* Pressed (ADR-0047): an answer the moment it is pressed. */
+.link {
+  transition:
+    transform var(--press-duration) ease,
+    background-color var(--press-duration) ease;
+}
+
+.link:active {
+  transform: scale(var(--press-scale));
+  background: var(--color-pressed);
+}
+
+.sortLink {
+  transition: opacity var(--press-duration) ease;
+}
+
+.sortLink:active {
+  opacity: var(--press-opacity);
 }

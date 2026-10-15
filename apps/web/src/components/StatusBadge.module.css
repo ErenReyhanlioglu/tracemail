@@ -28,3 +28,13 @@
   background: var(--color-neutral-bg);
   color: var(--color-neutral-text);
 }
+
+/* Phones (ADR-0047): smaller, exactly the row grid's 20 px line (DataTable):
+   a 16 px line and 2 px above and below. */
+@media (--phone) {
+  .badge {
+    padding: var(--row-line-gap) var(--space-2);
+    font-size: var(--text-2xs);
+    line-height: calc(var(--row-line-first) - 2 * var(--row-line-gap));
+  }
+}

@@ -1,4 +1,4 @@
-/* Shared layout of the list pages: title row and notes. */
+/* Shared layout of the list pages: the title row. */
 .header {
   display: flex;
   align-items: baseline;
@@ -13,8 +13,17 @@
   line-height: 1.2;
 }
 
-.note {
-  margin-top: var(--space-4);
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
+/* Phones (ADR-0047): the bottom bar already names the current section, so
+   the title row is hidden visually and kept for screen readers (owner's
+   review). */
+@media (--phone) {
+  .header {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }

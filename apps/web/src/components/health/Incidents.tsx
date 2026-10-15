@@ -16,7 +16,6 @@ export function Incidents() {
         <h2 id="incidents-title" className={styles.heading}>
           {text.title}
         </h2>
-        <span className={styles.aside}>{text.aside}</span>
       </div>
       <div className={styles.card}>
         {text.items.map((incident) => (
@@ -32,9 +31,10 @@ export function Incidents() {
             </time>
             <div>
               <p className={styles.incidentTitle}>{incident.title}</p>
-              <p className={styles.incidentBody}>{incident.body}</p>
+              {/* One paragraph cut at two lines on every screen; the report
+                  has the rest (owner's review). */}
               <p className={styles.incidentBody}>
-                <b>{text.solution}</b> {incident.solution}
+                {incident.body} <b>{text.solution}</b> {incident.solution}
               </p>
             </div>
             <span className={styles.incidentLink}>

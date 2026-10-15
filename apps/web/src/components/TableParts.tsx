@@ -58,6 +58,12 @@ export interface TableShape {
   minWidth: string;
 }
 
+// The table's minimum width as a custom property, so CSS can drop it on
+// phones, where rows stack instead of scrolling (ADR-0047).
+export function tableStyle(shape: TableShape): CSSProperties {
+  return { "--table-min-width": `var(${shape.minWidth})` } as CSSProperties;
+}
+
 // A fixed column width from a design token; the column without one takes
 // the remaining width.
 export function columnStyle(token: string | null): CSSProperties | undefined {

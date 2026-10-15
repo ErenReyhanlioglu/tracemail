@@ -1,18 +1,24 @@
 "use client";
 
 // Ends the session through the API, then returns to the public health panel
-// (ADR-0040). Collapsed, only its icon shows; the label stays readable.
+// (ADR-0040). Styled by its place (sidebar footer or the phone's top bar);
+// where only its icon shows, the label stays readable.
 import { useRouter } from "next/navigation";
 
 import { PANEL_PATH } from "@/lib/paths";
 import { strings } from "@/lib/strings";
 
-import { SignOutIcon } from "./icons/NavIcons";
-import styles from "./Sidebar.module.css";
+import { SignOutIcon } from "../icons/NavIcons";
 
 const LOGOUT_URL = "/api/v1/auth/logout";
 
-export function SignOutButton() {
+export function SignOutButton({
+  className,
+  labelClassName,
+}: {
+  className?: string;
+  labelClassName?: string;
+}) {
   const router = useRouter();
 
   async function signOut(): Promise<void> {
@@ -24,12 +30,12 @@ export function SignOutButton() {
   return (
     <button
       type="button"
-      className={styles.footerAction}
+      className={className}
       title={strings.account.signOut}
       onClick={() => void signOut()}
     >
       <SignOutIcon />
-      <span className={styles.label}>{strings.account.signOut}</span>
+      <span className={labelClassName}>{strings.account.signOut}</span>
     </button>
   );
 }

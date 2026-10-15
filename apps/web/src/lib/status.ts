@@ -6,6 +6,8 @@ import { strings } from "@/lib/strings";
 export interface Badge {
   tone: BadgeTone;
   label: string;
+  // What a screen reader says, when the label is a short form.
+  spoken?: string;
 }
 
 function statusBadge(application: Application): Badge | null {
@@ -28,7 +30,11 @@ export function badgesFor(application: Application): Badge[] {
   const badges: Badge[] = [];
   if (application.is_silent) {
     const days = application.days_since_last_event;
-    badges.push({ tone: "warning", label: strings.status.silentDays(days) });
+    badges.push({
+      tone: "warning",
+      label: strings.status.silentDays(days),
+      spoken: strings.status.silentDaysSpoken(days),
+    });
   }
   const status = statusBadge(application);
   if (status) {

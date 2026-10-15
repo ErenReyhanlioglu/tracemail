@@ -25,8 +25,10 @@
   white-space: nowrap;
 }
 
-.segment:hover {
-  color: var(--color-text);
+@media (hover: hover) {
+  .segment:hover {
+    color: var(--color-text);
+  }
 }
 
 .selected,
@@ -48,4 +50,59 @@
   font-weight: var(--weight-regular);
   line-height: var(--counter-line-height);
   text-align: center;
+}
+
+/* Phones (ADR-0047), after the owner's mockup: small separate chips in one
+   line; the toolbar row around them scrolls (ListPanel). */
+@media (--phone) {
+  .control {
+    flex-wrap: nowrap;
+    gap: var(--space-2);
+    padding: 0;
+    background: none;
+  }
+
+  .segment {
+    gap: var(--space-1);
+    height: var(--chip-height);
+    padding: 0 var(--space-3);
+    border: var(--border);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-2xs);
+  }
+
+  /* The count as a quiet number beside the label, not a pill of its own. */
+  .count {
+    min-width: 0;
+    padding: 0;
+    background: none;
+    color: var(--color-text-muted);
+    font-size: var(--text-2xs);
+    line-height: 1;
+  }
+
+  .selected,
+  .selected:hover {
+    border-color: var(--color-chip-active);
+    background: var(--color-chip-active);
+    color: var(--color-on-chip-active);
+  }
+
+  .selected .count {
+    color: inherit;
+    opacity: var(--count-on-chip-opacity);
+  }
+}
+
+/* Pressed (ADR-0047): an answer the moment it is pressed. */
+.segment {
+  transition: transform var(--press-duration) ease;
+}
+
+.segment:active {
+  transform: scale(var(--press-scale));
+}
+
+.segment:not(.selected):active {
+  background: var(--color-pressed);
 }

@@ -3,7 +3,7 @@
 // when the API cannot answer, the page says so instead of showing numbers.
 import type { Metadata } from "next";
 
-import { AppShell } from "@/components/AppShell";
+import { AppShell } from "@/components/shell/AppShell";
 import { Delivery } from "@/components/health/Delivery";
 import { History } from "@/components/health/History";
 import styles from "@/components/health/HealthPanel.module.css";

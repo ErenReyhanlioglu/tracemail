@@ -6,11 +6,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { AppShell } from "@/components/AppShell";
+import { AppShell } from "@/components/shell/AppShell";
 import { LockedPage } from "@/components/locked/LockedPage";
 import { ApplicationTable } from "@/components/ApplicationTable";
 import { EmptyState, NoMatchState, UnavailableState } from "@/components/ListState";
 import { ListPanel } from "@/components/ListPanel";
+import { ListSummary } from "@/components/ListSummary";
 import panelStyles from "@/components/ListPanel.module.css";
 import { Pagination } from "@/components/Pagination";
 import { SearchBox } from "@/components/SearchBox";
@@ -48,6 +49,8 @@ import styles from "../list.module.css";
 export const dynamic = "force-dynamic";
 
 const PATH = "/applications";
+// Phones sort by the last event only, the one date a phone row shows.
+const PHONE_SORT_KEY: ApplicationSortKey = "last_event";
 const text = strings.applications;
 
 // Behind login: never indexed, whatever the response status (ADR-0039).
@@ -204,10 +207,21 @@ function ApplicationList({
       </ListPanel>
     );
   }
+  const byLastEvent = filters.sort.key === PHONE_SORT_KEY;
+  const filtered = filters.filter !== "all" || filters.search !== "";
   return (
     <ListPanel
       start={start}
       end={end}
+      summary={
+        <ListSummary
+          clearHref={filtered ? at({ ...filters, filter: "all", search: "" }, size) : null}
+          clearLabel={text.clearFilters}
+          sortLabel={text.columns.lastEvent}
+          sortHref={at({ ...filters, sort: nextSort(filters.sort, PHONE_SORT_KEY) }, size)}
+          order={byLastEvent ? filters.sort.order : null}
+        />
+      }
       footer={
         <Pagination
           location={location(filters)}

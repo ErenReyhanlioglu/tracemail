@@ -62,8 +62,16 @@
   cursor: pointer;
 }
 
-.select:hover {
-  border-color: var(--color-text-muted);
+@media (hover: hover) {
+  .select:hover {
+    border-color: var(--color-text-muted);
+  }
+}
+
+/* Page links: the phone window shows on phones only (after .pages, below,
+   it would lose to its display, so both name the list). */
+.pages.phone {
+  display: none;
 }
 
 /* Page links */
@@ -100,10 +108,12 @@
   font-family: var(--font-mono);
 }
 
-.step:hover,
-.number:hover {
-  background: var(--color-surface);
-  border-color: var(--color-text-muted);
+@media (hover: hover) {
+  .step:hover,
+  .number:hover {
+    background: var(--color-surface);
+    border-color: var(--color-text-muted);
+  }
 }
 
 .current,
@@ -136,4 +146,65 @@
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+/* Phones (ADR-0047), after the owner's mockup: the page links alone,
+   centred; the size is fixed at the default and the count sits above the
+   list (ListSummary). */
+@media (--phone) {
+  /* On the rows' surface tone (DataTable). */
+  .bar {
+    justify-content: center;
+    padding: var(--space-4);
+    background: var(--color-surface);
+  }
+
+  .side:first-child {
+    display: none;
+  }
+
+  .pages {
+    gap: var(--space-1);
+  }
+
+  .pages.wide {
+    display: none;
+  }
+
+  .pages.phone {
+    display: flex;
+  }
+
+  .step,
+  .number {
+    height: var(--chip-height);
+    min-width: var(--chip-height);
+    border-radius: var(--radius-md);
+  }
+
+  .gap {
+    min-width: var(--space-4);
+  }
+}
+
+/* Pressed (ADR-0047): an answer the moment it is pressed. */
+.step,
+.number {
+  transition:
+    transform var(--press-duration) ease,
+    background-color var(--press-duration) ease;
+}
+
+.step:not(.disabled):active,
+.number:not(.current):active {
+  transform: scale(var(--press-scale));
+  background: var(--color-pressed);
+}
+
+.select {
+  transition: transform var(--press-duration) ease;
+}
+
+.select:active {
+  transform: scale(var(--press-scale));
 }

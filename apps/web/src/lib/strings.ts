@@ -13,6 +13,14 @@ export const strings = {
     applications: "Başvurularım",
     reports: "Eşleşme raporları",
     health: "Sağlık paneli",
+    // The phone's bottom bar (ADR-0047): five labels across 320 px.
+    short: {
+      overview: "Özet",
+      postings: "İlanlar",
+      applications: "Başvurular",
+      reports: "Raporlar",
+      health: "Sağlık",
+    },
     // Not shown as text: for screen readers and the collapsed tooltip.
     comingLater: "yakında",
     ownerOnly: "yalnızca hesap sahibi",
@@ -44,7 +52,7 @@ export const strings = {
   health: {
     title: "Sağlık paneli",
     intro:
-      "TraceMail, bir iş arama sürecini izleyen kişisel bir veri sistemidir. Başvuru mail kutusunu saatte bir okur, başvuruların ve gelen ilanların durumunu çıkarır. Bu sayfa sistemin kendi çalışmasını gösterir ve kişisel veri içermez.",
+      "TraceMail, gelen postaları izleyen kişisel bir veri sistemidir. Posta kutusunu saatte bir okur, başvuruların ve gelen ilanların durumunu çıkarır. Bu sayfa sistemin kendi çalışmasını gösterir.",
     linksLabel: "Bağlantılar",
     sourceCode: "Kaynak kodu",
     decisions: "Mimari kararlar",
@@ -54,29 +62,36 @@ export const strings = {
       late: "Çalışma gecikti",
       failed: "Son çalışma başarısız",
       noRun: "Henüz çalışma yok",
-      lastRun: (time: string, ago: string) => `son çalışma ${time}, ${ago}`,
-      minutesAgo: (minutes: number) => `${minutes} dk önce`,
-      hoursAgo: (hours: number) => `${hours} saat önce`,
-      daysAgo: (days: number) => `${days} gün önce`,
-      streak: (hours: number) => `${hours} saattir kesintisiz`,
+      // Label and value apart, so the values can stand out (ADR-0047).
+      lastRun: "son çalışma",
+      minutesAgo: (minutes: number) => `${minutes} dk`,
+      hoursAgo: (hours: number) => `${hours} saat`,
+      daysAgo: (days: number) => `${days} gün`,
+      ago: "önce",
+      streak: (hours: number) => `${hours} saat`,
+      streakLabel: "kesintisiz",
       version: "sürüm",
     },
+    // Short enough for one legend line on a phone (ADR-0047).
     cells: {
       ok: "sorunsuz",
-      skipped: "atlandı, yeni veri yok",
+      skipped: "atlandı",
       late: "gecikme",
       failed: "hata",
       none: "kayıt yok",
     },
     stages: {
       title: "Veri nasıl akıyor",
-      aside: "Oracle Cloud · Airflow · tracemail_hourly · saatlik",
+      aside: "Oracle Cloud · Airflow · tracemail_hourly",
       stage: "Aşama",
       state: "Durum",
       window: "son 24 saat",
       lastProcessed: "Son işlem",
       median: "Medyan süre",
       medianWindow: "son 7 gün",
+      // A stage's detail line on phones (ADR-0047).
+      lastRunShort: "son işlem",
+      medianShort: "medyan",
       running: "Çalışıyor",
       late: "Gecikti",
       failed: "Hata",
@@ -90,20 +105,18 @@ export const strings = {
     },
     history: {
       title: "Son 30 gün",
-      aside: "gün başına bir kutu",
       from: "30 gün önce",
       today: "bugün",
       freshnessName: "Zamanında işlenen saatler",
-      freshnessDetail: (hours: number) =>
-        `Her saatin verisi en geç ${hours} saat içinde panele ulaştı mı.`,
+      // A short note instead of a sentence (owner's review).
+      freshnessDetail: (hours: number) => `en geç ${hours} saatte`,
       objective: (percent: string) => `hedef ${percent}`,
       onTime: (onTime: number, hours: number) => `${onTime} / ${hours} saat zamanında`,
       dbtName: "dbt build",
-      dbtDetail: (models: number, tests: number) =>
-        `${models} model kuruldu ve ${tests} test geçti mi.`,
       buildsOk: "build başarılı",
       lastBuild: (passed: number, tests: number, documented: number, models: number) =>
-        `son build ${passed} / ${tests} test, ${documented} / ${models} model belgeli`,
+        // Without spaces around the slashes, so it fits one phone line.
+        `son build ${passed}/${tests} test, ${documented}/${models} model belgeli`,
     },
     resources: {
       title: "Kaynak kullanımı",
@@ -118,38 +131,34 @@ export const strings = {
       now: "şu an",
       used: "kullanılan",
       projected: "ay sonu tahmini",
-      limit: "aylık kotanın %85'i",
+      // The dashed line: the 85% rule (ADR-0017).
+      limit: "%85",
     },
     delivery: {
       title: "Teslimat",
-      aside: "GitHub Actions · production · son 30 gün",
+      aside: "GitHub Actions · production",
       deployments: "Deploy'lar",
-      failedAttempts: (count: number) => `deploy · ${count} başarısız deneme`,
+      failedAttempts: (count: number) => `${count} başarısız deneme`,
       lastDeploy: (time: string) => `son deploy ${time}`,
       leadTime: "Değişiklikten yayına",
-      leadTimeCaption: (count: number) => `ilk commit'ten · medyan · ${count} değişiklik`,
       changeFailure: "Değişiklik hatası",
-      changeFailureCaption: "acil müdahale gereken deploy",
       recovery: "Kurtarma süresi",
-      recoveryCaption: (count: number) => `medyan · ${count} olay`,
       rework: "Plansız deploy",
-      reworkCaption: "bir olayı düzeltmek için",
       released: "Yayın",
       change: "Değişiklik",
       duration: "Süre",
       noPullRequest: "doğrudan commit",
       unavailable: "Teslimat verileri şu an alınamıyor.",
       cells: {
-        ok: "deploy edildi",
+        ok: "deploy",
         skipped: "deploy yok",
-        failed: "acil müdahale gerekti",
+        failed: "acil müdahale",
         none: "kayıt yok",
       },
     },
     incidents: {
       title: "Olay kaydı",
-      aside: "raporlar GitHub'da",
-      open: "Raporu aç",
+      open: "Rapor",
       solution: "Çözüm.",
       // Owner-approved summaries of docs/incidents (CLAUDE.md, Incidents).
       items: [
@@ -194,8 +203,11 @@ export const strings = {
       muteOn: "Sesi kapat",
       muteOff: "Sesi aç",
       hint: "SPACE · ↑ · TIK İLE ZIPLA",
+      // Touch screens have no Space key (ADR-0047).
+      hintTouch: "DOKUN VE ZIPLA",
       over: "POSTA TESLİM EDİLEMEDİ",
       restart: "TEKRAR İÇİN SPACE",
+      restartTouch: "TEKRAR İÇİN DOKUN",
     },
   },
   search: {
@@ -229,10 +241,10 @@ export const strings = {
     filterLabel: "Durum",
     filters: {
       all: "Tümü",
-      waiting: "Yanıt bekleniyor",
+      waiting: "Yanıtsız",
       inProgress: "İlerleme",
       rejected: "Ret",
-      closed: "Yanıtsız kapandı",
+      closed: "Kapandı",
     },
     columns: {
       application: "Pozisyon ve şirket",
@@ -297,15 +309,15 @@ export const strings = {
     noMatch: "Eşleşen ilan yok.",
     clearFilters: "Filtreleri temizle",
     searchPlaceholder: "Pozisyon veya şirket ara",
-    laterNote:
-      "Rol türü, kaba uygunluk ve eşleşme raporu sonraki aşamalarda bu tabloya eklenecek.",
   },
   status: {
-    applied: "Yanıt bekleniyor",
+    applied: "Yanıtsız",
     inProgress: "İlerleme",
     rejected: "Ret",
-    silentDays: (days: number) => `${days} gündür sessiz`,
-    closedWithoutReply: "yanıtsız kapandı",
+    // The badge shows the days; screen readers hear the sentence.
+    silentDays: (days: number) => `${days}+`,
+    silentDaysSpoken: (days: number) => `${days} gündür sessiz`,
+    closedWithoutReply: "Kapandı",
   },
   lastActivity: {
     today: "bugün",

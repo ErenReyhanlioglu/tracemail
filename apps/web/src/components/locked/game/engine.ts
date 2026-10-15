@@ -29,7 +29,7 @@ export interface GameController {
   destroy(): void;
 }
 
-type State = "closed" | "intro" | "morph" | "run" | "dying" | "over" | "closing";
+type State = "closed" | "intro" | "morph" | "run" | "dying" | "over" | "unmorph" | "closing";
 
 interface Obstacle {
   rows: Rows;
@@ -75,6 +75,14 @@ const NODES = TRACE + 1;
 const BUFFER_MS = 110;
 const FREEZE_MS = 75;
 const SHAKE_MS = 260;
+// Closing plays the opening's morph backwards, a little faster than its
+// 700 ms (owner's review): the trace folds back into the TraceMail dot.
+const UNMORPH_MS = 500;
+
+// The opening's ease, in and out (cubic).
+function easeInOut(raw: number): number {
+  return raw < 0.5 ? 4 * raw * raw * raw : 1 - Math.pow(-2 * raw + 2, 3) / 2;
+}
 
 function pad(n: number): string {
   return `00000${Math.floor(n)}`.slice(-5);
@@ -166,6 +174,12 @@ export function createGame(el: GameElements, audio: AudioContext | null): GameCo
   let state: State = "closed";
   let morphStart = 0;
   let morphP = 0;
+  // The morph's height above the ground: 0 when opening, the envelope's
+  // height when it is closed mid-jump.
+  let morphLift = 0;
+  // Where the backwards morph starts: 1 from the game, less when the
+  // opening morph is cut short.
+  let unmorphFrom = 1;
   let env: Envelope | null = null;
   let obs: Obstacle[] = [];
   let clouds: { x: number; y: number }[] = [];
@@ -331,6 +345,7 @@ export function createGame(el: GameElements, audio: AudioContext | null): GameCo
   function open(): void {
     if (state !== "closed") return;
     state = "intro";
+    morphLift = 0;
     mail.classList.add(el.readClass);
     sound.warm();
     reset();
@@ -339,6 +354,9 @@ export function createGame(el: GameElements, audio: AudioContext | null): GameCo
     later(
       () => {
         stage.classList.add(el.openClass);
+        // Also as an attribute, for the page around the stage to follow
+        // (LockedSection lifts it on phones; ADR-0047).
+        stage.dataset.open = "";
         placeMail(0);
         introStart = performance.now() + (reduce ? 0 : 250);
         raf(introLoop);
@@ -351,7 +369,7 @@ export function createGame(el: GameElements, audio: AudioContext | null): GameCo
     if (state !== "intro") return;
     const dur = reduce ? 1 : 750;
     const raw = Math.max(0, Math.min(1, (now - introStart) / dur));
-    introP = raw < 0.5 ? 4 * raw * raw * raw : 1 - Math.pow(-2 * raw + 2, 3) / 2;
+    introP = easeInOut(raw);
     draw();
     if (raw < 1 || now - introStart < (reduce ? 0 : 600)) {
       raf(introLoop);
@@ -368,7 +386,7 @@ export function createGame(el: GameElements, audio: AudioContext | null): GameCo
   function morphLoop(now: number): void {
     if (state !== "morph") return;
     const raw = reduce ? 1 : Math.min(1, (now - morphStart) / 700);
-    morphP = raw < 0.5 ? 4 * raw * raw * raw : 1 - Math.pow(-2 * raw + 2, 3) / 2;
+    morphP = easeInOut(raw);
     draw();
     if (raw < 1) {
       raf(morphLoop);
@@ -380,11 +398,34 @@ export function createGame(el: GameElements, audio: AudioContext | null): GameCo
     raf(loop);
   }
 
+  // Closing first folds the trace back into the dot (the opening's morph,
+  // backwards), where the envelope is, then hands over to the HTML envelope.
   function close(): void {
     if (state !== "run" && state !== "over" && state !== "morph") return;
-    const lift = env ? env.y : 0;
-    state = "closing";
+    unmorphFrom = state === "morph" ? morphP : 1;
+    morphLift = env ? env.y : 0;
+    shakeX = shakeY = 0;
     el.over.hidden = true;
+    state = "unmorph";
+    morphStart = performance.now();
+    raf(unmorphLoop);
+  }
+
+  function unmorphLoop(now: number): void {
+    if (state !== "unmorph") return;
+    const span = UNMORPH_MS * unmorphFrom;
+    const raw = reduce || span === 0 ? 1 : Math.min(1, (now - morphStart) / span);
+    morphP = unmorphFrom * (1 - easeInOut(raw));
+    draw();
+    if (raw < 1) {
+      raf(unmorphLoop);
+      return;
+    }
+    finishClose(morphLift);
+  }
+
+  function finishClose(lift: number): void {
+    state = "closing";
     mail.style.transition = "none";
     placeMail(lift);
     mail.hidden = false;
@@ -392,6 +433,7 @@ export function createGame(el: GameElements, audio: AudioContext | null): GameCo
     mail.style.transition = "";
     draw();
     stage.classList.remove(el.openClass);
+    delete stage.dataset.open;
     raf(() => {
       mail.style.left = "";
       mail.style.top = "";
@@ -721,7 +763,7 @@ export function createGame(el: GameElements, audio: AudioContext | null): GameCo
 
   function drawMorph(): void {
     const q = morphP;
-    const by = GROUND - EH;
+    const by = GROUND - EH - Math.round(morphLift);
     sprite(b, C, BODY, EX, by);
     b.fillStyle = C.ink;
     b.globalAlpha = 1 - q; // the logo's inner line and tail fade out
@@ -823,7 +865,13 @@ export function createGame(el: GameElements, audio: AudioContext | null): GameCo
     pebbles.forEach((pb) => {
       if (pb.x < gw) b.fillRect(Math.round(pb.x), pb.y, pb.w, 1);
     });
-    if (state === "morph") {
+    if (state === "morph" || state === "unmorph") {
+      if (state === "unmorph") {
+        // The obstacles fade with the trace instead of vanishing.
+        b.globalAlpha = morphP;
+        obs.forEach((o) => sprite(b, C, o.rows, o.x, o.y));
+        b.globalAlpha = 1;
+      }
       drawMorph();
       blit();
       return;
