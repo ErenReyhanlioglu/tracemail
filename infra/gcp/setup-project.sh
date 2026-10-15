@@ -156,13 +156,16 @@ setup_roles() {
   done
 
   # API: read the marts only. The health views reach further as authorized
-  # views; staging's views read ops on marts' behalf.
+  # views.
   grant_job_user "$API"
   grant_dataset "$API" roles/bigquery.dataViewer marts
   for dataset in landing ops staging intermediate; do
     authorize_dataset marts "$dataset"
   done
+  # Staging's views read ops (run records) and landing (deployments,
+  # ADR-0045) on marts' behalf.
   authorize_dataset staging ops
+  authorize_dataset staging landing
 }
 
 enable_apis
