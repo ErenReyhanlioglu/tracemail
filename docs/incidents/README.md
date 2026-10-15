@@ -81,6 +81,7 @@ YYYY-MM-DD (or: pending approval).
 | Date | Incident | Status |
 |---|---|---|
 | 2026-10-12 | [Manual runs without a logical date failed](2026-10-12-manual-runs-without-a-logical-date.md) | Resolved |
+| 2026-10-14 | [Health panel down after the delivery metrics deploy](2026-10-14-panel-down-after-the-delivery-deploy.md) | Mitigated |
 
 ## References
 
