@@ -172,6 +172,32 @@ export const strings = {
     footer: (time: string) =>
       `Veriler saatlik çalışma kayıtlarından · ${time} itibarıyla · saatler Türkiye saati`,
   },
+  // A private section seen by a visitor: what it holds, never its data.
+  locked: {
+    title: "Bu bölüm yalnızca hesap sahibine açık",
+    held: (what: string) =>
+      `${what} burada tutuluyor. Kişisel veri olduğu için bu sayfaya hiç gönderilmiyor.`,
+    sections: {
+      overview: "Başvuru sayıları, yanıt oranları ve takip bekleyenlerin özeti",
+      postings: "Gelen ilanlar ve profile uyum sıralaması",
+      applications: "Her başvurunun aşaması ve kaç gündür yanıt beklendiği",
+      reports: "İlan gereksinimlerinin profildeki kanıtla karşılaştırması",
+    },
+    panelLink: "Sistemin nasıl çalıştığını sağlık panelinde gör",
+    comingTitle: "Bu bölüm yakında",
+    comingBody: "Bu bölümün verisi sonraki aşamalarda gelecek.",
+    // The pixel font has no lowercase dotless i, so game text stays upper case.
+    game: {
+      mail: "1 yeni mail",
+      canvas: "Mini oyun. Zıplamak için Space, yukarı ok ya da tıklama.",
+      close: "Oyunu kapat",
+      muteOn: "Sesi kapat",
+      muteOff: "Sesi aç",
+      hint: "SPACE · ↑ · TIK İLE ZIPLA",
+      over: "POSTA TESLİM EDİLEMEDİ",
+      restart: "TEKRAR İÇİN SPACE",
+    },
+  },
   search: {
     label: "Ara",
   },
