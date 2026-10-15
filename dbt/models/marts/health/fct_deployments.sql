@@ -1,10 +1,11 @@
--- One row per commit sent to production (ADR-0045). Re-runs of the deploy
--- job and duplicate pushes collapse into the commit's first successful
--- deployment; failed attempts are counted beside it, and a commit that never
--- deployed keeps a row with no deployed_at. Lead time runs from the change's
--- first commit. Change failures and their fixes come from the owner-kept
--- seed: a fixing deployment is rework, and its recovery time runs from the
--- failure's detection. A read-time view.
+-- One row per commit sent to production (ADR-0045, ADR-0046). Re-runs of the
+-- deploy job and duplicate pushes collapse into the commit's first
+-- successful deployment; failed attempts are counted beside it, and a commit
+-- that never deployed keeps a row with no deployed_at. Lead time runs from
+-- the change's first commit. Change failures come from the owner-kept seed:
+-- a failure's recovery time runs from its detection to the recorded
+-- recovery, or else to the deployment of the pull request that fixed it,
+-- which is rework. A read-time view.
 
 with attempts as (
     select * from {{ ref('stg_github__deployments') }}
@@ -25,6 +26,25 @@ per_commit as (
         any_value(first_commit_at) as first_commit_at
     from attempts
     group by commit_sha
+),
+
+fixing as (
+    select pull_request_number, min(deployed_at) as deployed_at
+    from per_commit
+    where pull_request_number is not null
+    group by pull_request_number
+),
+
+recoveries as (
+    select
+        failures.failed_sha,
+        timestamp_diff(
+            coalesce(failures.recovered_at, fixing.deployed_at),
+            failures.detected_at,
+            second
+        ) as recovery_seconds
+    from failures
+    left join fixing on failures.fixed_pull_request = fixing.pull_request_number
 )
 
 select
@@ -37,10 +57,10 @@ select
     per_commit.first_commit_at,
     timestamp_diff(per_commit.deployed_at, per_commit.first_commit_at, second)
         as lead_time_seconds,
-    failed.failed_sha is not null as is_change_failure,
-    fixed.fixed_sha is not null as is_rework,
-    timestamp_diff(per_commit.deployed_at, fixed.detected_at, second)
-        as recovery_seconds
+    recoveries.failed_sha is not null as is_change_failure,
+    recoveries.recovery_seconds,
+    per_commit.pull_request_number in (
+        select fixed_pull_request from failures where fixed_pull_request is not null
+    ) as is_rework
 from per_commit
-left join failures as failed on per_commit.commit_sha = failed.failed_sha
-left join failures as fixed on per_commit.commit_sha = fixed.fixed_sha
+left join recoveries on per_commit.commit_sha = recoveries.failed_sha

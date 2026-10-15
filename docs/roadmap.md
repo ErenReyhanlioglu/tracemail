@@ -7,29 +7,19 @@ one branch and one or more pull requests.
 
 ## Now
 
-**Phase 1, step 1.12: phase exit.** Done when production runs 48 consecutive
-hourly intervals with no missed run and no failed step; the owner then cuts
-`v0.1.0` ([ADR-0043](adr/0043-phase-1-exit-criterion.md), ADR-0002). The
-streak started at the 2026-10-12 17:00 UTC interval.
+**VM usage on the panel**, the last step before Phase 2: the Oracle VM's
+CPU, memory, and network over 7 days against the 20% idle-reclamation
+threshold ([infra/vm](../infra/vm/README.md)), read from Oracle's
+monitoring. It needs new access to Oracle, so it starts with an ADR.
+
+Phase 1 ended with `v0.1.0` on 2026-10-14 ([ADR-0043](adr/0043-phase-1-exit-criterion.md)).
+Since then: the health panel core ([ADR-0044](adr/0044-health-panel-core-metrics.md))
+and delivery metrics ([ADR-0045](adr/0045-delivery-metrics.md),
+[ADR-0046](adr/0046-failure-list-by-pull-request-and-separate-delivery-query.md)).
 
 ## Next
 
-In this order ([ADR-0044](adr/0044-health-panel-core-metrics.md)):
-
-1. **Health panel core**, ahead of Phase 2: one row per pipeline stage with
-   its last 24 hours, the 2-hour freshness SLO against a 99% objective over
-   30 days, dbt builds over 30 days, all five free-tier allowances against
-   the 85% line, and the incident log. It needs `marts` authorized on
-   `staging` and `ops`, a public API router with whitelisted schemas and the
-   privacy test, caching, and rate limiting. Application, posting, and mail
-   counts stay private.
-2. **Delivery metrics (DORA)**: GitHub deployment records into `ops`, shown
-   beside the run history.
-3. **VM usage on the panel**: the Oracle VM's CPU, memory, and network over
-   7 days against the 20% idle-reclamation threshold
-   ([infra/vm](../infra/vm/README.md)), read from Oracle's monitoring. It
-   needs new access to Oracle, so it starts with an ADR.
-4. **Phase 2.**
+**Phase 2.**
 
 Alongside:
 
@@ -48,6 +38,11 @@ Alongside:
 
 Not urgent; each is picked up when it starts to matter.
 
+- Build dbt when a deploy changes dbt models, so new views exist before the
+  code that reads them (incident 2026-10-14, open action item).
+- dbt node retries are frequent: 20 `dbt_node_retry` records against 22
+  builds from 2026-10-12 to 2026-10-14, every build successful. Find why
+  Cosmos's sensors re-run nodes after a passing build (ADR-0029).
 - Every merge restarts the stack, documentation-only merges included
   ([infra/vm](../infra/vm/README.md)); narrow the deploy trigger if restarts
   start to interrupt runs.
@@ -77,7 +72,7 @@ from any device, running hourly in production. No LLM.
 | 1.9 | API with Google sign-in and the privacy test (ADR-0015, ADR-0032) | Done |
 | 1.10 | Web app: login, application and posting lists (ADR-0033, ADR-0034) | Done |
 | 1.11 | Production: VM, deploys, Cloudflare Tunnel, domain (ADR-0010, ADR-0012, ADR-0016, ADR-0035 to ADR-0038) | Done 2026-10-14 |
-| 1.12 | Phase exit, `v0.1.0` (ADR-0043) | In progress |
+| 1.12 | Phase exit, `v0.1.0` (ADR-0043) | Done 2026-10-14 |
 
 ## Phase 2: Intelligence
 

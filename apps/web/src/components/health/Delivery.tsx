@@ -34,7 +34,7 @@ function Measures({ delivery }: { delivery: DeliveryData }) {
     {
       name: text.recovery,
       value: duration(delivery.median_recovery_seconds),
-      caption: text.recoveryCaption(delivery.rework_deployments),
+      caption: text.recoveryCaption(delivery.recovered_failures),
     },
     { name: text.rework, value: ratio(delivery.rework_deployments), caption: text.reworkCaption },
   ];
@@ -92,17 +92,33 @@ function Recent({ deployments }: { deployments: RecentDeployment[] }) {
   );
 }
 
+function Head() {
+  return (
+    <div className={styles.head}>
+      <h2 id="delivery-title" className={styles.heading}>
+        {text.title}
+      </h2>
+      <span className={styles.aside}>{text.aside}</span>
+    </div>
+  );
+}
+
+// The delivery data is read apart from the rest of the panel (ADR-0045):
+// when it cannot be read, only this section says so.
 export function Delivery({ panel }: { panel: HealthPanel }) {
   const delivery = panel.delivery;
+  if (delivery === null) {
+    return (
+      <section className={styles.section} aria-labelledby="delivery-title">
+        <Head />
+        <p className={`${styles.card} ${styles.unavailable}`}>{text.unavailable}</p>
+      </section>
+    );
+  }
   const last = delivery.last_deployed_at;
   return (
     <section className={styles.section} aria-labelledby="delivery-title">
-      <div className={styles.head}>
-        <h2 id="delivery-title" className={styles.heading}>
-          {text.title}
-        </h2>
-        <span className={styles.aside}>{text.aside}</span>
-      </div>
+      <Head />
       <div className={styles.card}>
         <HistoryRow
           name={text.deployments}

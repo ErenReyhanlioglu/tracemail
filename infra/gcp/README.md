@@ -28,8 +28,9 @@ Notes:
   create-only precondition in code (ADR-0006), not through IAM.
 - `tm-api` reads only `marts`. The health views there select from other
   datasets (ADR-0044), so `marts` is an authorized dataset on `landing`,
-  `ops`, `staging`, and `intermediate`, and `staging` on `ops`, whose views
-  the health views read through. Any view in `marts` can then read those
+  `ops`, `staging`, and `intermediate`, and `staging` on `ops` and
+  `landing`, whose views the health views read through. The `landing` grant
+  was missing until the delivery views needed it (incident 2026-10-14). Any view in `marts` can then read those
   datasets; `tm-api` itself still cannot. The run-record views leave the
   error message out (CLAUDE.md, Privacy).
 

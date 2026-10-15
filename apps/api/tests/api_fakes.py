@@ -150,6 +150,7 @@ def health_panel_row() -> HealthPanel:
                 "changes_with_lead_time": 14,
                 "change_failures": 1,
                 "median_recovery_seconds": 20571.0,
+                "recovered_failures": 1,
                 "rework_deployments": 1,
                 "last_deployed_at": started,
             },

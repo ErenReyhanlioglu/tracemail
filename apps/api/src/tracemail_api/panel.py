@@ -111,6 +111,8 @@ class Delivery(BaseModel):
     changes_with_lead_time: int
     change_failures: int
     median_recovery_seconds: float | None
+    # Failures with a recovery time: the count behind the median.
+    recovered_failures: int
     rework_deployments: int
     last_deployed_at: datetime | None
 
@@ -145,7 +147,8 @@ class HealthPanel(BaseModel):
     dbt_days: list[BuildDay]
     last_build: LastBuild | None
     resources: list[Resource]
-    delivery: Delivery
+    # None when the delivery data cannot be read; the rest still shows.
+    delivery: Delivery | None
     delivery_days: list[DeliveryDay]
     recent_deployments: list[RecentDeployment]
 

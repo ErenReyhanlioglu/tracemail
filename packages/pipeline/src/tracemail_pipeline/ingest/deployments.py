@@ -7,6 +7,11 @@ commit with that pull request's commits, for the change's first commit. The
 key is the deployment's own id under its UTC creation date, so a re-run
 writes the same key and the create-only precondition makes it a no-op; a
 deployment still running is left for a later run. Nothing is listed in GCS.
+
+A deployment already stored is skipped before any GitHub request: one
+existence check (GCS Class B) instead of three requests against an hourly
+limit of 60. Without it, a backfill re-fetched every stored deployment and
+used up the limit (incident 2026-10-14).
 """
 
 import json
@@ -43,6 +48,8 @@ class DeploymentIngestResult(BaseModel):
     written_days: list[date] = []
     bytes_written: int = 0
     github_requests: int = 0
+    # Existence checks before any GitHub request (Class B).
+    gcs_existence_checks: int = 0
     # Objects created (Class A); a write rejected as already stored returns
     # 412 and is not billed.
     gcs_writes: int = 0
@@ -101,6 +108,12 @@ def _store_deployment(
     days: set[date],
 ) -> None:
     """Write one deployment once it has finished."""
+    day = created_at(deployment).date()
+    key = deployment_object_key(day, deployment["id"])
+    result.gcs_existence_checks += 1
+    if store.exists(key):
+        result.already_stored += 1
+        return
     statuses = api.get(f"/deployments/{deployment['id']}/statuses")
     if not statuses or statuses[0]["state"] not in TERMINAL_STATES:
         result.unfinished += 1
@@ -111,10 +124,7 @@ def _store_deployment(
         **_change(api, deployment),
     }
     data = json.dumps(record, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    day = created_at(deployment).date()
-    if store.write_once(
-        deployment_object_key(day, deployment["id"]), data, JSON_CONTENT_TYPE
-    ):
+    if store.write_once(key, data, JSON_CONTENT_TYPE):
         result.written += 1
         result.gcs_writes += 1
         result.bytes_written += len(data)
