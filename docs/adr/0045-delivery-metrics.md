@@ -1,7 +1,7 @@
 # ADR-0045: Delivery Metrics (DORA) — Source, Failure Definition, and Lead Time
 
 **Date:** 2026-10-14
-**Status:** Accepted (not yet implemented)
+**Status:** Accepted; failure list amended by ADR-0046
 
 ## Context
 

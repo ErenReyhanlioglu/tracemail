@@ -59,4 +59,5 @@ written at the moment the decision is made — not drafted ahead of time.
 | [0042](0042-list-toolbar-and-status-groups.md) | List Toolbar — Status Groups, Segmented Filter, Search, Period Menu, and Sorting | Accepted |
 | [0043](0043-phase-1-exit-criterion.md) | Phase 1 Exit — 48 Hours of Uninterrupted Hourly Runs, LinkedIn History after `v0.1.0` | Accepted |
 | [0044](0044-health-panel-core-metrics.md) | Health Panel Core — What to Measure and Show before Phase 2 | Accepted |
-| [0045](0045-delivery-metrics.md) | Delivery Metrics (DORA) — Source, Failure Definition, and Lead Time | Accepted (not yet implemented) |
+| [0045](0045-delivery-metrics.md) | Delivery Metrics (DORA) — Source, Failure Definition, and Lead Time | Accepted; failure list amended by ADR-0046 |
+| [0046](0046-failure-list-by-pull-request-and-separate-delivery-query.md) | Failure List by Pull Request, and a Separate Delivery Query | Accepted |
