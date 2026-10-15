@@ -34,7 +34,7 @@ with runs as (
                 + coalesce(int64(metrics.gcs_metadata_reads), 0)
             -- Existence checks before large uploads (ADR-0036). Writes
             -- rejected as already stored return 412 and are not billed.
-            when job_name = 'ingest_mail'
+            when job_name in ('ingest_mail', 'ingest_deployments')
                 then coalesce(int64(metrics.gcs_existence_checks), 0)
         end as gcs_class_b,
         case

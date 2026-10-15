@@ -102,6 +102,10 @@ def test_finished_deployment_in_the_window_is_stored_once_as_json(
     )
     assert (second.written, second.already_stored, second.written_days) == (0, 1, [])
     assert first.github_requests == 4
+    # The second run asks GitHub only for the list: the stored deployment is
+    # skipped before its statuses, pull request, and commits are requested.
+    assert second.github_requests == 5
+    assert second.gcs_existence_checks == 1
 
 
 def test_deployment_still_running_is_left_for_a_later_run(
