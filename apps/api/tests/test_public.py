@@ -1,12 +1,14 @@
 """Tests for the public health-panel endpoint: schema, cache, rate limit."""
 
 import asyncio
+import logging
 from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
 from api_fakes import FakeMarts, api_client, make_settings
+from google.api_core.exceptions import Forbidden
 
 from tracemail_api.panel import HealthPanel, StageRow, StageState
 from tracemail_api.rate_limit import WINDOW_SECONDS, RateLimiter
@@ -95,30 +97,16 @@ def test_health_panel_reads_null_sections_as_empty_lists() -> None:
             "dbt_days": None,
             "last_build": None,
             "resources": None,
-            **{
-                key: PANEL_ROW[key]
-                for key in ("delivery", "delivery_days", "recent_deployments")
-            },
+            **DELIVERY_ROW,
         }
     )
     assert panel.stages == [] and panel.resources == []
-    assert panel.recent_deployments == [] and panel.delivery.deployments == 0
+    assert panel.recent_deployments == []
+    assert panel.delivery is not None and panel.delivery.deployments == 0
 
 
 PANEL_ROW: dict[str, Any] = {
     "last_ingest": None,
-    "delivery": {
-        "deployments": 0,
-        "failed_attempts": 0,
-        "median_lead_time_seconds": None,
-        "changes_with_lead_time": 0,
-        "change_failures": 0,
-        "median_recovery_seconds": None,
-        "rework_deployments": 0,
-        "last_deployed_at": None,
-    },
-    "delivery_days": None,
-    "recent_deployments": None,
     "on_time_streak_hours": 0,
     "stages": None,
     "freshness_days": None,
@@ -133,6 +121,21 @@ PANEL_ROW: dict[str, Any] = {
         }
     ],
 }
+DELIVERY_ROW: dict[str, Any] = {
+    "delivery": {
+        "deployments": 0,
+        "failed_attempts": 0,
+        "median_lead_time_seconds": None,
+        "changes_with_lead_time": 0,
+        "change_failures": 0,
+        "median_recovery_seconds": None,
+        "recovered_failures": 0,
+        "rework_deployments": 0,
+        "last_deployed_at": None,
+    },
+    "delivery_days": None,
+    "recent_deployments": None,
+}
 STORAGE_ROW: dict[str, Any] = {
     "allowance": "bigquery_storage_bytes",
     "used_to_date": 1_600_000,
@@ -140,11 +143,16 @@ STORAGE_ROW: dict[str, Any] = {
 }
 
 
-def test_reader_runs_the_panel_and_storage_queries_with_parameters() -> None:
+def rows(row: dict[str, Any]) -> list[MagicMock]:
+    return [MagicMock(items=row.items)]
+
+
+def test_reader_runs_panel_storage_and_delivery_queries_with_parameters() -> None:
     client = MagicMock()
     client.query.return_value.result.side_effect = [
-        [MagicMock(items=PANEL_ROW.items)],
-        [MagicMock(items=STORAGE_ROW.items)],
+        rows(PANEL_ROW),
+        rows(STORAGE_ROW),
+        rows(DELIVERY_ROW),
     ]
     [panel] = asyncio.run(MartsReader(client, make_settings()).health_panel())
     assert [r.allowance for r in panel.resources] == [
@@ -152,14 +160,42 @@ def test_reader_runs_the_panel_and_storage_queries_with_parameters() -> None:
         "bigquery_storage_bytes",
     ]
     assert panel.resources[1].projected_month is None
-    first, second = client.query.call_args_list
-    assert "from fct_hourly_stages" in first.args[0]
-    assert "from fct_bigquery_storage" in second.args[0]
-    params = {p.name: p.value for p in first.kwargs["job_config"].query_parameters}
-    assert params == {
+    main, storage, delivery = client.query.call_args_list
+    assert "from fct_hourly_stages" in main.args[0]
+    assert "from fct_bigquery_storage" in storage.args[0]
+    assert "from fct_deployments" in delivery.args[0]
+    assert "fct_deployments" not in main.args[0]
+
+    def params(call: Any) -> dict[str, Any]:
+        return {p.name: p.value for p in call.kwargs["job_config"].query_parameters}
+
+    assert params(main) == {
         "display_timezone": "Europe/Istanbul",
         "window_days": 30,
         "stage_hours": 24,
         "median_days": 7,
+    }
+    assert params(delivery) == {
+        "display_timezone": "Europe/Istanbul",
+        "window_days": 30,
         "recent_deployments": 5,
     }
+
+
+def test_unreadable_delivery_leaves_the_rest_of_the_panel_up(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    client = MagicMock()
+    denied = Forbidden("Access Denied: Table landing.github_deployments")  # type: ignore[no-untyped-call]
+    client.query.return_value.result.side_effect = [
+        rows(PANEL_ROW),
+        rows(STORAGE_ROW),
+        denied,
+    ]
+    with caplog.at_level(logging.WARNING):
+        [panel] = asyncio.run(MartsReader(client, make_settings()).health_panel())
+    assert panel.delivery is None
+    assert panel.delivery_days == [] and panel.recent_deployments == []
+    assert len(panel.resources) == 2
+    assert "Delivery section unavailable (Forbidden)" in caplog.text
+    assert "github_deployments" not in caplog.text

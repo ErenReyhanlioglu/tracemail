@@ -138,6 +138,7 @@ export const strings = {
       change: "Değişiklik",
       duration: "Süre",
       noPullRequest: "doğrudan commit",
+      unavailable: "Teslimat verileri şu an alınamıyor.",
       cells: {
         ok: "deploy edildi",
         skipped: "deploy yok",
@@ -152,6 +153,13 @@ export const strings = {
       solution: "Çözüm.",
       // Owner-approved summaries of docs/incidents (CLAUDE.md, Incidents).
       items: [
+        {
+          date: "2026-10-14",
+          title: "Sağlık paneli 18 dakika kapalı kaldı.",
+          body: "Bir deploy, üretimde henüz oluşmamış veriyi okudu.",
+          solution: "Her bölüm artık kendi verisini ayrı yüklüyor.",
+          report: "2026-10-14-panel-down-after-the-delivery-deploy.md",
+        },
         {
           date: "2026-10-12",
           title: "Bir manuel çalıştırma başarısız oldu.",

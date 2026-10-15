@@ -60,6 +60,7 @@ export interface Delivery {
   changes_with_lead_time: number;
   change_failures: number;
   median_recovery_seconds: number | null;
+  recovered_failures: number;
   rework_deployments: number;
   last_deployed_at: string | null;
 }
@@ -88,7 +89,8 @@ export interface HealthPanel {
   dbt_days: BuildDay[];
   last_build: LastBuild | null;
   resources: Resource[];
-  delivery: Delivery;
+  // Null when the delivery data cannot be read; the rest still shows.
+  delivery: Delivery | null;
   delivery_days: DeliveryDay[];
   recent_deployments: RecentDeployment[];
 }

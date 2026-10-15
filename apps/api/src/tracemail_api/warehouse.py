@@ -8,11 +8,14 @@ so every call runs in a worker thread.
 """
 
 import asyncio
+import logging
 from collections.abc import Sequence
 from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
+from google.api_core.exceptions import GoogleAPIError
+from google.auth.exceptions import GoogleAuthError
 from google.cloud import bigquery
 from pydantic import BaseModel
 
@@ -23,14 +26,22 @@ from tracemail_api.panel import (
     STAGE_HOURS,
     WINDOW_DAYS,
     HealthPanel,
-    Resource,
 )
+
+logger = logging.getLogger(__name__)
 
 SQL_DIR = Path(__file__).parent / "sql"
 APPLICATIONS_SQL = SQL_DIR / "applications.sql"
 POSTINGS_SQL = SQL_DIR / "postings.sql"
 HEALTH_PANEL_SQL = SQL_DIR / "health_panel.sql"
 BIGQUERY_STORAGE_SQL = SQL_DIR / "bigquery_storage.sql"
+DELIVERY_SQL = SQL_DIR / "delivery.sql"
+# An unreadable delivery section reads as no data (ADR-0045).
+EMPTY_DELIVERY: dict[str, Any] = {
+    "delivery": None,
+    "delivery_days": None,
+    "recent_deployments": None,
+}
 # Local dates on the panel follow the owner's calendar (dbt display_timezone).
 DISPLAY_TIMEZONE_NAME = "Europe/Istanbul"
 # Tables whose rebuild marks new data (dbt rebuilds them only when landing
@@ -112,34 +123,49 @@ class MartsReader:
         return [PostingRow.model_validate(row) for row in rows]
 
     async def health_panel(self) -> list[HealthPanel]:
-        """The public health panel: one query for run history and deployments
-        (billed 10 MiB per table it reads: 30 MiB, measured) and one for
-        storage metadata (billed 0, ADR-0044, ADR-0045)."""
-        params = [
-            bigquery.ScalarQueryParameter(
-                "display_timezone", "STRING", DISPLAY_TIMEZONE_NAME
-            ),
-            bigquery.ScalarQueryParameter("window_days", "INT64", WINDOW_DAYS),
+        """The public health panel from three queries (ADR-0044, ADR-0045):
+        run history (billed the 10 MiB minimum), storage metadata (billed 0),
+        and delivery (two tables, 20 MiB). Delivery is read on its own: if its
+        data is missing or unreadable, only that section is empty."""
+        timezone = bigquery.ScalarQueryParameter(
+            "display_timezone", "STRING", DISPLAY_TIMEZONE_NAME
+        )
+        window = bigquery.ScalarQueryParameter("window_days", "INT64", WINDOW_DAYS)
+        main = [
+            timezone,
+            window,
             bigquery.ScalarQueryParameter("stage_hours", "INT64", STAGE_HOURS),
             bigquery.ScalarQueryParameter("median_days", "INT64", MEDIAN_DAYS),
-            bigquery.ScalarQueryParameter(
-                "recent_deployments", "INT64", RECENT_DEPLOYMENTS
-            ),
         ]
-        rows = await asyncio.to_thread(self._query, HEALTH_PANEL_SQL, params)
+        rows = await asyncio.to_thread(self._query, HEALTH_PANEL_SQL, main)
         storage = await asyncio.to_thread(self._query, BIGQUERY_STORAGE_SQL)
+        delivery = await self._delivery([timezone, window])
+        extra = [{**row, "projected_month": None} for row in storage]
         panel = HealthPanel.model_validate(
             {
                 **rows[0],
+                **delivery,
+                "resources": [*(rows[0]["resources"] or []), *extra],
                 "read_at": datetime.now(UTC),
                 "freshness_target_hours": self._freshness_target_hours,
                 "freshness_objective_percent": self._freshness_objective_percent,
             }
         )
-        extra = [
-            Resource.model_validate({**row, "projected_month": None}) for row in storage
-        ]
-        return [panel.model_copy(update={"resources": [*panel.resources, *extra]})]
+        return [panel]
+
+    async def _delivery(
+        self, params: list[bigquery.ScalarQueryParameter]
+    ) -> dict[str, Any]:
+        """The delivery section, or an empty one if it cannot be read."""
+        recent = bigquery.ScalarQueryParameter(
+            "recent_deployments", "INT64", RECENT_DEPLOYMENTS
+        )
+        try:
+            rows = await asyncio.to_thread(self._query, DELIVERY_SQL, [*params, recent])
+        except (GoogleAPIError, GoogleAuthError) as e:
+            logger.warning("Delivery section unavailable (%s)", type(e).__name__)
+            return dict(EMPTY_DELIVERY)
+        return rows[0]
 
     def _query(
         self, sql: Path, params: Sequence[bigquery.ScalarQueryParameter] = ()
