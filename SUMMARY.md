@@ -68,9 +68,9 @@ One web application, publicly reachable, three roles.
   (active model and prompt version, model comparison table, cost per report,
   weekly error rate), and the incident log. Run history is shown in two stacked views: the last
   24 hours with one bar per hourly run, and the last 30 days with one bar per
-  day summarizing that day's runs. The other four sections appear as
-  a blurred skeleton with an explanatory note; the API sends no data to that
-  view.
+  day summarizing that day's runs. Each of the other four sections shows
+  a locked page: what the section holds and that its data is never sent
+  there, with a link to the panel; the API sends no data to that view.
 
 A share link never stays in the address bar: on first use it is exchanged for
 a session cookie with the same expiry, and the browser is redirected to a
@@ -108,9 +108,9 @@ clean URL.
   button and service, match report, golden set, model and prompt comparison,
   LLM call log, and the evaluation gate in CI.
 - **Phase three, interface:** public health panel, the full four sections
-  behind login, share links for guests, and blurred skeletons for visitors.
-  Read-only. The panel's core (run history, freshness, parse quality, tests,
-  cost, incidents) and delivery metrics come before phase two
+  behind login, and share links for guests. Read-only. The panel's core
+  (run history, freshness, dbt builds, resource use, incidents), delivery
+  metrics, and the visitors' locked pages come before phase two
   ([ADR-0044](docs/adr/0044-health-panel-core-metrics.md)).
 - **Phase four, optional:** rough fit ranking for alert postings (title
   similarity to a profile summary, local embedding model), automatic

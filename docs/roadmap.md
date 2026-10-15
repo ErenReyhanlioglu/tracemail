@@ -15,7 +15,9 @@ monitoring. It needs new access to Oracle, so it starts with an ADR.
 Phase 1 ended with `v0.1.0` on 2026-10-14 ([ADR-0043](adr/0043-phase-1-exit-criterion.md)).
 Since then: the health panel core ([ADR-0044](adr/0044-health-panel-core-metrics.md))
 and delivery metrics ([ADR-0045](adr/0045-delivery-metrics.md),
-[ADR-0046](adr/0046-failure-list-by-pull-request-and-separate-delivery-query.md)).
+[ADR-0046](adr/0046-failure-list-by-pull-request-and-separate-delivery-query.md)),
+and locked pages for visitors in every private section (ahead of Phase 3,
+see the note in [ADR-0040](adr/0040-viewer-routing-and-public-landing.md)).
 
 ## Next
 
@@ -86,7 +88,7 @@ Open decision: which models to compare. Ends with `v0.2.0`.
 
 The health panel's LLM section and whatever its core left out (the core
 comes before Phase 2, ADR-0044); the remaining private sections; share
-links for guests; visitor skeletons. Ends with `v0.3.0`.
+links for guests. Ends with `v0.3.0`.
 
 ## Phase 4: Optional
 

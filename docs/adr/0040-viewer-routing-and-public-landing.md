@@ -82,6 +82,11 @@ document; not yet by a production sign-in.
   elsewhere (for example from a decoded ID token), since the API no longer
   shows it.
 
+**Note, 2026-10-15:** a visitor opening a private section no longer lands on
+the health panel. Each section has its own locked page in the same frame:
+what the section holds and that its data is never sent to the page, with a
+link to the panel. Without a session cookie the page does not call the API.
+
 ## References
 
 1. [OpenID configuration — Google](https://accounts.google.com/.well-known/openid-configuration) (`subject_types_supported: ["public"]`, read 2026-10-13)
