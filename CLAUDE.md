@@ -258,8 +258,8 @@ company correspondence). This section overrides convenience.
 - **Public vs. private API.** Public endpoints (health panel) live in their own
   router and return only system-level aggregates. Their response schemas are
   explicit whitelists. Visitor views of the four private sections receive
-  **no data at all** — the blurred skeletons are static shapes in the
-  frontend, not real data rendered blurry.
+  **no data at all** — their locked pages are static, and without a session
+  cookie they do not call the API.
 - A test asserts that every public endpoint's response schema contains no
   field from the private domain (company, role, sender, posting text, profile
   evidence, run `error_message`). Adding a public endpoint without passing this test is a blocker.
@@ -514,7 +514,7 @@ alert postings that have only a title.
 - TypeScript `strict`. No `any`. No `@ts-ignore` without a written reason.
 - Read-only UI (until Phase 4). No forms that write data.
 - Private data is fetched server-side with the session; it never reaches a
-  visitor's browser, not even hidden. Visitor skeletons are static.
+  visitor's browser, not even hidden. Visitors' locked pages are static.
 - Design tokens come from the mockups: IBM Plex Sans / IBM Plex Mono, sidebar
   `#151A21`, accent `#1F4FD8`, background `#F5F6F8`, success `#0B6B57`, warning
   `#FCEBD0` / `#7A4300`. Define them once as tokens, not inline per component.

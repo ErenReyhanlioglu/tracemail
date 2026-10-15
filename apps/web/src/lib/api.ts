@@ -27,6 +27,12 @@ function apiUrl(path: string): string {
   return `${base}${path}`;
 }
 
+// Whether the browser sent a session cookie at all. Without one the viewer is
+// a visitor, and pages answer without asking the API anything.
+export async function hasSession(): Promise<boolean> {
+  return (await cookies()).has(SESSION_COOKIE);
+}
+
 async function forwardedHeaders(): Promise<Record<string, string>> {
   const session = (await cookies()).get(SESSION_COOKIE);
   const client = (await headers()).get(CLIENT_IP_HEADER);

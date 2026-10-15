@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { AppShell } from "@/components/AppShell";
+import { LockedPage } from "@/components/locked/LockedPage";
 import { EmptyState, NoMatchState, UnavailableState } from "@/components/ListState";
 import { ListPanel } from "@/components/ListPanel";
 import panelStyles from "@/components/ListPanel.module.css";
@@ -182,7 +183,7 @@ export default async function PostingsPage({
   };
   const size = parsePageSize(params.size);
   const requested = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
-  const data = await loadPrivate(() =>
+  const loaded = await loadPrivate(() =>
     fetchPostings({
       status: filters.status,
       days: PERIOD_DAYS[filters.period],
@@ -193,6 +194,10 @@ export default async function PostingsPage({
       pageSize: size,
     }),
   );
+  if (loaded.locked) {
+    return <LockedPage section="postings" title={text.title} viewer="visitor" />;
+  }
+  const data = loaded.data;
   if (data && data.items.length === 0 && data.total > 0) {
     // Past the last page (a stale link or a smaller filter): open the last one.
     redirect(listUrl(location(filters), pageCount(data.total, size), size));

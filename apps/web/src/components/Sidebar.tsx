@@ -1,6 +1,7 @@
 // Navigation as in the mockups, with an icon per section. Every section but
-// the public health panel belongs to the owner; a visitor sees them locked
-// (ADR-0040). Sections not built yet are dimmed for the owner. The sidebar collapses to its icons; labels stay in
+// the public health panel belongs to the owner; a visitor sees them with a
+// lock and each opens its locked page (ADR-0040, note of 2026-10-15).
+// Sections not built yet are dimmed for the owner. The sidebar collapses to its icons; labels stay in
 // the markup for screen readers and show as a tooltip (ADR-0041).
 import { cookies } from "next/headers";
 import Link from "next/link";
@@ -26,7 +27,7 @@ import { SignOutButton } from "./SignOutButton";
 import styles from "./Sidebar.module.css";
 import { ThemeToggle } from "./ThemeToggle";
 
-export type Section = "postings" | "applications" | "health";
+export type Section = "overview" | "postings" | "applications" | "reports" | "health";
 
 const SIDEBAR_ID = "sidebar";
 
@@ -34,18 +35,27 @@ interface NavItem {
   label: string;
   icon: ComponentType;
   section?: Section;
-  href?: string;
+  href: string;
   ownerOnly?: boolean;
+  // Built for the owner; a section that is not is dimmed for the owner.
+  ready?: boolean;
 }
 
 const NAV: readonly NavItem[] = [
-  { label: strings.nav.overview, icon: OverviewIcon, ownerOnly: true },
+  {
+    label: strings.nav.overview,
+    icon: OverviewIcon,
+    section: "overview",
+    href: "/overview",
+    ownerOnly: true,
+  },
   {
     label: strings.nav.postings,
     icon: PostingsIcon,
     section: "postings",
     href: "/postings",
     ownerOnly: true,
+    ready: true,
   },
   {
     label: strings.nav.applications,
@@ -53,33 +63,34 @@ const NAV: readonly NavItem[] = [
     section: "applications",
     href: "/applications",
     ownerOnly: true,
+    ready: true,
   },
-  { label: strings.nav.reports, icon: ReportsIcon, ownerOnly: true },
-  { label: strings.nav.health, icon: HealthIcon, section: "health", href: PANEL_PATH },
+  {
+    label: strings.nav.reports,
+    icon: ReportsIcon,
+    section: "reports",
+    href: "/reports",
+    ownerOnly: true,
+  },
+  { label: strings.nav.health, icon: HealthIcon, section: "health", href: PANEL_PATH, ready: true },
 ];
 
-function Unavailable({ item, locked }: { item: NavItem; locked: boolean }) {
-  const reason = locked ? strings.nav.ownerOnly : strings.nav.comingLater;
+function ComingLater({ item }: { item: NavItem }) {
   return (
     <span className={styles.itemDisabled} aria-disabled="true" title={item.label}>
       <item.icon />
       <span className={styles.label}>
         {item.label}
-        <span className="visually-hidden">, {reason}</span>
+        <span className="visually-hidden">, {strings.nav.comingLater}</span>
       </span>
-      {locked ? (
-        <span className={styles.lock}>
-          <LockIcon />
-        </span>
-      ) : null}
     </span>
   );
 }
 
 function Item({ item, active, viewer }: { item: NavItem; active: Section; viewer: Viewer }) {
   const locked = Boolean(item.ownerOnly) && viewer !== "owner";
-  if (item.href === undefined || locked) {
-    return <Unavailable item={item} locked={locked} />;
+  if (!locked && !item.ready) {
+    return <ComingLater item={item} />;
   }
   const current = item.section === active;
   return (
@@ -90,7 +101,15 @@ function Item({ item, active, viewer }: { item: NavItem; active: Section; viewer
       title={item.label}
     >
       <item.icon />
-      <span className={styles.label}>{item.label}</span>
+      <span className={styles.label}>
+        {item.label}
+        {locked ? <span className="visually-hidden">, {strings.nav.ownerOnly}</span> : null}
+      </span>
+      {locked ? (
+        <span className={styles.lock}>
+          <LockIcon />
+        </span>
+      ) : null}
     </Link>
   );
 }

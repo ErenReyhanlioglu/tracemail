@@ -1,0 +1,67 @@
+/*
+ * A private section seen by a visitor (or not built yet, for the owner):
+ * no card; the message sits in the middle of the page background, under the
+ * envelope for a visitor.
+ */
+/* The content starts at a fixed offset rather than being centred: centring
+   would move the envelope's stage up and down as the game opens and closes,
+   and drag the envelope through the text below (owner's fix to the
+   reference). The offset centres the closed state in the 440 px area. */
+.locked {
+  flex: 1 1 auto;
+  min-height: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  padding-top: 120px;
+  box-sizing: border-box;
+}
+
+.lock {
+  display: flex;
+  font-size: var(--text-sm);
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: 44ch;
+  text-align: center;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: var(--weight-semibold);
+}
+
+.title svg {
+  flex: 0 0 auto;
+}
+
+.description {
+  margin: 0;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  text-wrap: balance;
+}
+
+.link {
+  margin-top: 6px;
+  color: var(--logo-accent);
+  font-size: 13px;
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--logo-accent);
+  outline-offset: 2px;
+}

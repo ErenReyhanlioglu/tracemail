@@ -1,0 +1,325 @@
+/*
+ * The envelope and its game, as in the approved reference: timings, easing,
+ * and sizes are the reference's own; colours come from the site's tokens.
+ * The controls get their own 32 px strip above the play area, so a full jump
+ * never reaches them.
+ */
+.stage {
+  --ease: cubic-bezier(0.65, 0, 0.35, 1);
+  --pixel: var(--font-pixel), var(--font-mono);
+  position: relative;
+  width: 100%;
+  max-width: 960px;
+  height: 58px;
+  overflow: hidden;
+  transition: height 0.6s var(--ease);
+}
+
+/* Closing waits 0.2 s, so the stage (0.6 s) and the returning envelope
+   (0.8 s) finish together and the envelope stays inside the stage all the
+   way (owner's fix to the reference). Opening grows at once. */
+.stage:not(.open) {
+  transition-delay: 0.2s;
+}
+
+.open {
+  height: 232px;
+}
+
+.game {
+  position: absolute;
+  left: 0;
+  top: 32px;
+  width: 100%;
+  height: 200px;
+  display: block;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+}
+
+.open .game {
+  opacity: 1;
+  pointer-events: auto;
+  transition-delay: 0.2s;
+}
+
+.game:focus-visible {
+  outline: none;
+}
+
+.mail {
+  position: absolute;
+  left: calc(50% - 14px);
+  top: 13px;
+  width: 28px;
+  height: 32px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transition:
+    left 0.8s var(--ease),
+    top 0.8s var(--ease);
+}
+
+.mail[hidden] {
+  display: none;
+}
+
+.mail:focus-visible {
+  outline: 2px solid var(--logo-accent);
+  outline-offset: 6px;
+  border-radius: 3px;
+}
+
+.ring {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 100%;
+  animation: ring 5s ease-in-out 2s infinite;
+}
+
+.read .ring {
+  animation: none;
+}
+
+.mail canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+.badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  min-width: 14px;
+  height: 14px;
+  box-sizing: border-box;
+  padding: 0 3px;
+  border-radius: 7px;
+  background: var(--cell-failed);
+  color: #ffffff;
+  font: 600 9px/14px var(--font-mono);
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--color-page);
+  transition:
+    transform 0.28s cubic-bezier(0.5, -0.6, 0.7, 1),
+    opacity 0.28s ease;
+}
+
+.read .badge {
+  transform: scale(0);
+  opacity: 0;
+}
+
+@keyframes ring {
+  0%,
+  80%,
+  100% {
+    transform: rotate(0);
+  }
+  82% {
+    transform: rotate(-6deg);
+  }
+  84% {
+    transform: rotate(5deg);
+  }
+  86% {
+    transform: rotate(-4deg);
+  }
+  88% {
+    transform: rotate(3deg);
+  }
+  90% {
+    transform: rotate(-1deg);
+  }
+  92% {
+    transform: rotate(0);
+  }
+}
+
+/* .stage in these selectors outranks the controls' "all: unset", as in the
+   reference. */
+.stage .ui {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.stage.open .ui {
+  opacity: 1;
+  transition-delay: 0.7s;
+}
+
+.stage.open .hit {
+  pointer-events: auto;
+}
+
+.hud {
+  position: absolute;
+  top: 8px;
+  right: 6%;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-family: var(--pixel);
+  font-size: 16px;
+  line-height: 1;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.hud b {
+  font-weight: 400;
+  color: var(--color-text);
+}
+
+.best {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.best svg,
+.control svg {
+  display: block;
+  shape-rendering: crispEdges;
+}
+
+.control {
+  all: unset;
+  position: absolute;
+  top: 3px;
+  display: flex;
+  align-items: center;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-family: var(--pixel);
+  font-size: 11px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  letter-spacing: 0.04em;
+}
+
+.control:hover {
+  color: var(--color-text);
+}
+
+.control:focus-visible {
+  outline: 2px solid var(--logo-accent);
+}
+
+.closeButton {
+  left: 6%;
+}
+
+.mute {
+  left: calc(6% + 34px);
+}
+
+.hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 6px;
+  text-align: center;
+  font-family: var(--pixel);
+  font-size: 10px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.06em;
+}
+
+.stage .hint.gone {
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.over {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+  text-align: center;
+}
+
+.over[hidden] {
+  display: none;
+}
+
+.over strong {
+  font-family: var(--pixel);
+  font-weight: 400;
+  font-size: 18px;
+  color: var(--color-text);
+  letter-spacing: 0.04em;
+}
+
+.over span {
+  font-family: var(--pixel);
+  font-size: 11px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.04em;
+}
+
+/* Game-over reveal: the title opens from the centre in 7 hard steps, then
+   the restart line pops in. */
+.over:not([hidden]) strong {
+  animation: unroll 0.3s steps(7, end) both;
+}
+
+.over:not([hidden]) span {
+  animation: popin 0s 0.42s both;
+}
+
+@keyframes unroll {
+  from {
+    clip-path: inset(0 50% 0 50%);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes popin {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .over:not([hidden]) strong,
+  .over:not([hidden]) span {
+    animation: none;
+  }
+
+  .stage,
+  .mail,
+  .game,
+  .stage .ui,
+  .badge {
+    transition: none !important;
+  }
+
+  .ring {
+    animation: none;
+  }
+}

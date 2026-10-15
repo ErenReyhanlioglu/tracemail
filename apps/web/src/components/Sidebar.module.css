@@ -115,7 +115,8 @@
   color: var(--color-sidebar-text-strong);
 }
 
-/* Not built yet, or locked for a visitor: dimmed and not a link. */
+/* Not built yet (the owner's view): dimmed and not a link. A visitor's locked
+   items are links to their locked pages. */
 .itemDisabled {
   color: var(--color-sidebar-text-dim);
   cursor: default;

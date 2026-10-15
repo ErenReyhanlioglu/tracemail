@@ -1,12 +1,13 @@
 // The owner's application list (step 1.10), filtered by status group and
 // by a search of company and title, and sorted by a date column (ADR-0042).
 // Data is fetched on the server with the session cookie; without a session
-// the visitor is sent to the public panel and receives no data.
+// the visitor sees the section's locked page and receives no data.
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { AppShell } from "@/components/AppShell";
+import { LockedPage } from "@/components/locked/LockedPage";
 import { ApplicationTable } from "@/components/ApplicationTable";
 import { EmptyState, NoMatchState, UnavailableState } from "@/components/ListState";
 import { ListPanel } from "@/components/ListPanel";
@@ -99,7 +100,11 @@ export default async function ApplicationsPage({
     search: parseQuery(params.q),
     sort: parseSort(APPLICATION_SORT_KEYS, DEFAULT_APPLICATION_SORT, params.sort, params.order),
   };
-  const applications = await loadPrivate(fetchAllApplications);
+  const loaded = await loadPrivate(fetchAllApplications);
+  if (loaded.locked) {
+    return <LockedPage section="applications" title={text.title} viewer="visitor" />;
+  }
+  const applications = loaded.data;
   return (
     <AppShell active="applications" viewer="owner">
       <header className={styles.header}>
