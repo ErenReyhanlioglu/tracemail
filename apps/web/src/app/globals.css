@@ -69,6 +69,11 @@
   --bar-used: light-dark(#6b7684, #8792a2);
   --bar-projected-opacity: 0.35;
 
+  /* The locked page's mail game: the runner's colour when it is hit, a warm
+     coral in both themes (the health panel's failure red is too harsh for a
+     game). */
+  --color-game-hit: light-dark(#e5604e, #f07167);
+
   /* Type */
   --font-sans: var(--font-plex-sans), system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
