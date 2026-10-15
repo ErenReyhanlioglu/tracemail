@@ -7,12 +7,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { AppShell } from "@/components/AppShell";
+import { AppShell } from "@/components/shell/AppShell";
 import { LockedPage } from "@/components/locked/LockedPage";
 import { EmptyState, NoMatchState, UnavailableState } from "@/components/ListState";
 import { ListPanel } from "@/components/ListPanel";
 import panelStyles from "@/components/ListPanel.module.css";
 import { Pagination } from "@/components/Pagination";
+import { ListSummary } from "@/components/ListSummary";
 import { PeriodMenu } from "@/components/PeriodMenu";
 import { PostingTable } from "@/components/PostingTable";
 import { SearchBox } from "@/components/SearchBox";
@@ -50,6 +51,8 @@ import styles from "../list.module.css";
 export const dynamic = "force-dynamic";
 
 const PATH = "/postings";
+// Phones sort by the last sighting only, the one date a phone row shows.
+const PHONE_SORT_KEY = "last_seen" as const;
 const text = strings.postings;
 
 // Behind login: never indexed, whatever the response status (ADR-0039).
@@ -66,6 +69,16 @@ function at(filters: PostingFilters, size: PageSize): string {
   return listUrl(location(filters), 1, size);
 }
 
+// The default filters, and whether the list has left them (a "clear" link
+// shows then).
+function cleared(filters: PostingFilters): PostingFilters {
+  return { ...filters, status: "all", period: DEFAULT_PERIOD, search: "" };
+}
+
+function isChanged(filters: PostingFilters): boolean {
+  return filters.status !== "all" || filters.period !== DEFAULT_PERIOD || filters.search !== "";
+}
+
 // The toolbar: status segments and the period menu on the left; a way back
 // to the default filters once they changed, and the search, on the right.
 function toolbarParts(
@@ -73,9 +86,7 @@ function toolbarParts(
   filters: PostingFilters,
   size: PageSize,
 ): { start: ReactNode; end: ReactNode } {
-  const cleared = { ...filters, status: "all" as const, period: DEFAULT_PERIOD, search: "" };
-  const changed =
-    filters.status !== "all" || filters.period !== DEFAULT_PERIOD || filters.search !== "";
+  const changed = isChanged(filters);
   return {
     start: (
       <>
@@ -91,6 +102,7 @@ function toolbarParts(
         />
         <PeriodMenu
           label={text.periodLabel}
+          active={filters.period !== "all"}
           options={PERIODS.map((option) => ({
             key: option,
             label: text.periods[option],
@@ -103,7 +115,7 @@ function toolbarParts(
     end: (
       <>
         {changed ? (
-          <Link className={panelStyles.clear} href={at(cleared, size)}>
+          <Link className={panelStyles.clear} href={at(cleared(filters), size)}>
             {text.clearFilters}
           </Link>
         ) : null}
@@ -150,10 +162,20 @@ function PostingList({
       </ListPanel>
     );
   }
+  const changed = isChanged(filters);
   return (
     <ListPanel
       start={start}
       end={end}
+      summary={
+        <ListSummary
+          clearHref={changed ? at(cleared(filters), size) : null}
+          clearLabel={text.clearFilters}
+          sortLabel={text.columns.lastSeen}
+          sortHref={at({ ...filters, sort: nextSort(filters.sort, PHONE_SORT_KEY) }, size)}
+          order={filters.sort.key === PHONE_SORT_KEY ? filters.sort.order : null}
+        />
+      }
       footer={
         <Pagination
           location={location(filters)}
@@ -214,10 +236,7 @@ export default async function PostingsPage({
       ) : neverAny ? (
         <EmptyState title={text.emptyTitle} body={text.emptyBody} />
       ) : (
-        <>
-          <PostingList data={data} filters={filters} size={size} />
-          <p className={styles.note}>{text.laterNote}</p>
-        </>
+        <PostingList data={data} filters={filters} size={size} />
       )}
     </AppShell>
   );

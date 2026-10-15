@@ -519,6 +519,11 @@ alert postings that have only a title.
   `#151A21`, accent `#1F4FD8`, background `#F5F6F8`, success `#0B6B57`, warning
   `#FCEBD0` / `#7A4300`. Define them once as tokens, not inline per component.
 - Numbers use the mono font, as in the mockups.
+- Phones (ADR-0047): one breakpoint, named once in `src/app/media.css`
+  (`@custom-media --phone`). Stylesheets write `@media (--phone)`, never a
+  width; no JavaScript width checks. Each component keeps its phone rules
+  at the end of its own stylesheet; navigation is the only separate phone
+  component (`components/shell/`).
 - Every report screen keeps the disclaimer that the match report is overlap,
   not hiring probability.
 

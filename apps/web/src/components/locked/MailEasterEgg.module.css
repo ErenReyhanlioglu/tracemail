@@ -212,8 +212,10 @@
   letter-spacing: 0.04em;
 }
 
-.control:hover {
-  color: var(--color-text);
+@media (hover: hover) {
+  .control:hover {
+    color: var(--color-text);
+  }
 }
 
 .control:focus-visible {
@@ -270,7 +272,7 @@
   letter-spacing: 0.04em;
 }
 
-.over span {
+.over > span {
   font-family: var(--pixel);
   font-size: 11px;
   color: var(--color-text-muted);
@@ -283,7 +285,7 @@
   animation: unroll 0.3s steps(7, end) both;
 }
 
-.over:not([hidden]) span {
+.over:not([hidden]) > span {
   animation: popin 0s 0.42s both;
 }
 
@@ -305,6 +307,22 @@
   }
 }
 
+/* Keyboard copy for mouse and keyboard, tapping copy for touch screens
+   (ADR-0047); the primary pointer decides. */
+.touch {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .keys {
+    display: none;
+  }
+
+  .touch {
+    display: inline;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .over:not([hidden]) strong,
   .over:not([hidden]) span {
@@ -322,4 +340,13 @@
   .ring {
     animation: none;
   }
+}
+
+/* Pressed (ADR-0047): an answer the moment it is pressed. */
+.control {
+  transition: transform var(--press-duration) ease;
+}
+
+.control:active {
+  transform: scale(var(--press-scale));
 }

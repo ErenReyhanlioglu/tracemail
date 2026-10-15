@@ -1,0 +1,10 @@
+/*
+ * Named viewport ranges, defined once (ADR-0047). Every stylesheet uses the
+ * name, never a width: `@media (--phone) { ... }`. postcss.config.mjs makes
+ * these definitions visible to each CSS file and replaces the names with
+ * the queries at build time; this file itself is never imported.
+ *
+ * Phones: below 48rem (768 px) the sidebar gives way to a top bar and a
+ * bottom bar, and lists stack their rows.
+ */
+@custom-media --phone (width < 48rem);

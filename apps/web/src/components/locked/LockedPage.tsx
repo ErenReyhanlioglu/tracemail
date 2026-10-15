@@ -3,8 +3,8 @@
 // frame are the same as everywhere; only the main area changes.
 import type { Viewer } from "@/lib/load";
 
-import { AppShell } from "../AppShell";
-import type { Section } from "../Sidebar";
+import { AppShell } from "../shell/AppShell";
+import type { Section } from "../shell/navItems";
 import { type LockedKey, LockedSection } from "./LockedSection";
 import listStyles from "../../app/list.module.css";
 

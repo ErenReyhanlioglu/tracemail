@@ -39,11 +39,25 @@
   cursor: pointer;
 }
 
-.action:hover {
-  border-color: var(--color-text-muted);
+@media (hover: hover) {
+  .action:hover {
+    border-color: var(--color-text-muted);
+  }
 }
 
 .action:disabled {
   color: var(--color-text-muted);
   cursor: default;
+}
+
+/* Pressed (ADR-0047): an answer the moment it is pressed. */
+.action {
+  transition:
+    transform var(--press-duration) ease,
+    background-color var(--press-duration) ease;
+}
+
+.action:not(:disabled):active {
+  transform: scale(var(--press-scale));
+  background: var(--color-pressed);
 }

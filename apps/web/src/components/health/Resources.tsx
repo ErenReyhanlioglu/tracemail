@@ -3,7 +3,7 @@
 // line past which an optimization is mandatory. Bars are quantities, so
 // they stay neutral.
 import type { HealthPanel, Resource } from "@/lib/panel";
-import { formatBytes, formatCount, formatMonth, formatPercent, isBytes } from "@/lib/panel";
+import { formatBytes, formatCount, formatPercent, isBytes } from "@/lib/panel";
 import { strings } from "@/lib/strings";
 
 import styles from "./HealthPanel.module.css";
@@ -25,7 +25,9 @@ function Amounts({ resource }: { resource: Resource }) {
         <b>
           {format(resource.used_to_date)} / {limit}
         </b>{" "}
-        ({formatPercent(resource.used_to_date / resource.monthly_free)})
+        <span className={styles.resourceShare}>
+          ({formatPercent(resource.used_to_date / resource.monthly_free)})
+        </span>
       </span>
     );
   }
@@ -35,9 +37,16 @@ function Amounts({ resource }: { resource: Resource }) {
       <b>
         {format(resource.projected_month)} / {limit}
       </b>{" "}
-      ({formatPercent(resource.projected_month / resource.monthly_free)})
+      <span className={styles.resourceShare}>
+        ({formatPercent(resource.projected_month / resource.monthly_free)})
+      </span>
     </span>
   );
+}
+
+// The share shown: of the month-end projection when there is one.
+function share(resource: Resource): string {
+  return formatPercent((resource.projected_month ?? resource.used_to_date) / resource.monthly_free);
 }
 
 function Row({ resource }: { resource: Resource }) {
@@ -46,6 +55,10 @@ function Row({ resource }: { resource: Resource }) {
     <div className={styles.resource}>
       <span className={styles.resourceName}>
         {text.rows[resource.allowance] ?? resource.allowance}
+      </span>
+      {/* Phones: the share beside the name (ADR-0047). */}
+      <span className={styles.resourcePercent} aria-hidden="true">
+        {share(resource)}
       </span>
       <span className={styles.bar} aria-hidden="true">
         {resource.projected_month !== null ? (
@@ -74,7 +87,6 @@ export function Resources({ panel }: { panel: HealthPanel }) {
         <h2 id="resources-title" className={styles.heading}>
           {text.title}
         </h2>
-        <span className={styles.aside}>{formatMonth(new Date(panel.read_at))}</span>
       </div>
       <div className={`${styles.card} ${styles.resources}`}>
         {rows.map((resource) => (

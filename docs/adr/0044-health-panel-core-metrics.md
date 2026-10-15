@@ -263,6 +263,8 @@ Alternatives considered:
   date, prod counted 67 hours before it existed as missed. The start is now
   set per dbt target.
 
+**Note, 2026-10-16:** the panel's copy was cut after a review against a status page: shorter introduction, legends, and notes; the dbt row without its description ([ADR-0047](0047-mobile-layout.md)).
+
 ## References
 
 1. [Data Processing Pipelines — Google SRE Workbook](https://sre.google/workbook/data-processing/)

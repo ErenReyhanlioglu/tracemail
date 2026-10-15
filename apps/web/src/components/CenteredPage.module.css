@@ -4,6 +4,7 @@
   display: grid;
   place-items: center;
   min-height: 100vh;
+  min-height: 100dvh;
   padding: var(--space-6);
 }
 
@@ -69,8 +70,10 @@
   cursor: pointer;
 }
 
-.primary:hover {
-  filter: brightness(1.1);
+@media (hover: hover) {
+  .primary:hover {
+    filter: brightness(1.1);
+  }
 }
 
 .secondary {
@@ -79,6 +82,26 @@
   text-align: center;
 }
 
-.secondary:hover {
-  color: var(--color-text);
+@media (hover: hover) {
+  .secondary:hover {
+    color: var(--color-text);
+  }
+}
+
+/* Pressed (ADR-0047): an answer the moment it is pressed. */
+.primary {
+  transition: transform var(--press-duration) ease;
+}
+
+.primary:active {
+  transform: scale(var(--press-scale));
+  filter: brightness(0.92);
+}
+
+.secondary {
+  transition: opacity var(--press-duration) ease;
+}
+
+.secondary:active {
+  opacity: var(--press-opacity);
 }

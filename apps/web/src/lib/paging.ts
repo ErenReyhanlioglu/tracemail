@@ -9,6 +9,9 @@ export const DEFAULT_PAGE_SIZE: PageSize = 20;
 // GitHub Primer's pagination (marginPageCount 1, surroundingPageCount 2).
 export const MARGIN_PAGES = 1;
 export const SURROUNDING_PAGES = 2;
+// Phones (ADR-0047): one page on each side of the current one, and an
+// ellipsis for every gap, so the links fit a phone's width.
+export const PHONE_SURROUNDING_PAGES = 1;
 
 export type PageItem = { kind: "page"; page: number } | { kind: "gap"; after: number };
 
@@ -36,24 +39,26 @@ export function pageSlice<T>(items: T[], page: number, size: PageSize): T[] {
   return items.slice(start, start + size);
 }
 
-function isShown(page: number, current: number, pages: number): boolean {
+function isShown(page: number, current: number, pages: number, surrounding: number): boolean {
   return (
     page <= MARGIN_PAGES ||
     page > pages - MARGIN_PAGES ||
-    Math.abs(page - current) <= SURROUNDING_PAGES
+    Math.abs(page - current) <= surrounding
   );
 }
 
-// Page links with gaps: a gap of exactly one page shows that page instead of
-// an ellipsis, so an ellipsis always hides at least two pages.
-export function pageItems(current: number, pages: number): PageItem[] {
+// Page links with gaps: on wide screens a gap of exactly one page shows that
+// page instead of an ellipsis, so an ellipsis always hides at least two
+// pages; the phone window marks every gap.
+export function pageItems(current: number, pages: number, phone = false): PageItem[] {
+  const surrounding = phone ? PHONE_SURROUNDING_PAGES : SURROUNDING_PAGES;
   const shown = Array.from({ length: pages }, (_, index) => index + 1).filter((page) =>
-    isShown(page, current, pages),
+    isShown(page, current, pages, surrounding),
   );
   const items: PageItem[] = [];
   let previous = 0;
   for (const page of shown) {
-    if (page - previous === 2) {
+    if (!phone && page - previous === 2) {
       items.push({ kind: "page", page: page - 1 });
     } else if (page - previous > 2) {
       items.push({ kind: "gap", after: previous });

@@ -63,6 +63,23 @@ function Stage({ stage, models }: { stage: StageRow; models: number | null }) {
           : "–"}
         <span className={styles.sub}>{text.medianWindow}</span>
       </span>
+      {/* Narrow content only: the two columns above as one line under the strip. */}
+      <div className={styles.stageMeta} aria-hidden="true">
+        <span>
+          {text.lastRunShort} <b>{stage.last_run_at ? formatClock(new Date(stage.last_run_at)) : "–"}</b>
+          {stage.last_duration_seconds !== null
+            ? ` · ${formatDuration(stage.last_duration_seconds)}`
+            : ""}
+        </span>
+        <span>
+          {text.medianShort}{" "}
+          <b>
+            {stage.median_duration_seconds !== null
+              ? formatDuration(stage.median_duration_seconds)
+              : "–"}
+          </b>
+        </span>
+      </div>
     </div>
   );
 }
@@ -89,6 +106,12 @@ export function StageTable({ panel }: { panel: HealthPanel }) {
           </span>
           <span className={styles.num}>{text.lastProcessed}</span>
           <span className={styles.num}>{text.median}</span>
+        </div>
+        {/* Narrow content only: the shared axis, once above the rows. */}
+        <div className={styles.narrowAxis} aria-hidden="true">
+          <span>{formatClock(axis.first)}</span>
+          <span>{text.window}</span>
+          <span>{formatClock(axis.last)}</span>
         </div>
         {panel.stages.map((stage) => (
           <Stage key={stage.job_name} stage={stage} models={models} />

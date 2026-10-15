@@ -175,7 +175,6 @@ const DAY_MONTH_TIME = new Intl.DateTimeFormat("tr-TR", {
   minute: "2-digit",
   timeZone: TIME_ZONE,
 });
-const MONTH = new Intl.DateTimeFormat("tr-TR", { month: "long", timeZone: TIME_ZONE });
 
 export function formatClock(instant: Date): string {
   return CLOCK.format(instant);
@@ -183,11 +182,6 @@ export function formatClock(instant: Date): string {
 
 export function formatDayMonthTime(instant: Date): string {
   return DAY_MONTH_TIME.format(instant).replace(",", "");
-}
-
-export function formatMonth(instant: Date): string {
-  const month = MONTH.format(instant);
-  return month.charAt(0).toLocaleUpperCase("tr-TR") + month.slice(1);
 }
 
 // The run times on the 24-hour axis: each hourly interval is processed by

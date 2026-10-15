@@ -56,9 +56,18 @@ export function StatusLine({
     <div className={styles.status}>
       <span className={current.className}>{current.label}</span>
       {started ? (
-        <span className={styles.meta}>{text.lastRun(formatClock(started), ago(minutes))}</span>
+        <>
+          <span className={styles.meta}>
+            {text.lastRun} <b>{formatClock(started)}</b>
+          </span>
+          <span className={styles.meta}>
+            <b>{ago(minutes)}</b> {text.ago}
+          </span>
+        </>
       ) : null}
-      <span className={styles.meta}>{text.streak(panel.on_time_streak_hours)}</span>
+      <span className={styles.meta}>
+        <b>{text.streak(panel.on_time_streak_hours)}</b> {text.streakLabel}
+      </span>
       {version ? (
         <span className={styles.meta}>
           {text.version} <b>{version}</b>

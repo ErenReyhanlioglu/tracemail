@@ -123,6 +123,8 @@ Guidance read on 2026-10-13:
 - Five segments fit a desktop toolbar; on a phone they wrap, which the
   mobile layout (ADR-0039) revisits.
 
+**Note, 2026-10-16:** the posting list is sorted by "Son görülme" by default, and phones get their own toolbar and a summary line with the sort ([ADR-0047](0047-mobile-layout.md)).
+
 ## References
 
 1. [SegmentedControl guidelines — GitHub Primer](https://primer.style/product/components/segmented-control/guidelines/)

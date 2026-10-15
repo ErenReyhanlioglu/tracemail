@@ -121,6 +121,8 @@ Verified 2026-10-11 against dev data, screenshots in both themes at 1920 and
 - Revisit the status set when Phase 2 adds reply classification or an
   "offer" outcome (the first use of green).
 
+**Note, 2026-10-16:** the application labels are now "Yanıtsız" (was "Yanıt bekleniyor"), "Kapandı" (was "yanıtsız kapandı"), and "N+" on the silent badge, read aloud as "N gündür sessiz"; postings show a coloured status dot, green for applied ([ADR-0047](0047-mobile-layout.md)). The phone layout of point 4 is ADR-0047.
+
 ## References
 
 1. [Status indicator pattern — Carbon Design System](https://www.carbondesignsystem.com/patterns/status-indicator-pattern)

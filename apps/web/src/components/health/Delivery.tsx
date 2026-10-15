@@ -18,25 +18,23 @@ function duration(seconds: number | null): string {
   return seconds === null ? DASH : formatDuration(seconds);
 }
 
+// The pull request number in the accent colour, then its title.
+function Title({ number, title }: { number: number; title: string }) {
+  return (
+    <>
+      <span className={styles.pullNumber}>#{number}</span> {title}
+    </>
+  );
+}
+
 function Measures({ delivery }: { delivery: DeliveryData }) {
   const ratio = (count: number) => `${count} / ${delivery.deployments}`;
+  // Name and value only (owner's review): the rates carry their counts.
   const measures = [
-    {
-      name: text.leadTime,
-      value: duration(delivery.median_lead_time_seconds),
-      caption: text.leadTimeCaption(delivery.changes_with_lead_time),
-    },
-    {
-      name: text.changeFailure,
-      value: ratio(delivery.change_failures),
-      caption: text.changeFailureCaption,
-    },
-    {
-      name: text.recovery,
-      value: duration(delivery.median_recovery_seconds),
-      caption: text.recoveryCaption(delivery.recovered_failures),
-    },
-    { name: text.rework, value: ratio(delivery.rework_deployments), caption: text.reworkCaption },
+    { name: text.leadTime, value: duration(delivery.median_lead_time_seconds) },
+    { name: text.changeFailure, value: ratio(delivery.change_failures) },
+    { name: text.recovery, value: duration(delivery.median_recovery_seconds) },
+    { name: text.rework, value: ratio(delivery.rework_deployments) },
   ];
   return (
     <dl className={styles.measures}>
@@ -44,7 +42,6 @@ function Measures({ delivery }: { delivery: DeliveryData }) {
         <div key={measure.name} className={styles.measure}>
           <dt className={styles.detail}>{measure.name}</dt>
           <dd className={styles.measureValue}>{measure.value}</dd>
-          <dd className={styles.sub}>{measure.caption}</dd>
         </div>
       ))}
     </dl>
@@ -67,7 +64,11 @@ function Recent({ deployments }: { deployments: RecentDeployment[] }) {
               {formatDayMonthTime(new Date(deployment.deployed_at))}
             </span>
             <span className={styles.deploymentTitle}>
-              {number === null ? text.noPullRequest : `#${number} ${deployment.pull_request_title ?? ""}`}
+              {number === null ? (
+                text.noPullRequest
+              ) : (
+                <Title number={number} title={deployment.pull_request_title ?? ""} />
+              )}
             </span>
             <span className={styles.num}>{duration(deployment.lead_time_seconds)}</span>
           </>
@@ -125,7 +126,7 @@ export function Delivery({ panel }: { panel: HealthPanel }) {
           score={<span className={styles.scoreValue}>{delivery.deployments}</span>}
           caption={text.failedAttempts(delivery.failed_attempts)}
           cells={deliveryCells(panel.delivery_days, new Date(panel.read_at))}
-          window={last ? text.lastDeploy(formatDayMonthTime(new Date(last))) : DASH}
+          detail={last ? text.lastDeploy(formatDayMonthTime(new Date(last))) : DASH}
           words={text.cells}
         />
         <Measures delivery={delivery} />

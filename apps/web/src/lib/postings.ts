@@ -49,7 +49,10 @@ export function parsePeriod(value: string | undefined): Period {
 // Date columns the list can be sorted by (ADR-0042); the API sorts.
 export type PostingSortKey = "first_seen" | "last_seen";
 export const POSTING_SORT_KEYS: readonly PostingSortKey[] = ["first_seen", "last_seen"];
-export const DEFAULT_POSTING_SORT: Sort<PostingSortKey> = { key: "first_seen", order: "desc" };
+// Newest sighting first (owner's review, ADR-0047): the last time a posting
+// was seen matters more than the first, and it is the one date a phone row
+// shows.
+export const DEFAULT_POSTING_SORT: Sort<PostingSortKey> = { key: "last_seen", order: "desc" };
 
 // Everything that selects and orders the list's rows.
 export interface PostingFilters {

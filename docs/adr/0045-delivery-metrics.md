@@ -127,6 +127,8 @@ itself; fixed by a planned change).
 - Weekly counts are small; the metrics describe this project, not a team,
   and are not compared with DORA's benchmarks.
 
+**Note, 2026-10-16:** the measures show name and value only; the medians' counts are no longer beside them, while the rates keep theirs ([ADR-0047](0047-mobile-layout.md)).
+
 ## References
 
 1. [DORA's software delivery performance metrics — DORA](https://dora.dev/guides/dora-metrics/)

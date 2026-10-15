@@ -1,79 +1,24 @@
-// Navigation as in the mockups, with an icon per section. Every section but
-// the public health panel belongs to the owner; a visitor sees them with a
-// lock and each opens its locked page (ADR-0040, note of 2026-10-15).
-// Sections not built yet are dimmed for the owner. The sidebar collapses to its icons; labels stay in
-// the markup for screen readers and show as a tooltip (ADR-0041).
+// Navigation as in the mockups, with an icon per section (sections and
+// their access: navItems.ts). Wide screens only; phones get the bottom bar
+// (ADR-0047). The sidebar collapses to its icons; labels stay in the markup
+// for screen readers and show as a tooltip (ADR-0041).
 import { cookies } from "next/headers";
 import Link from "next/link";
-import type { ComponentType } from "react";
 
 import type { Viewer } from "@/lib/load";
-import { LOGIN_PATH, PANEL_PATH } from "@/lib/paths";
+import { LOGIN_PATH } from "@/lib/paths";
 import { isCollapsed, SIDEBAR_COOKIE } from "@/lib/sidebar";
 import { strings } from "@/lib/strings";
 
-import {
-  ApplicationsIcon,
-  HealthIcon,
-  LockIcon,
-  OverviewIcon,
-  PostingsIcon,
-  ReportsIcon,
-  SignInIcon,
-} from "./icons/NavIcons";
-import { LogoMark } from "./icons/LogoMark";
+import { LockIcon, SignInIcon } from "../icons/NavIcons";
+import { LogoMark } from "../icons/LogoMark";
+import { isComingLater, isLocked, NAV, type NavItem, type Section } from "./navItems";
 import { SidebarToggle } from "./SidebarToggle";
 import { SignOutButton } from "./SignOutButton";
 import styles from "./Sidebar.module.css";
 import { ThemeToggle } from "./ThemeToggle";
 
-export type Section = "overview" | "postings" | "applications" | "reports" | "health";
-
 const SIDEBAR_ID = "sidebar";
-
-interface NavItem {
-  label: string;
-  icon: ComponentType;
-  section?: Section;
-  href: string;
-  ownerOnly?: boolean;
-  // Built for the owner; a section that is not is dimmed for the owner.
-  ready?: boolean;
-}
-
-const NAV: readonly NavItem[] = [
-  {
-    label: strings.nav.overview,
-    icon: OverviewIcon,
-    section: "overview",
-    href: "/overview",
-    ownerOnly: true,
-  },
-  {
-    label: strings.nav.postings,
-    icon: PostingsIcon,
-    section: "postings",
-    href: "/postings",
-    ownerOnly: true,
-    ready: true,
-  },
-  {
-    label: strings.nav.applications,
-    icon: ApplicationsIcon,
-    section: "applications",
-    href: "/applications",
-    ownerOnly: true,
-    ready: true,
-  },
-  {
-    label: strings.nav.reports,
-    icon: ReportsIcon,
-    section: "reports",
-    href: "/reports",
-    ownerOnly: true,
-  },
-  { label: strings.nav.health, icon: HealthIcon, section: "health", href: PANEL_PATH, ready: true },
-];
 
 function ComingLater({ item }: { item: NavItem }) {
   return (
@@ -88,8 +33,8 @@ function ComingLater({ item }: { item: NavItem }) {
 }
 
 function Item({ item, active, viewer }: { item: NavItem; active: Section; viewer: Viewer }) {
-  const locked = Boolean(item.ownerOnly) && viewer !== "owner";
-  if (!locked && !item.ready) {
+  const locked = isLocked(item, viewer);
+  if (isComingLater(item, viewer)) {
     return <ComingLater item={item} />;
   }
   const current = item.section === active;
@@ -124,7 +69,7 @@ function Footer({ viewer }: { viewer: Viewer }) {
         <ThemeToggle />
       </div>
       {viewer === "owner" ? (
-        <SignOutButton />
+        <SignOutButton className={styles.footerAction} labelClassName={styles.label} />
       ) : (
         <Link href={LOGIN_PATH} className={styles.footerAction} title={strings.account.signIn}>
           <SignInIcon />

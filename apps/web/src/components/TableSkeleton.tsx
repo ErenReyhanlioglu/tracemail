@@ -6,24 +6,33 @@ import { strings } from "@/lib/strings";
 
 import tableStyles from "./DataTable.module.css";
 import panelStyles from "./ListPanel.module.css";
-import { TableHead, type TableShape } from "./TableParts";
+import { TableHead, type TableShape, tableStyle } from "./TableParts";
 import styles from "./TableSkeleton.module.css";
 
 const ROWS = 8;
 
+// The placeholder cells carry the real rows' phone roles (ADR-0047): the
+// first is the position, the last two the date and status, the rest hide.
+function phoneRole(cell: number, cells: number): string | undefined {
+  if (cell === cells - 2) {
+    return tableStyles.cellStatus;
+  }
+  return cell === cells - 3 ? tableStyles.cellDate : tableStyles.cellExtra;
+}
+
 function Row({ cells }: { cells: number }) {
   return (
     <tr>
-      <td>
+      <td className={tableStyles.cellMain}>
         <span className={`${styles.bar} ${styles.wide}`} />
         <span className={`${styles.bar} ${styles.wider}`} />
       </td>
       {Array.from({ length: cells - 1 }, (_, cell) => (
-        <td key={cell}>
+        <td key={cell} className={phoneRole(cell, cells)}>
           <span className={`${styles.bar} ${styles.short}`} />
         </td>
       ))}
-      <td />
+      <td className={tableStyles.linkCell} />
     </tr>
   );
 }
@@ -55,7 +64,7 @@ export function TableSkeleton({
           </div>
         </div>
         <div className={tableStyles.scroll}>
-          <table className={tableStyles.table} style={{ minWidth: `var(${shape.minWidth})` }}>
+          <table className={tableStyles.table} style={tableStyle(shape)}>
             <TableHead shape={shape} />
             <tbody className={styles.delayed}>
               {Array.from({ length: ROWS }, (_, row) => (
