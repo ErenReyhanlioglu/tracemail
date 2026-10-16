@@ -63,3 +63,5 @@ written at the moment the decision is made — not drafted ahead of time.
 | [0046](0046-failure-list-by-pull-request-and-separate-delivery-query.md) | Failure List by Pull Request, and a Separate Delivery Query | Accepted |
 | [0047](0047-mobile-layout.md) | Mobile Layout — Bottom Bar, Named Breakpoint, Stacked List Rows | Accepted |
 | [0048](0048-interaction-feedback.md) | Interaction Feedback — Pressing and Hover | Accepted |
+| [0049](0049-waiting-feedback.md) | Waiting Feedback — Instant Selection, a Quiet Pending State, and Loading on Every Route | Accepted |
+| [0050](0050-health-panel-sections-load-and-fail-independently.md) | Health Panel Sections Load and Fail Independently | Accepted; cold path (point 4) open |
