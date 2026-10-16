@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 from fastapi import Request
 
 from tracemail_api.cache import MartCache
-from tracemail_api.panel import HealthPanel
+from tracemail_api.panel import DeliveryPanel, RunsPanel, StoragePanel
 from tracemail_api.rate_limit import RateLimiter
 from tracemail_api.warehouse import (
     DISPLAY_TIMEZONE_NAME,
@@ -44,10 +44,20 @@ def get_posting_cache(request: Request) -> MartCache[PostingRow]:
     return cache
 
 
-def get_panel_cache(request: Request) -> MartCache[HealthPanel]:
-    """The health-panel cache created at startup."""
-    cache: MartCache[HealthPanel] = request.app.state.panel_cache
-    return cache
+class PanelCaches:
+    """One cache per part of the health panel, so each part is read, and
+    fails, on its own (ADR-0050)."""
+
+    def __init__(self) -> None:
+        self.runs = MartCache[RunsPanel]()
+        self.storage = MartCache[StoragePanel]()
+        self.delivery = MartCache[DeliveryPanel]()
+
+
+def get_panel_caches(request: Request) -> PanelCaches:
+    """The health-panel caches created at startup."""
+    caches: PanelCaches = request.app.state.panel_caches
+    return caches
 
 
 def get_rate_limiter(request: Request) -> RateLimiter:

@@ -17,7 +17,9 @@ from fastapi.testclient import TestClient
 
 PUBLIC_OPERATIONS = {
     ("get", "/api/v1/health"),
-    ("get", "/api/v1/public/health-panel"),
+    ("get", "/api/v1/public/health-panel/runs"),
+    ("get", "/api/v1/public/health-panel/storage"),
+    ("get", "/api/v1/public/health-panel/delivery"),
     ("get", "/api/v1/auth/google/login"),
     ("get", "/api/v1/auth/google/callback"),
     ("post", "/api/v1/auth/logout"),

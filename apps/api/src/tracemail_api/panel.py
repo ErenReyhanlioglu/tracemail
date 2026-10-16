@@ -1,11 +1,12 @@
-"""Response schema of the public health panel (ADR-0044).
+"""Response schemas of the public health panel (ADR-0044, ADR-0050).
 
 An explicit whitelist of system-level values: states, times, durations, and
 counts. No field names a company, posting, sender, or error message, and the
 privacy test checks every field reachable from here (CLAUDE.md, Privacy).
-The panel query returns one row whose nested fields validate into
-``HealthPanel``; BigQuery aggregates over no rows return null, which reads
-as an empty list.
+The panel comes in three parts, one per query, so each loads and fails on
+its own: run records, BigQuery storage, and delivery. Each query returns one
+row whose nested fields validate into its part; BigQuery aggregates over no
+rows return null, which reads as an empty list.
 """
 
 from datetime import date, datetime
@@ -134,8 +135,13 @@ class RecentDeployment(BaseModel):
     is_change_failure: bool
 
 
-class HealthPanel(BaseModel):
-    """Everything the public health panel shows."""
+def _null_is_empty(value: Any) -> Any:
+    return [] if value is None else value
+
+
+class RunsPanel(BaseModel):
+    """The parts read from run records: the status line, the stages, the
+    history strips, and the allowances measured per run."""
 
     read_at: datetime
     freshness_target_hours: int
@@ -147,20 +153,27 @@ class HealthPanel(BaseModel):
     dbt_days: list[BuildDay]
     last_build: LastBuild | None
     resources: list[Resource]
-    # None when the delivery data cannot be read; the rest still shows.
-    delivery: Delivery | None
+
+    nulls_are_empty = field_validator(
+        "stages", "freshness_days", "dbt_days", "resources", mode="before"
+    )(_null_is_empty)
+
+
+class StoragePanel(BaseModel):
+    """BigQuery storage, read from table metadata."""
+
+    read_at: datetime
+    resources: list[Resource]
+
+
+class DeliveryPanel(BaseModel):
+    """The delivery metrics, their daily strip, and the latest deployments."""
+
+    read_at: datetime
+    delivery: Delivery
     delivery_days: list[DeliveryDay]
     recent_deployments: list[RecentDeployment]
 
-    @field_validator(
-        "stages",
-        "freshness_days",
-        "dbt_days",
-        "resources",
-        "delivery_days",
-        "recent_deployments",
-        mode="before",
-    )
-    @classmethod
-    def _null_is_empty(cls, value: Any) -> Any:
-        return [] if value is None else value
+    nulls_are_empty = field_validator(
+        "delivery_days", "recent_deployments", mode="before"
+    )(_null_is_empty)
