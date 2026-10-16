@@ -1,6 +1,7 @@
 /* A recessed track holding the segments; the selected one is raised onto
    the surface with stronger text, so two cues mark it (NN/g). */
 .control {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-1);
@@ -12,6 +13,7 @@
 }
 
 .segment {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
@@ -37,6 +39,36 @@
   background: var(--color-surface);
   color: var(--color-text);
   font-weight: var(--weight-medium);
+}
+
+/* One raised background under the shown option (ADR-0049). It slides to a
+   clicked option; once it is drawn, the selected option's own background
+   steps aside. */
+.indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--indicator-width);
+  height: var(--indicator-height);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  pointer-events: none;
+  transform: translate(var(--indicator-x), var(--indicator-y));
+  transition:
+    transform var(--motion-base) ease,
+    width var(--motion-base) ease;
+}
+
+.control[data-indicator] .selected {
+  border-color: transparent;
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .indicator {
+    transition: none;
+  }
 }
 
 .count {
@@ -86,6 +118,12 @@
     border-color: var(--color-chip-active);
     background: var(--color-chip-active);
     color: var(--color-on-chip-active);
+  }
+
+  .indicator {
+    border-color: var(--color-chip-active);
+    border-radius: var(--radius-pill);
+    background: var(--color-chip-active);
   }
 
   .selected .count {

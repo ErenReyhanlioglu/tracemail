@@ -1,7 +1,7 @@
 // The status line (ADR-0044): whether the last hourly run succeeded and how
 // long ago, the on-time streak, and the running version. A run older than
 // the freshness target reads as late.
-import type { HealthPanel } from "@/lib/panel";
+import type { RunsPanel } from "@/lib/panel";
 import { COMPLETE, formatClock, minutesBetween } from "@/lib/panel";
 import { strings } from "@/lib/strings";
 
@@ -25,7 +25,7 @@ function ago(minutes: number): string {
 }
 
 function state(
-  panel: HealthPanel,
+  panel: RunsPanel,
   minutes: number,
 ): { label: string; className: string | undefined } {
   if (panel.last_ingest === null) {
@@ -45,7 +45,7 @@ export function StatusLine({
   now,
   version,
 }: {
-  panel: HealthPanel;
+  panel: RunsPanel;
   now: Date;
   version: string | null;
 }) {

@@ -1,0 +1,97 @@
+/*
+ * Health panel parts while they load (ADR-0050). Each block keeps its
+ * measured height (--panel-*-height), its real heading shows at once, and
+ * its placeholder lines appear only after --skeleton-delay (ADR-0039).
+ */
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+}
+
+.part {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.status {
+  display: flex;
+  align-items: center;
+}
+
+.statusHeight {
+  min-height: var(--panel-status-height);
+}
+
+.stagesHeight {
+  min-height: var(--panel-stages-height);
+}
+
+.historyHeight {
+  min-height: var(--panel-history-height);
+}
+
+.resourcesHeight {
+  min-height: var(--panel-resources-height);
+}
+
+.deliveryHeight {
+  min-height: var(--panel-delivery-height);
+}
+
+.card {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-5);
+}
+
+.bar {
+  display: block;
+  height: var(--skeleton-bar-height);
+  border-radius: var(--radius-sm);
+  background: var(--color-neutral-bg);
+  animation:
+    appear 0s linear var(--skeleton-delay) both,
+    pulse var(--skeleton-pulse) ease-in-out var(--skeleton-delay) infinite alternate;
+}
+
+@keyframes appear {
+  from {
+    visibility: hidden;
+  }
+
+  to {
+    visibility: visible;
+  }
+}
+
+@keyframes pulse {
+  to {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar {
+    animation: appear 0s linear var(--skeleton-delay) both;
+  }
+}
+
+.wide {
+  width: 45%;
+}
+
+.wider {
+  width: 65%;
+}
+
+.medium {
+  width: 30%;
+}
+
+.narrow {
+  width: 20%;
+}

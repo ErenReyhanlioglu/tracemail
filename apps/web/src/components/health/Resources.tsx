@@ -2,7 +2,9 @@
 // used, the month-end projection where history allows one, and the 85%
 // line past which an optimization is mandatory. Bars are quantities, so
 // they stay neutral.
-import type { HealthPanel, Resource } from "@/lib/panel";
+import type { ReactNode } from "react";
+
+import type { Resource } from "@/lib/panel";
 import { formatBytes, formatCount, formatPercent, isBytes } from "@/lib/panel";
 import { strings } from "@/lib/strings";
 
@@ -77,8 +79,17 @@ function Row({ resource }: { resource: Resource }) {
 
 const ORDER = Object.keys(text.rows);
 
-export function Resources({ panel }: { panel: HealthPanel }) {
-  const rows = [...panel.resources].sort(
+// The allowances come from two parts of the panel, run records and storage
+// metadata (ADR-0050); a part that cannot be read leaves a notice under the
+// rows it could give, or in their place when there are none.
+export function Resources({
+  resources,
+  notice,
+}: {
+  resources: Resource[];
+  notice: ReactNode;
+}) {
+  const rows = [...resources].sort(
     (a, b) => ORDER.indexOf(a.allowance) - ORDER.indexOf(b.allowance),
   );
   return (
@@ -88,25 +99,30 @@ export function Resources({ panel }: { panel: HealthPanel }) {
           {text.title}
         </h2>
       </div>
-      <div className={`${styles.card} ${styles.resources}`}>
-        {rows.map((resource) => (
-          <Row key={resource.allowance} resource={resource} />
-        ))}
-      </div>
-      <ul className={styles.legend}>
-        <li>
-          <span className={`${styles.swatch} ${styles.swatchUsed}`} aria-hidden="true" />
-          {text.used}
-        </li>
-        <li>
-          <span className={`${styles.swatch} ${styles.swatchProjected}`} aria-hidden="true" />
-          {text.projected}
-        </li>
-        <li>
-          <span className={`${styles.swatch} ${styles.swatchLimit}`} aria-hidden="true" />
-          {text.limit}
-        </li>
-      </ul>
+      {rows.length > 0 ? (
+        <div className={`${styles.card} ${styles.resources}`}>
+          {rows.map((resource) => (
+            <Row key={resource.allowance} resource={resource} />
+          ))}
+        </div>
+      ) : null}
+      {notice}
+      {rows.length > 0 ? (
+        <ul className={styles.legend}>
+          <li>
+            <span className={`${styles.swatch} ${styles.swatchUsed}`} aria-hidden="true" />
+            {text.used}
+          </li>
+          <li>
+            <span className={`${styles.swatch} ${styles.swatchProjected}`} aria-hidden="true" />
+            {text.projected}
+          </li>
+          <li>
+            <span className={`${styles.swatch} ${styles.swatchLimit}`} aria-hidden="true" />
+            {text.limit}
+          </li>
+        </ul>
+      ) : null}
     </section>
   );
 }

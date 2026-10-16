@@ -51,6 +51,8 @@ export const strings = {
   // its live measurements. One state vocabulary in every strip and legend.
   health: {
     title: "Sağlık paneli",
+    // Read by screen readers while the panel's parts load.
+    loading: "Panel yükleniyor",
     intro:
       "TraceMail, gelen postaları izleyen kişisel bir veri sistemidir. Posta kutusunu saatte bir okur, başvuruların ve gelen ilanların durumunu çıkarır. Bu sayfa sistemin kendi çalışmasını gösterir.",
     linksLabel: "Bağlantılar",
@@ -148,7 +150,6 @@ export const strings = {
       change: "Değişiklik",
       duration: "Süre",
       noPullRequest: "doğrudan commit",
-      unavailable: "Teslimat verileri şu an alınamıyor.",
       cells: {
         ok: "deploy",
         skipped: "deploy yok",
@@ -222,9 +223,15 @@ export const strings = {
     loading: "Liste yükleniyor",
     retry: "Tekrar dene",
     retrying: "Deneniyor",
-    unavailableTitle: "Veriler şu an alınamıyor",
-    unavailableBody:
-      "Sunucuya şu an ulaşılamıyor. Bu genellikle birkaç dakika içinde düzelir.",
+    // What failed, as far as the web server can tell (ADR-0050).
+    failures: {
+      unreachable: "Sunucuya şu an ulaşılamıyor",
+      warehouse: "Veri ambarı şu an yanıt vermiyor",
+      busy: "Kısa sürede çok fazla istek geldi",
+      error: "Veriler şu an alınamıyor",
+    },
+    autoRetrySeconds: "sn içinde kendiliğinden yeniden denenecek.",
+    retryingNow: "Yeniden deneniyor.",
   },
   notFound: {
     title: "Sayfa bulunamadı",

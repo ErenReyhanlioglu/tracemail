@@ -31,6 +31,10 @@ export interface NavItem {
   ready?: boolean;
 }
 
+// The sidebar and the bottom bar show one current section; a click moves it
+// at once (ADR-0049).
+export const SECTION_GROUP = "section";
+
 export const NAV: readonly NavItem[] = [
   {
     label: strings.nav.overview,

@@ -141,10 +141,29 @@
   background: var(--color-surface);
   box-shadow: var(--shadow-menu);
   list-style: none;
+  transform-origin: top left;
+  transition:
+    opacity var(--motion-base) ease-out,
+    transform var(--motion-base) ease-out;
+}
+
+/* Opening grows the list from its button (ADR-0049); closing is immediate,
+   since display: none is not animated. */
+@starting-style {
+  .menuList {
+    opacity: 0;
+    transform: translateY(var(--menu-enter-offset)) scale(var(--menu-enter-scale));
+  }
 }
 
 .menuList[hidden] {
   display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menuList {
+    transition: none;
+  }
 }
 
 .menuItem {
@@ -351,6 +370,7 @@
     left: auto;
     z-index: var(--layer-sheet);
     min-width: 0;
+    transform-origin: top right;
   }
 
   /* The wide menu's items, in the chips' type size. */

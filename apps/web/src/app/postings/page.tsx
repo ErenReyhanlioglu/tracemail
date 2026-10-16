@@ -3,7 +3,6 @@
 // company, and sorted by a date column (ADR-0042). Filtering, sorting, and
 // paging happen in the API; this page fetches one page on the server.
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
@@ -14,6 +13,7 @@ import { ListPanel } from "@/components/ListPanel";
 import panelStyles from "@/components/ListPanel.module.css";
 import { Pagination } from "@/components/Pagination";
 import { ListSummary } from "@/components/ListSummary";
+import { PendingLink } from "@/components/navigation/Pending";
 import { PeriodMenu } from "@/components/PeriodMenu";
 import { PostingTable } from "@/components/PostingTable";
 import { SearchBox } from "@/components/SearchBox";
@@ -91,6 +91,7 @@ function toolbarParts(
     start: (
       <>
         <SegmentedControl
+          group="status"
           label={text.statusLabel}
           segments={STATUS_FILTERS.map((option) => ({
             key: option,
@@ -115,9 +116,9 @@ function toolbarParts(
     end: (
       <>
         {changed ? (
-          <Link className={panelStyles.clear} href={at(cleared(filters), size)}>
+          <PendingLink className={panelStyles.clear} href={at(cleared(filters), size)} group="clear">
             {text.clearFilters}
-          </Link>
+          </PendingLink>
         ) : null}
         <SearchBox
           path={PATH}
@@ -174,6 +175,7 @@ function PostingList({
           sortLabel={text.columns.lastSeen}
           sortHref={at({ ...filters, sort: nextSort(filters.sort, PHONE_SORT_KEY) }, size)}
           order={filters.sort.key === PHONE_SORT_KEY ? filters.sort.order : null}
+          nextOrder={nextSort(filters.sort, PHONE_SORT_KEY).order}
         />
       }
       footer={
@@ -219,7 +221,7 @@ export default async function PostingsPage({
   if (loaded.locked) {
     return <LockedPage section="postings" title={text.title} viewer="visitor" />;
   }
-  const data = loaded.data;
+  const data = loaded.ok ? loaded.data : null;
   if (data && data.items.length === 0 && data.total > 0) {
     // Past the last page (a stale link or a smaller filter): open the last one.
     redirect(listUrl(location(filters), pageCount(data.total, size), size));
@@ -231,12 +233,12 @@ export default async function PostingsPage({
       <header className={styles.header}>
         <h1 className={styles.title}>{text.title}</h1>
       </header>
-      {data === null ? (
-        <UnavailableState />
+      {!loaded.ok ? (
+        <UnavailableState reason={loaded.reason} />
       ) : neverAny ? (
         <EmptyState title={text.emptyTitle} body={text.emptyBody} />
       ) : (
-        <PostingList data={data} filters={filters} size={size} />
+        <PostingList data={loaded.data} filters={filters} size={size} />
       )}
     </AppShell>
   );

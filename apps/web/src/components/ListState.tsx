@@ -1,13 +1,13 @@
 // What a list shows instead of its table (ADR-0039): empty, either because
 // nothing has arrived yet or because the filter matches nothing (with a way
-// out), or unavailable because the API failed (with a retry).
-import Link from "next/link";
+// out), or unavailable because the API failed (with a retry, ADR-0050).
 import type { ReactNode } from "react";
 
-import { strings } from "@/lib/strings";
+import type { FailureReason } from "@/lib/failures";
 
 import styles from "./ListState.module.css";
-import { RetryButton } from "./RetryButton";
+import { PendingLink } from "./navigation/Pending";
+import { PageFailure } from "./PageFailure";
 
 function StatePanel({
   title,
@@ -47,20 +47,15 @@ export function NoMatchState({
       title={title}
       inset
       action={
-        <Link className={styles.action} href={clearHref}>
+        <PendingLink className={styles.action} href={clearHref} group="clear">
           {clearLabel}
-        </Link>
+        </PendingLink>
       }
     />
   );
 }
 
-export function UnavailableState() {
-  return (
-    <StatePanel
-      title={strings.states.unavailableTitle}
-      body={strings.states.unavailableBody}
-      action={<RetryButton className={styles.action} />}
-    />
-  );
+// The API gave no list (ADR-0050): what failed, and a retry.
+export function UnavailableState({ reason }: { reason: FailureReason }) {
+  return <PageFailure reason={reason} />;
 }

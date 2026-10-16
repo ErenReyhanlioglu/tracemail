@@ -5,6 +5,7 @@
 // lives in the URL like every other filter, and the history entry is
 // replaced rather than added per keystroke. Without JavaScript it is a
 // plain GET form. The list's other filters ride along; paging restarts.
+// While results load, the list dims as for any other filter (ADR-0049).
 import { useRouter } from "next/navigation";
 import { type ChangeEvent, type FormEvent, useEffect, useRef, useState } from "react";
 
@@ -13,6 +14,7 @@ import { strings } from "@/lib/strings";
 
 import { SearchIcon } from "./icons/NavIcons";
 import styles from "./ListPanel.module.css";
+import { useNavigate } from "./navigation/Pending";
 
 export function SearchBox({
   path,
@@ -26,6 +28,7 @@ export function SearchBox({
   placeholder: string;
 }) {
   const router = useRouter();
+  const navigate = useNavigate();
   const [value, setValue] = useState(query);
   const input = useRef<HTMLInputElement>(null);
   const timer = useRef<number | undefined>(undefined);
@@ -49,7 +52,11 @@ export function SearchBox({
       params.set(SEARCH_PARAM, trimmed);
     }
     const address = params.size > 0 ? `${path}?${params.toString()}` : path;
-    router.replace(address, { scroll: false });
+    if (navigate) {
+      navigate(address, { group: "search", replace: true, scroll: false });
+    } else {
+      router.replace(address, { scroll: false });
+    }
   }
 
   function onChange(event: ChangeEvent<HTMLInputElement>): void {

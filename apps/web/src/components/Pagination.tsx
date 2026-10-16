@@ -2,8 +2,8 @@
 // page and the item range on the left; previous, page links, and next on the
 // right, as in common data-table footers (Carbon's pagination anatomy). Page
 // links are truncated as in GitHub Primer (first and last page, two on each
-// side of the current one, an ellipsis for longer gaps).
-import Link from "next/link";
+// side of the current one, an ellipsis for longer gaps). A clicked page shows
+// as current at once, and focus moves to the new rows (ADR-0049).
 
 import {
   type ListLocation,
@@ -15,10 +15,12 @@ import {
 } from "@/lib/paging";
 import { strings } from "@/lib/strings";
 
+import { PendingLink } from "./navigation/Pending";
 import { PageSizeSelect } from "./PageSizeSelect";
 import styles from "./Pagination.module.css";
 
 const text = strings.pagination;
+const GROUP = "page";
 
 function Chevron({ direction }: { direction: "left" | "right" }) {
   const path = direction === "left" ? "M15 6l-6 6 6 6" : "M9 6l6 6-6 6";
@@ -48,15 +50,17 @@ function Step({
     );
   }
   return (
-    <Link
+    <PendingLink
       className={styles.step}
       href={href}
+      group={GROUP}
+      focusList={true}
       rel={direction === "left" ? "prev" : "next"}
       aria-label={label}
       title={label}
     >
       <Chevron direction={direction} />
-    </Link>
+    </PendingLink>
   );
 }
 
@@ -82,14 +86,18 @@ function PageLinks({
           </li>
         ) : (
           <li key={item.page}>
-            <Link
-              className={item.page === page ? `${styles.number} ${styles.current}` : styles.number}
+            <PendingLink
+              className={styles.number}
+              selectedClassName={`${styles.number} ${styles.current}`}
               href={at(item.page)}
+              group={GROUP}
+              selected={item.page === page}
+              current="page"
+              focusList={true}
               aria-label={text.goToPage(item.page)}
-              aria-current={item.page === page ? "page" : undefined}
             >
               {item.page}
-            </Link>
+            </PendingLink>
           </li>
         ),
       )}

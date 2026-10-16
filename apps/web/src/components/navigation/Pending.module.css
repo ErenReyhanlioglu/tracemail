@@ -1,0 +1,17 @@
+/*
+ * What a pending navigation replaces (ADR-0049). Nothing shows for a fast
+ * answer; after --pending-delay the content fades to --pending-opacity over
+ * --pending-fade, with no loop, since waits here are mostly under a second
+ * (NN/g). It returns at once when the answer arrives.
+ */
+.content[data-pending] {
+  opacity: var(--pending-opacity);
+  transition: opacity var(--pending-fade) ease var(--pending-delay);
+}
+
+/* Reduced motion: the same delay, then no fade. */
+@media (prefers-reduced-motion: reduce) {
+  .content[data-pending] {
+    transition-duration: 0s;
+  }
+}

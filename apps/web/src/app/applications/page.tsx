@@ -3,7 +3,6 @@
 // Data is fetched on the server with the session cookie; without a session
 // the visitor sees the section's locked page and receives no data.
 import type { Metadata } from "next";
-import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { AppShell } from "@/components/shell/AppShell";
@@ -12,6 +11,7 @@ import { ApplicationTable } from "@/components/ApplicationTable";
 import { EmptyState, NoMatchState, UnavailableState } from "@/components/ListState";
 import { ListPanel } from "@/components/ListPanel";
 import { ListSummary } from "@/components/ListSummary";
+import { PendingLink } from "@/components/navigation/Pending";
 import panelStyles from "@/components/ListPanel.module.css";
 import { Pagination } from "@/components/Pagination";
 import { SearchBox } from "@/components/SearchBox";
@@ -107,19 +107,18 @@ export default async function ApplicationsPage({
   if (loaded.locked) {
     return <LockedPage section="applications" title={text.title} viewer="visitor" />;
   }
-  const applications = loaded.data;
   return (
     <AppShell active="applications" viewer="owner">
       <header className={styles.header}>
         <h1 className={styles.title}>{text.title}</h1>
       </header>
-      {applications === null ? (
-        <UnavailableState />
-      ) : applications.length === 0 ? (
+      {!loaded.ok ? (
+        <UnavailableState reason={loaded.reason} />
+      ) : loaded.data.length === 0 ? (
         <EmptyState title={text.emptyTitle} body={text.emptyBody} />
       ) : (
         <ApplicationList
-          applications={applications}
+          applications={loaded.data}
           filters={filters}
           size={parsePageSize(params.size)}
           pageParam={params.page}
@@ -140,6 +139,7 @@ function toolbarParts(
   return {
     start: (
       <SegmentedControl
+        group="filter"
         label={text.filterLabel}
         segments={FILTERS.map((option) => ({
           key: option,
@@ -153,9 +153,9 @@ function toolbarParts(
     end: (
       <>
         {filters.filter !== "all" || filters.search !== "" ? (
-          <Link className={panelStyles.clear} href={at(cleared, size)}>
+          <PendingLink className={panelStyles.clear} href={at(cleared, size)} group="clear">
             {text.clearFilters}
-          </Link>
+          </PendingLink>
         ) : null}
         <SearchBox
           path={PATH}
@@ -220,6 +220,7 @@ function ApplicationList({
           sortLabel={text.columns.lastEvent}
           sortHref={at({ ...filters, sort: nextSort(filters.sort, PHONE_SORT_KEY) }, size)}
           order={byLastEvent ? filters.sort.order : null}
+          nextOrder={nextSort(filters.sort, PHONE_SORT_KEY).order}
         />
       }
       footer={
