@@ -16,8 +16,6 @@ them on a public panel.
 - **Master profile:** a single hand-written file that describes experience at
   the level of evidence, with a context tag (internship, research, personal
   project). CVs do not enter the system.
-- **LinkedIn data export:** uploaded manually, once to load history and
-  occasionally to verify it.
 
 ## What the system does
 
@@ -90,7 +88,7 @@ clean URL.
 | Backend | FastAPI (capture and interface endpoints) |
 | Frontend | Next.js |
 | LLM | Via Gemini Enterprise Agent Platform (formerly Vertex AI), two tiers; starting with Gemini, final choice by golden-set comparison |
-| Matching | LLM evaluation with the full master profile as context (no retrieval); a local multilingual embedding model only for the phase-four rough fit ranking ([ADR-0001](docs/adr/0001-no-retrieval-in-matching-embeddings-only-for-rough-ranking.md)) |
+| Matching | LLM evaluation with the full master profile as context, no retrieval ([ADR-0001](docs/adr/0001-no-retrieval-in-matching-embeddings-only-for-rough-ranking.md)) |
 | LLM evaluation | MLflow (experiment tracking), golden set |
 | LLM call log | BigQuery table, weekly summary with dbt |
 | CI/CD | GitHub Actions |
@@ -100,7 +98,7 @@ clean URL.
 ## Phases
 
 - **Phase one, core:** mail collection, raw storage, data model, application
-  status table, loading LinkedIn history, Airflow running hourly on the VM,
+  status table, Airflow running hourly on the VM,
   CI/CD, and recording health metrics. Owner login and a minimal read-only
   application list on the public web app, so real data is visible from any
   device from the start. No LLM.
@@ -112,9 +110,8 @@ clean URL.
   (run history, freshness, dbt builds, resource use, incidents), delivery
   metrics, and the visitors' locked pages come before phase two
   ([ADR-0044](docs/adr/0044-health-panel-core-metrics.md)).
-- **Phase four, optional:** rough fit ranking for alert postings (title
-  similarity to a profile summary, local embedding model), automatic
-  text completion from companies' public job pages, follow-up email draft,
+- **Phase four, optional:** automatic text completion from companies'
+  public job pages, follow-up email draft,
   manually adding events and notes from the interface, a "correct" option on
   reports, recording direct applications from sent mail.
 

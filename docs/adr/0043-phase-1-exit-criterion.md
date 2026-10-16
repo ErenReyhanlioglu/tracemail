@@ -59,3 +59,5 @@ no hourly interval has been missed since.
   until step 1.6 lands.
 - 48 hours is a short window; `v1.0.0` keeps ADR-0002's requirement of a
   longer, measurable criterion.
+
+**Note, 2026-10-16:** step 1.6 (LinkedIn history) is dropped from the scope by the owner; Phase 1 is complete as released in `v0.1.0`.

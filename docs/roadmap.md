@@ -69,7 +69,6 @@ from any device, running hourly in production. No LLM.
 | 1.3 | LinkedIn parsers, parsed zone, parse outcomes (ADR-0018) | Done |
 | 1.4 | BigQuery landing loads and run records (ADR-0019, ADR-0020) | Done |
 | 1.5 | dbt models: applications, events, postings, companies, status (ADR-0023, ADR-0024, ADR-0027) | Done |
-| 1.6 | LinkedIn history | After `v0.1.0` |
 | 1.7 | Airflow stack, hourly DAG, dirty-day gating (ADR-0003, ADR-0013, ADR-0021, ADR-0022, ADR-0029) | Done |
 | 1.8 | More LinkedIn templates, parse health per template (ADR-0031) | Done |
 | 1.9 | API with Google sign-in and the privacy test (ADR-0015, ADR-0032) | Done |
@@ -93,6 +92,5 @@ links for guests. Ends with `v0.3.0`.
 
 ## Phase 4: Optional
 
-Rough fit ranking with local embeddings (ADR-0001); text completion from
-public job pages; follow-up drafts; manual events and notes; a "correct"
+Text completion from public job pages; follow-up drafts; manual events and notes; a "correct"
 option on reports; direct applications from sent mail (ADR-0031).

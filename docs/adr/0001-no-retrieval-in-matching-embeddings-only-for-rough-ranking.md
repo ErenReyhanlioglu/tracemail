@@ -96,3 +96,5 @@ Alternatives considered:
   from the evidence-based match report.
 - One more owner-maintained file (the profile summary) and one more labeled
   set (calibration titles) to keep in sync with the master profile.
+
+**Note, 2026-10-16:** the rough fit ranking is dropped from the scope by the owner: a title alone says too little about a posting's requirements to be worth a model, a profile summary, and a calibration set. Matching without retrieval stands; no embedding model is planned.

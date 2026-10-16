@@ -188,7 +188,7 @@ export const strings = {
       `${what} burada tutuluyor. Kişisel veri olduğu için bu sayfaya hiç gönderilmiyor.`,
     sections: {
       overview: "Başvuru sayıları, yanıt oranları ve takip bekleyenlerin özeti",
-      postings: "Gelen ilanlar ve profile uyum sıralaması",
+      postings: "Gelen ilanlar ve durumları",
       applications: "Her başvurunun aşaması ve kaç gündür yanıt beklendiği",
       reports: "İlan gereksinimlerinin profildeki kanıtla karşılaştırması",
     },

@@ -277,10 +277,9 @@ company correspondence). This section overrides convenience.
   `raw/mail/received_date=YYYY-MM-DD/<sha256(Message-ID)>.eml`. The partition
   is the message's own received date (IMAP internal date, UTC), never the run
   date — a run date would give the same message different keys on different
-  days. Captured postings and LinkedIn exports follow the same pattern under
-  their own prefixes.
-- Store the original bytes (`.eml`, original export file), not a parsed
-  version.
+  days. Captured postings follow the same pattern under their own prefix.
+- Store the original bytes (the `.eml`, the captured posting as sent), not a
+  parsed version.
 - Flow: `raw/` (original bytes) → parse in `pipeline_venv` → `parsed/` (JSONL)
   → BigQuery load job into `landing` → dbt. The `parsed/` zone exists for
   debugging: it must always show exactly what the parser understood from each
@@ -387,7 +386,7 @@ company correspondence). This section overrides convenience.
   `dim_<entity>`.
 - Staging: 1:1 with a source, rename/cast/clean only, no joins.
 - Intermediate: entity resolution and dedup (the same application seen in a
-  LinkedIn export, a confirmation mail, and a capture is one application).
+  confirmation mail, a status mail, and a capture is one application).
 - Marts: star schema. No `SELECT *` in marts.
 - Surrogate keys are deterministic hashes of natural keys
   (`dbt_utils.generate_surrogate_key`), never random — reruns must produce the
@@ -459,27 +458,6 @@ company correspondence). This section overrides convenience.
 - The CI eval gate runs when anything under `packages/llm/` or
   `packages/evals/` changes, and fails if accuracy drops below the recorded baseline.
   It is the only place in CI that makes real LLM calls.
-
----
-
-## Embeddings (Phase 4 Only)
-
-See ADR-0001. Embeddings exist for one purpose: the rough fit ranking of
-alert postings that have only a title.
-
-- Phases 1–3 contain no embedding dependency, code, or infrastructure.
-- No vector database. Vectors live in memory for the duration of the run;
-  BigQuery stores only score, fit bucket, model name/version, and
-  profile-summary version.
-- The model is multilingual (Turkish and English titles), runs locally via
-  ONNX runtime — no PyTorch in the image, no LLM call.
-- High / Medium / Low thresholds come from calibration against owner-labeled
-  titles, never hand-picked. The labels follow the same rule as the golden
-  set: never edited to make a result look better.
-- The profile summary is owner-written, same rules as `profile/`. Never
-  generate it from the master profile.
-- The UI keeps the rough ranking visually distinct from the evidence-based
-  match report.
 
 ---
 

@@ -98,3 +98,5 @@ Alternatives considered:
   mail was seen.
 - Without a "reply" concept, the overview cannot say how many
   companies answered; revisit if that becomes a question the owner asks.
+
+**Note, 2026-10-16:** the LinkedIn export (step 1.6) is dropped from the scope; applications come from mail, and from Phase 2 also from the capture button.

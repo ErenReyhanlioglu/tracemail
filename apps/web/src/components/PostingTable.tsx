@@ -1,7 +1,7 @@
 // The incoming-postings list: same table style as the application list. The
 // status is a coloured dot and its word (new orange, saved blue, applied
-// green, owner's review); role type, rough fit, and the match report join
-// as columns in later phases. On phones each row stacks into the position
+// green, owner's review); the match report joins as a column in a later
+// phase. On phones each row stacks into the position
 // beside the last sighting, the company beside its mention count, then the
 // status beside the location (ADR-0047).
 import { formatDayMonth } from "@/lib/format";
