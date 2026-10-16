@@ -1,8 +1,9 @@
 // Navigation icons, drawn inline like the app's other icons (no icon
 // library, ADR-0034). Paths are from Lucide 1.48.0 (lucide-static), ISC
 // License, Copyright (c) 2026 Lucide Icons and Contributors; arrow-down,
-// arrow-up, check, chevron-down, clock, lock, log-in, log-out, and search
-// derive from Feather, MIT License, Copyright (c) 2013-present Cole Bemis.
+// arrow-up, check, chevron-down, clock, lock, log-in, log-out, rotate-cw,
+// search, and triangle-alert derive from Feather, MIT License, Copyright (c)
+// 2013-present Cole Bemis.
 // Full notices: LICENSE-lucide.txt in this folder.
 import type { ReactNode } from "react";
 
@@ -173,6 +174,36 @@ export function ChevronDownIcon() {
   return (
     <Icon>
       <path d="m6 9 6 6 6-6" />
+    </Icon>
+  );
+}
+
+// A part that cannot be read (ADR-0050): lucide triangle-alert.
+export function WarningIcon() {
+  return (
+    <Icon>
+      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
+      <path d="M12 9v4" />
+      <path d="M12 17h.01" />
+    </Icon>
+  );
+}
+
+// Retry: lucide rotate-cw.
+export function RetryIcon() {
+  return (
+    <Icon>
+      <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+      <path d="M21 3v5h-5" />
+    </Icon>
+  );
+}
+
+// A retry in progress: lucide loader-circle, turned by its parent's CSS.
+export function SpinnerIcon() {
+  return (
+    <Icon>
+      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
     </Icon>
   );
 }

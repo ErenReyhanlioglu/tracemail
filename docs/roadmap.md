@@ -15,8 +15,11 @@ and delivery metrics ([ADR-0045](adr/0045-delivery-metrics.md),
 [ADR-0046](adr/0046-failure-list-by-pull-request-and-separate-delivery-query.md)),
 locked pages for visitors in every private section (ahead of Phase 3,
 see the note in [ADR-0040](adr/0040-viewer-routing-and-public-landing.md)),
-the phone layout ([ADR-0047](adr/0047-mobile-layout.md)), and pressed
-states on every control ([ADR-0048](adr/0048-interaction-feedback.md)).
+the phone layout ([ADR-0047](adr/0047-mobile-layout.md)), pressed
+states on every control ([ADR-0048](adr/0048-interaction-feedback.md)),
+waiting feedback on every click ([ADR-0049](adr/0049-waiting-feedback.md)),
+and health panel parts that load and fail on their own
+([ADR-0050](adr/0050-health-panel-sections-load-and-fail-independently.md)).
 
 ## Next
 
@@ -28,9 +31,10 @@ Alongside:
   "last checked" time on the lists, which shares the health panel core's
   authorization; the Lighthouse and manual pass, desktop and phone; a web
   app manifest for the owner's 192, 512, and maskable icons (the image must
-  then copy `public/`); loading and transition states: a loading boundary
-  on every route, when a skeleton shows, pending buttons (open in
-  [ADR-0048](adr/0048-interaction-feedback.md)).
+  then copy `public/`).
+- **The health panel's cold path** (point 4 of
+  [ADR-0050](adr/0050-health-panel-sections-load-and-fail-independently.md)):
+  measure it on production after the deploy, then choose.
 - **Watch the VM:** read the 95th percentiles of CPU, network, and memory
   by hand after a week of hourly runs; if all stay below 20%, Oracle may
   reclaim the instance, so record the options in an ADR
@@ -40,6 +44,9 @@ Alongside:
 ## Follow-ups
 
 Not urgent; each is picked up when it starts to matter.
+
+- Every list click spends 0.3 to 0.5 s on the server before anything
+  changes (ADR-0049); find where that time goes before changing anything.
 
 - Build dbt when a deploy changes dbt models, so new views exist before the
   code that reads them (incident 2026-10-14, open action item).
@@ -69,7 +76,6 @@ from any device, running hourly in production. No LLM.
 | 1.3 | LinkedIn parsers, parsed zone, parse outcomes (ADR-0018) | Done |
 | 1.4 | BigQuery landing loads and run records (ADR-0019, ADR-0020) | Done |
 | 1.5 | dbt models: applications, events, postings, companies, status (ADR-0023, ADR-0024, ADR-0027) | Done |
-| 1.6 | LinkedIn history | After `v0.1.0` |
 | 1.7 | Airflow stack, hourly DAG, dirty-day gating (ADR-0003, ADR-0013, ADR-0021, ADR-0022, ADR-0029) | Done |
 | 1.8 | More LinkedIn templates, parse health per template (ADR-0031) | Done |
 | 1.9 | API with Google sign-in and the privacy test (ADR-0015, ADR-0032) | Done |
@@ -93,6 +99,5 @@ links for guests. Ends with `v0.3.0`.
 
 ## Phase 4: Optional
 
-Rough fit ranking with local embeddings (ADR-0001); text completion from
-public job pages; follow-up drafts; manual events and notes; a "correct"
+Text completion from public job pages; follow-up drafts; manual events and notes; a "correct"
 option on reports; direct applications from sent mail (ADR-0031).

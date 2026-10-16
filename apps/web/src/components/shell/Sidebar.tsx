@@ -1,7 +1,8 @@
 // Navigation as in the mockups, with an icon per section (sections and
 // their access: navItems.ts). Wide screens only; phones get the bottom bar
 // (ADR-0047). The sidebar collapses to its icons; labels stay in the markup
-// for screen readers and show as a tooltip (ADR-0041).
+// for screen readers and show as a tooltip (ADR-0041). A clicked section
+// shows as current at once, before its page arrives (ADR-0049).
 import { cookies } from "next/headers";
 import Link from "next/link";
 
@@ -12,7 +13,15 @@ import { strings } from "@/lib/strings";
 
 import { LockIcon, SignInIcon } from "../icons/NavIcons";
 import { LogoMark } from "../icons/LogoMark";
-import { isComingLater, isLocked, NAV, type NavItem, type Section } from "./navItems";
+import { PendingLink, PendingNavigation } from "../navigation/Pending";
+import {
+  isComingLater,
+  isLocked,
+  NAV,
+  type NavItem,
+  SECTION_GROUP,
+  type Section,
+} from "./navItems";
 import { SidebarToggle } from "./SidebarToggle";
 import { SignOutButton } from "./SignOutButton";
 import styles from "./Sidebar.module.css";
@@ -37,12 +46,14 @@ function Item({ item, active, viewer }: { item: NavItem; active: Section; viewer
   if (isComingLater(item, viewer)) {
     return <ComingLater item={item} />;
   }
-  const current = item.section === active;
   return (
-    <Link
+    <PendingLink
       href={item.href}
-      className={current ? styles.itemActive : styles.item}
-      aria-current={current ? "page" : undefined}
+      group={SECTION_GROUP}
+      className={styles.item}
+      selectedClassName={styles.itemActive}
+      selected={item.section === active}
+      current="page"
       title={item.label}
     >
       <item.icon />
@@ -55,7 +66,7 @@ function Item({ item, active, viewer }: { item: NavItem; active: Section; viewer
           <LockIcon />
         </span>
       ) : null}
-    </Link>
+    </PendingLink>
   );
 }
 
@@ -95,13 +106,15 @@ export async function Sidebar({ active, viewer }: { active: Section; viewer: Vie
           className={styles.collapseButton}
         />
       </div>
-      <ul className={styles.items}>
-        {NAV.map((item) => (
-          <li key={item.label}>
-            <Item item={item} active={active} viewer={viewer} />
-          </li>
-        ))}
-      </ul>
+      <PendingNavigation>
+        <ul className={styles.items}>
+          {NAV.map((item) => (
+            <li key={item.label}>
+              <Item item={item} active={active} viewer={viewer} />
+            </li>
+          ))}
+        </ul>
+      </PendingNavigation>
       <Footer viewer={viewer} />
     </nav>
   );

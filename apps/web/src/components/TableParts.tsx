@@ -1,14 +1,14 @@
 // Parts shared by the list tables: the column header (sortable columns as
 // links, the sorted one marked, as in Carbon's tables), one-line text cut
 // with an ellipsis (full value on hover), and the external posting link.
-import Link from "next/link";
 import type { CSSProperties } from "react";
 
-import type { SortOrder } from "@/lib/sorting";
+import { nextSort, type SortOrder } from "@/lib/sorting";
 import { strings } from "@/lib/strings";
 
 import styles from "./DataTable.module.css";
-import { SortableIcon, SortDownIcon, SortUpIcon } from "./icons/NavIcons";
+import { PendingLink } from "./navigation/Pending";
+import { SORT_GROUP, SortIcon } from "./SortIcon";
 
 export function Clipped({ value, className }: { value: string; className?: string }) {
   return (
@@ -79,15 +79,19 @@ export interface TableSorting {
 
 function SortLink({ column, sorting }: { column: Column; sorting: TableSorting }) {
   const key = column.sortKey ?? "";
-  const current = sorting.key === key;
+  const href = sorting.hrefs[key] ?? "#";
   return (
-    <Link href={sorting.hrefs[key] ?? "#"} className={styles.sortLink} scroll={false}>
+    <PendingLink href={href} group={SORT_GROUP} className={styles.sortLink} scroll={false}>
       {column.label}
       <span className="visually-hidden">, {strings.table.sortHint}</span>
-      <span className={current ? styles.sortIcon : `${styles.sortIcon} ${styles.sortHint}`}>
-        {!current ? <SortableIcon /> : sorting.order === "desc" ? <SortDownIcon /> : <SortUpIcon />}
-      </span>
-    </Link>
+      <SortIcon
+        href={href}
+        order={sorting.key === key ? sorting.order : null}
+        nextOrder={nextSort(sorting, key).order}
+        className={styles.sortIcon}
+        idleClassName={styles.sortHint}
+      />
+    </PendingLink>
   );
 }
 

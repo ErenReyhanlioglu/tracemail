@@ -3,7 +3,7 @@
 // measures in one row with their counts, and the latest deployments, each
 // linking to its pull request on GitHub.
 import { pullRequestUrl } from "@/lib/links";
-import type { Delivery as DeliveryData, HealthPanel, RecentDeployment } from "@/lib/panel";
+import type { Delivery as DeliveryData, DeliveryPanel, RecentDeployment } from "@/lib/panel";
 import { deliveryCells, formatDayMonthTime, formatDuration } from "@/lib/panel";
 import { strings } from "@/lib/strings";
 
@@ -93,7 +93,7 @@ function Recent({ deployments }: { deployments: RecentDeployment[] }) {
   );
 }
 
-function Head() {
+export function DeliveryHead() {
   return (
     <div className={styles.head}>
       <h2 id="delivery-title" className={styles.heading}>
@@ -104,22 +104,14 @@ function Head() {
   );
 }
 
-// The delivery data is read apart from the rest of the panel (ADR-0045):
-// when it cannot be read, only this section says so.
-export function Delivery({ panel }: { panel: HealthPanel }) {
+// The delivery part loads and fails on its own (ADR-0050); when it cannot
+// be read, the panel shows its unavailable state instead of this section.
+export function Delivery({ panel }: { panel: DeliveryPanel }) {
   const delivery = panel.delivery;
-  if (delivery === null) {
-    return (
-      <section className={styles.section} aria-labelledby="delivery-title">
-        <Head />
-        <p className={`${styles.card} ${styles.unavailable}`}>{text.unavailable}</p>
-      </section>
-    );
-  }
   const last = delivery.last_deployed_at;
   return (
     <section className={styles.section} aria-labelledby="delivery-title">
-      <Head />
+      <DeliveryHead />
       <div className={styles.card}>
         <HistoryRow
           name={text.deployments}

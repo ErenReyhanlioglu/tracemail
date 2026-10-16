@@ -1,0 +1,119 @@
+/*
+ * A part that cannot be read (ADR-0050), after the owner's design: a
+ * warning icon, what failed and when the page tries again, and a retry
+ * button on the right. Phones put the button under the text, full width.
+ */
+.card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border: var(--border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.warning {
+  display: flex;
+  align-self: flex-start;
+  color: var(--color-warning-text);
+}
+
+.text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.title {
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.detail {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+}
+
+/* Numbers in the mono font, as everywhere (ADR-0034). */
+.number {
+  font-family: var(--font-mono);
+}
+
+.button {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+}
+
+.button svg {
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+}
+
+@media (hover: hover) {
+  .button:not(:disabled):hover {
+    border-color: var(--color-text-muted);
+  }
+}
+
+.button:disabled {
+  color: var(--color-text-muted);
+  cursor: default;
+}
+
+/* The spinner turns while a retry runs; a still icon under reduced motion,
+   where the label alone says it. */
+.pending svg {
+  animation: spin var(--spin-duration) linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pending svg {
+    animation: none;
+  }
+}
+
+/* Pressed (ADR-0048): an answer the moment it is pressed. */
+.button {
+  transition:
+    transform var(--press-duration) ease,
+    background-color var(--press-duration) ease;
+}
+
+.button:not(:disabled):active {
+  transform: scale(var(--press-scale));
+  background: var(--color-pressed);
+}
+
+/* Phones (ADR-0047): the button under the text, across the card. */
+@media (--phone) {
+  .card {
+    flex-wrap: wrap;
+    padding: var(--space-4);
+  }
+
+  .button {
+    flex-basis: 100%;
+  }
+}

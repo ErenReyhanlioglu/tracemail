@@ -4,7 +4,7 @@
 // under it.
 import type { ReactNode } from "react";
 
-import type { CellState, HealthPanel } from "@/lib/panel";
+import type { CellState, RunsPanel } from "@/lib/panel";
 import { dayCells, formatPercent } from "@/lib/panel";
 import { strings } from "@/lib/strings";
 
@@ -58,7 +58,7 @@ export function HistoryRow({
   );
 }
 
-function Freshness({ panel, today }: { panel: HealthPanel; today: Date }) {
+function Freshness({ panel, today }: { panel: RunsPanel; today: Date }) {
   const hours = panel.freshness_days.reduce((sum, day) => sum + day.hours, 0);
   const onTime = panel.freshness_days.reduce((sum, day) => sum + day.on_time, 0);
   const share = hours > 0 ? onTime / hours : null;
@@ -80,7 +80,7 @@ function Freshness({ panel, today }: { panel: HealthPanel; today: Date }) {
   );
 }
 
-function Builds({ panel, today }: { panel: HealthPanel; today: Date }) {
+function Builds({ panel, today }: { panel: RunsPanel; today: Date }) {
   const builds = panel.dbt_days.reduce((sum, day) => sum + day.builds, 0);
   const ok = panel.dbt_days.reduce((sum, day) => sum + day.builds_ok, 0);
   const last = panel.last_build;
@@ -100,7 +100,7 @@ function Builds({ panel, today }: { panel: HealthPanel; today: Date }) {
   );
 }
 
-export function History({ panel }: { panel: HealthPanel }) {
+export function History({ panel }: { panel: RunsPanel }) {
   const today = new Date(panel.read_at);
   return (
     <section className={styles.section} aria-labelledby="history-title">

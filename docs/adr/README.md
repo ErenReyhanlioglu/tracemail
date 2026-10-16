@@ -15,7 +15,7 @@ written at the moment the decision is made — not drafted ahead of time.
 
 | ID | Title | Status |
 |----|-------|--------|
-| [0001](0001-no-retrieval-in-matching-embeddings-only-for-rough-ranking.md) | No Retrieval in Matching; Embeddings Only for Phase 4 Rough Ranking | Accepted (embedding part not yet implemented) |
+| [0001](0001-no-retrieval-in-matching-embeddings-only-for-rough-ranking.md) | No Retrieval in Matching; Embeddings Only for Phase 4 Rough Ranking | Accepted; rough ranking dropped from scope (2026-10-16) |
 | [0002](0002-release-tagging-and-versioning.md) | Release Tagging and Versioning | Accepted (deploys from `main`; first tag at the Phase 1 exit) |
 | [0003](0003-isolated-python-environments-for-pipeline-and-dbt.md) | Isolated Python Environments for Pipeline Code and dbt | Accepted |
 | [0004](0004-monorepo-layout.md) | Monorepo Layout | Accepted |
@@ -57,9 +57,11 @@ written at the moment the decision is made — not drafted ahead of time.
 | [0040](0040-viewer-routing-and-public-landing.md) | Viewer Routing — the Health Panel as the Public Landing Page | Accepted |
 | [0041](0041-collapsible-sidebar-with-icons.md) | Collapsible Sidebar with Section Icons | Accepted |
 | [0042](0042-list-toolbar-and-status-groups.md) | List Toolbar — Status Groups, Segmented Filter, Search, Period Menu, and Sorting | Accepted; posting default sort amended by [0047](0047-mobile-layout.md) |
-| [0043](0043-phase-1-exit-criterion.md) | Phase 1 Exit — 48 Hours of Uninterrupted Hourly Runs, LinkedIn History after `v0.1.0` | Accepted |
+| [0043](0043-phase-1-exit-criterion.md) | Phase 1 Exit — 48 Hours of Uninterrupted Hourly Runs, LinkedIn History after `v0.1.0` | Accepted; LinkedIn history dropped from scope (2026-10-16) |
 | [0044](0044-health-panel-core-metrics.md) | Health Panel Core — What to Measure and Show before Phase 2 | Accepted; panel copy amended by [0047](0047-mobile-layout.md) |
 | [0045](0045-delivery-metrics.md) | Delivery Metrics (DORA) — Source, Failure Definition, and Lead Time | Accepted; failure list amended by ADR-0046, measure captions by [0047](0047-mobile-layout.md) |
 | [0046](0046-failure-list-by-pull-request-and-separate-delivery-query.md) | Failure List by Pull Request, and a Separate Delivery Query | Accepted |
 | [0047](0047-mobile-layout.md) | Mobile Layout — Bottom Bar, Named Breakpoint, Stacked List Rows | Accepted |
 | [0048](0048-interaction-feedback.md) | Interaction Feedback — Pressing and Hover | Accepted |
+| [0049](0049-waiting-feedback.md) | Waiting Feedback — Instant Selection, a Quiet Pending State, and Loading on Every Route | Accepted |
+| [0050](0050-health-panel-sections-load-and-fail-independently.md) | Health Panel Sections Load and Fail Independently | Accepted; cold path (point 4) open |

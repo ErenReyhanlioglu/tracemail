@@ -50,7 +50,6 @@ Claims in this README link to the record that measured them.
 flowchart LR
     M[Gmail<br/>read-only IMAP] -->|sender exclusions| R[(GCS raw/<br/>write-once .eml)]
     C[Capture button<br/>Phase 2] -.-> R
-    L[LinkedIn export] -.-> R
     R -->|rule-based parsers| P[(GCS parsed/<br/>JSONL per day)]
     P -->|batch load jobs| LD[(BigQuery<br/>landing)]
     LD -->|dbt| S[staging] --> I[intermediate] --> MT[marts]
@@ -175,10 +174,10 @@ can be checked today:
 
 | Phase | Scope | State |
 |---|---|---|
-| 1. Core | Ingestion, parsing, warehouse, dbt models, Airflow, owner login, application and posting lists, production deployment | Running in production and public on its domain; LinkedIn history pending ([roadmap](docs/roadmap.md)) |
+| 1. Core | Ingestion, parsing, warehouse, dbt models, Airflow, owner login, application and posting lists, production deployment | Running in production and public on its domain |
 | 2. Intelligence | Reply classification, evidence-quoted match reports, golden set, MLflow comparison, CI eval gate | Planned |
-| 3. Interface | Public health panel, share links, full private sections | Planned |
-| 4. Optional | Rough fit ranking with a local embedding model, follow-up drafts | Planned |
+| 3. Interface | Public health panel, share links, full private sections | Health panel live; share links and the remaining private sections planned ([roadmap](docs/roadmap.md)) |
+| 4. Optional | Text completion from public job pages, follow-up drafts | Planned |
 
 Phase 1 has no LLM by design: the data foundation comes first.
 

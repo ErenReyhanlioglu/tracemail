@@ -6,7 +6,8 @@ import "server-only";
 import { cookies, headers } from "next/headers";
 
 import type { Application, ApplicationPage } from "@/lib/applications";
-import type { HealthPanel } from "@/lib/panel";
+import { type FailureReason, reasonForStatus } from "@/lib/failures";
+import type { DeliveryPanel, RunsPanel, StoragePanel } from "@/lib/panel";
 import type { PostingPage } from "@/lib/postings";
 
 const SESSION_COOKIE = "tracemail_session";
@@ -17,7 +18,15 @@ const PAGE_SIZE = 100;
 
 export class NotSignedInError extends Error {}
 
-export class ApiUnavailableError extends Error {}
+export class ApiUnavailableError extends Error {
+  constructor(
+    readonly reason: FailureReason,
+    message: string,
+    options?: ErrorOptions,
+  ) {
+    super(message, options);
+  }
+}
 
 function apiUrl(path: string): string {
   const base = process.env.TRACEMAIL_API_URL;
@@ -48,7 +57,7 @@ async function request(path: string): Promise<Response> {
     return await fetch(apiUrl(path), { headers: forwarded, cache: "no-store" });
   } catch (error) {
     // The API is down or unreachable: the same state as an error answer.
-    throw new ApiUnavailableError("API unreachable", { cause: error });
+    throw new ApiUnavailableError("unreachable", "API unreachable", { cause: error });
   }
 }
 
@@ -58,7 +67,10 @@ async function getJson<T>(path: string): Promise<T> {
     throw new NotSignedInError();
   }
   if (!response.ok) {
-    throw new ApiUnavailableError(`API answered ${response.status}`);
+    throw new ApiUnavailableError(
+      reasonForStatus(response.status),
+      `API answered ${response.status}`,
+    );
   }
   return (await response.json()) as T;
 }
@@ -122,7 +134,18 @@ export async function fetchPostings(request: PostingsRequest): Promise<PostingPa
   return getJson<PostingPage>(`/api/v1/postings?${params.toString()}`);
 }
 
-// The public health panel; the API caches it, so every visit may ask.
-export async function fetchHealthPanel(): Promise<HealthPanel> {
-  return getJson<HealthPanel>("/api/v1/public/health-panel");
+// The public health panel's parts (ADR-0050); the API caches each, so every
+// visit may ask.
+const PANEL_PATH = "/api/v1/public/health-panel";
+
+export async function fetchRunsPanel(): Promise<RunsPanel> {
+  return getJson<RunsPanel>(`${PANEL_PATH}/runs`);
+}
+
+export async function fetchStoragePanel(): Promise<StoragePanel> {
+  return getJson<StoragePanel>(`${PANEL_PATH}/storage`);
+}
+
+export async function fetchDeliveryPanel(): Promise<DeliveryPanel> {
+  return getJson<DeliveryPanel>(`${PANEL_PATH}/delivery`);
 }

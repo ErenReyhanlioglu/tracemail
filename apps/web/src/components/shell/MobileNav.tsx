@@ -3,7 +3,8 @@
 // the bottom with the five sections, each an icon over a visible label
 // (NN/g). The bottom bar only navigates; actions stay in the top bar
 // (Apple HIG). Hidden on wide screens by CSS, so the server renders one
-// markup for every width.
+// markup for every width. A tapped section shows as current at once
+// (ADR-0049).
 import Link from "next/link";
 
 import type { Viewer } from "@/lib/load";
@@ -12,8 +13,16 @@ import { strings } from "@/lib/strings";
 
 import { LockIcon, SignInIcon } from "../icons/NavIcons";
 import { LogoMark } from "../icons/LogoMark";
+import { PendingLink, PendingNavigation } from "../navigation/Pending";
 import styles from "./MobileNav.module.css";
-import { isComingLater, isLocked, NAV, type NavItem, type Section } from "./navItems";
+import {
+  isComingLater,
+  isLocked,
+  NAV,
+  type NavItem,
+  SECTION_GROUP,
+  type Section,
+} from "./navItems";
 import { SignOutButton } from "./SignOutButton";
 import { ThemeIconButton } from "./ThemeToggle";
 
@@ -69,28 +78,32 @@ function BarItem({ item, active, viewer }: { item: NavItem; active: Section; vie
       </span>
     );
   }
-  const current = item.section === active;
   return (
-    <Link
+    <PendingLink
       href={item.href}
-      className={current ? styles.itemActive : styles.item}
-      aria-current={current ? "page" : undefined}
+      group={SECTION_GROUP}
+      className={styles.item}
+      selectedClassName={styles.itemActive}
+      selected={item.section === active}
+      current="page"
     >
       {content}
-    </Link>
+    </PendingLink>
   );
 }
 
 export function BottomNav({ active, viewer }: { active: Section; viewer: Viewer }) {
   return (
     <nav className={styles.bar} aria-label={strings.appName}>
-      <ul className={styles.items}>
-        {NAV.map((item) => (
-          <li key={item.section}>
-            <BarItem item={item} active={active} viewer={viewer} />
-          </li>
-        ))}
-      </ul>
+      <PendingNavigation>
+        <ul className={styles.items}>
+          {NAV.map((item) => (
+            <li key={item.section}>
+              <BarItem item={item} active={active} viewer={viewer} />
+            </li>
+          ))}
+        </ul>
+      </PendingNavigation>
     </nav>
   );
 }

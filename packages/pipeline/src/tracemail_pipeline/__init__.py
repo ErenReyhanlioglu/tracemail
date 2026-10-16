@@ -1,1 +1,1 @@
-"""Pipeline: ingest mail and exports, parse them, and load them into BigQuery."""
+"""Pipeline: ingest mail, parse it, and load it into BigQuery."""

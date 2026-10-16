@@ -78,7 +78,9 @@ export interface RecentDeployment {
   is_change_failure: boolean;
 }
 
-export interface HealthPanel {
+// The panel comes in three parts, one per query, each loading and failing on
+// its own (ADR-0050).
+export interface RunsPanel {
   read_at: string;
   freshness_target_hours: number;
   freshness_objective_percent: number;
@@ -89,8 +91,16 @@ export interface HealthPanel {
   dbt_days: BuildDay[];
   last_build: LastBuild | null;
   resources: Resource[];
-  // Null when the delivery data cannot be read; the rest still shows.
-  delivery: Delivery | null;
+}
+
+export interface StoragePanel {
+  read_at: string;
+  resources: Resource[];
+}
+
+export interface DeliveryPanel {
+  read_at: string;
+  delivery: Delivery;
   delivery_days: DeliveryDay[];
   recent_deployments: RecentDeployment[];
 }

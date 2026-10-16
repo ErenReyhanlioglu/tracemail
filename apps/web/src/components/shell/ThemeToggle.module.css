@@ -25,7 +25,7 @@
   border-radius: 50%;
   background: var(--color-sidebar-knob);
   color: var(--color-sidebar);
-  transition: transform 160ms ease;
+  transition: transform var(--motion-base) ease;
 }
 
 .icon {

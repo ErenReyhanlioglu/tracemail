@@ -7,8 +7,8 @@
 // a click outside, when focus leaves it, and when a period is chosen. On
 // phones the button sits in a sideways-scrolling row that would cut the
 // list off, so the list is placed under the button from its measured
-// position (ADR-0047) and closes when anything scrolls.
-import Link from "next/link";
+// position (ADR-0047) and closes when anything scrolls. A chosen period shows
+// in the button at once, while the list loads (ADR-0049).
 import {
   type CSSProperties,
   type FocusEvent,
@@ -20,6 +20,7 @@ import {
 
 import { CheckIcon, ChevronDownIcon, ClockIcon } from "./icons/NavIcons";
 import styles from "./ListPanel.module.css";
+import { PendingLink, usePendingTarget } from "./navigation/Pending";
 
 export interface MenuOption {
   key: string;
@@ -29,6 +30,7 @@ export interface MenuOption {
 }
 
 const GAP_PX = 4;
+const GROUP = "period";
 
 // Where the list goes: under the button, right edges aligned.
 function placeUnder(button: HTMLButtonElement | null): CSSProperties {
@@ -95,7 +97,9 @@ export function PeriodMenu({
     }
   }
 
-  const current = options.find((option) => option.selected);
+  const target = usePendingTarget(GROUP);
+  const current =
+    options.find((option) => option.href === target) ?? options.find((option) => option.selected);
   return (
     <div ref={root} className={styles.menu} onBlur={onBlur}>
       <button
@@ -117,16 +121,18 @@ export function PeriodMenu({
       <ul id={listId} className={styles.menuList} style={place} hidden={!open}>
         {options.map((option) => (
           <li key={option.key}>
-            <Link
+            <PendingLink
               href={option.href}
+              group={GROUP}
               scroll={false}
               className={styles.menuItem}
-              aria-current={option.selected ? "true" : undefined}
+              selected={option.selected}
+              current="true"
               onClick={() => setOpen(false)}
             >
-              <span className={styles.menuCheck}>{option.selected ? <CheckIcon /> : null}</span>
+              <span className={styles.menuCheck}>{option === current ? <CheckIcon /> : null}</span>
               {option.label}
-            </Link>
+            </PendingLink>
           </li>
         ))}
       </ul>

@@ -109,10 +109,15 @@
   --radius-md: 0.625rem;
   --radius-pill: 999px;
   --border: 1px solid var(--color-border);
+  /* Motion (ADR-0049): every site motion takes one of three durations.
+     Fast answers a press, base moves something, slow cross-fades. */
+  --motion-fast: 80ms;
+  --motion-base: 150ms;
+  --motion-slow: 250ms;
   --sidebar-width: 16rem;
   /* Collapsed: the icon column, wide enough for the theme switch. */
   --sidebar-collapsed-width: 4.5rem;
-  --sidebar-transition: 150ms;
+  --sidebar-transition: var(--motion-base);
   --nav-icon: 1.125rem;
   --nav-control: 2rem;
   /* Phone layout sizes (ADR-0047); the phone width itself is the named
@@ -173,6 +178,9 @@
   --search-max-width: 28rem;
   --layer-menu: 10;
   --shadow-menu: 0 0.25rem 0.75rem light-dark(rgb(20 24 31 / 0.12), rgb(0 0 0 / 0.45));
+  /* A menu grows into place from its button (ADR-0049). */
+  --menu-enter-scale: 0.96;
+  --menu-enter-offset: -0.25rem;
   --table-header-height: 2.75rem;
   --table-row-height: 4.75rem;
   --pagination-height: 3.25rem;
@@ -182,13 +190,13 @@
   --toggle-knob: 1.375rem;
   --toggle-inset: 0.125rem;
   --toggle-travel: 1.5rem;
-  --theme-icon-transition: 250ms;
+  --theme-icon-transition: var(--motion-slow);
   --focus-ring: 2px solid var(--color-accent);
   /* Pressed state (ADR-0047): every control answers the moment it is
      pressed, under the 0.1 s that reads as instant (NN/g). Controls shrink
      slightly; rows and links tint. */
   --press-scale: 0.96;
-  --press-duration: 80ms;
+  --press-duration: var(--motion-fast);
   --press-opacity: 0.6;
   --color-pressed: light-dark(rgb(20 24 31 / 0.08), rgb(230 233 238 / 0.08));
   --color-sidebar-pressed: rgb(255 255 255 / 0.12);
@@ -211,10 +219,38 @@
      response (under 0.5 s) and a cold one (1.5 s or more), measured
      2026-10-13, so only slow loads show it. */
   --skeleton-delay: 600ms;
+  /* A slow navigation (ADR-0049): the content it replaces starts to dim
+     after the delay, a chosen default between the measured warm answers
+     (about 0.35 to 0.5 s) and nothing, and fades over a short time, so an
+     answer arriving just after the delay barely shows it. */
+  --pending-delay: 300ms;
+  --pending-fade: 200ms;
+  --pending-opacity: 0.5;
+  /* One turn of a running retry's spinner (ADR-0050). */
+  --spin-duration: 1s;
   --skeleton-pulse: 1.2s;
   --skeleton-bar-height: 0.75rem;
   --skeleton-segment-width: 6rem;
+  /* Health panel parts while they load (ADR-0050): each placeholder takes
+     its block's height as measured on production on 2026-10-16 (1440 px
+     wide; phones below), so the page does not move when data arrives. */
+  --panel-status-height: 3.625rem;
+  --panel-stages-height: 28rem;
+  --panel-history-height: 25.875rem;
+  --panel-resources-height: 22.875rem;
+  --panel-delivery-height: 38.25rem;
   --skeleton-menu-width: 9rem;
+}
+
+/* The panel placeholders' heights on phones (390 px wide), as measured. */
+@media (--phone) {
+  :root {
+    --panel-status-height: 5.6875rem;
+    --panel-stages-height: 35.875rem;
+    --panel-history-height: 22.3125rem;
+    --panel-resources-height: 31.125rem;
+    --panel-delivery-height: 34rem;
+  }
 }
 
 :root[data-theme="light"] {

@@ -17,7 +17,7 @@ from starlette.responses import RedirectResponse, Response
 
 from tracemail_api.config import ApiSettings
 from tracemail_api.main import create_app
-from tracemail_api.panel import HealthPanel
+from tracemail_api.panel import DeliveryPanel, RunsPanel, StoragePanel
 from tracemail_api.routes.auth import get_google
 from tracemail_api.warehouse import ApplicationRow, MartsReader, PostingRow
 
@@ -103,10 +103,14 @@ def posting(
     )
 
 
-def health_panel_row() -> HealthPanel:
-    """A small panel: one stage, one day of each strip, one allowance."""
-    started = datetime(2026, 10, 14, 0, 0, 3, tzinfo=UTC)
-    return HealthPanel.model_validate(
+PANEL_READ_AT = datetime(2026, 10, 14, 0, 0, 3, tzinfo=UTC)
+
+
+def runs_panel_row() -> RunsPanel:
+    """A small run-records part: one stage, one day of each strip, one
+    allowance."""
+    started = PANEL_READ_AT
+    return RunsPanel.model_validate(
         {
             "read_at": started,
             "freshness_target_hours": 2,
@@ -143,27 +147,6 @@ def health_panel_row() -> HealthPanel:
                     "builds_ok": 2,
                 }
             ],
-            "delivery": {
-                "deployments": 14,
-                "failed_attempts": 1,
-                "median_lead_time_seconds": 706.0,
-                "changes_with_lead_time": 14,
-                "change_failures": 1,
-                "median_recovery_seconds": 20571.0,
-                "recovered_failures": 1,
-                "rework_deployments": 1,
-                "last_deployed_at": started,
-            },
-            "delivery_days": [{"local_date": date(2026, 10, 13), "state": "ok"}],
-            "recent_deployments": [
-                {
-                    "deployed_at": started,
-                    "pull_request_number": 24,
-                    "pull_request_title": "fix: pending hours",
-                    "lead_time_seconds": 514.0,
-                    "is_change_failure": False,
-                }
-            ],
             "last_build": None,
             "resources": [
                 {
@@ -177,18 +160,69 @@ def health_panel_row() -> HealthPanel:
     )
 
 
+def storage_panel_row() -> StoragePanel:
+    """BigQuery storage as one allowance without a projection."""
+    return StoragePanel.model_validate(
+        {
+            "read_at": PANEL_READ_AT,
+            "resources": [
+                {
+                    "allowance": "bigquery_storage_bytes",
+                    "used_to_date": 1_600_000,
+                    "projected_month": None,
+                    "monthly_free": 10_737_418_240,
+                }
+            ],
+        }
+    )
+
+
+def delivery_panel_row() -> DeliveryPanel:
+    """Delivery metrics with one day and one deployment."""
+    return DeliveryPanel.model_validate(
+        {
+            "read_at": PANEL_READ_AT,
+            "delivery": {
+                "deployments": 14,
+                "failed_attempts": 1,
+                "median_lead_time_seconds": 706.0,
+                "changes_with_lead_time": 14,
+                "change_failures": 1,
+                "median_recovery_seconds": 20571.0,
+                "recovered_failures": 1,
+                "rework_deployments": 1,
+                "last_deployed_at": PANEL_READ_AT,
+            },
+            "delivery_days": [{"local_date": date(2026, 10, 13), "state": "ok"}],
+            "recent_deployments": [
+                {
+                    "deployed_at": PANEL_READ_AT,
+                    "pull_request_number": 24,
+                    "pull_request_title": "fix: pending hours",
+                    "lead_time_seconds": 514.0,
+                    "is_change_failure": False,
+                }
+            ],
+        }
+    )
+
+
 class FakeMarts(MartsReader):
-    """Serves fixed rows and counts queries; can simulate an outage."""
+    """Serves fixed rows and counts queries; can simulate an outage, of the
+    whole warehouse or of panel parts (by name: runs, storage, delivery)."""
 
     def __init__(
         self,
         rows: list[ApplicationRow] | None = None,
         error: Exception | None = None,
         postings: list[PostingRow] | None = None,
+        failing_parts: dict[str, Exception] | None = None,
     ) -> None:
         self.rows = rows or []
         self.posting_rows = postings or []
         self.error = error
+        self.failing_parts = failing_parts or {}
+        self.part_reads: dict[str, int] = {}
         self.last_modified = datetime(2026, 10, 1, tzinfo=UTC)
         self.queries = 0
         self.closed = False
@@ -211,9 +245,23 @@ class FakeMarts(MartsReader):
         self.queries += 1
         return self.posting_rows
 
-    async def health_panel(self) -> list[HealthPanel]:
+    def _read_part(self, name: str) -> None:
         self.queries += 1
-        return [health_panel_row()]
+        self.part_reads[name] = self.part_reads.get(name, 0) + 1
+        if name in self.failing_parts:
+            raise self.failing_parts[name]
+
+    async def runs_panel(self) -> list[RunsPanel]:
+        self._read_part("runs")
+        return [runs_panel_row()]
+
+    async def storage_panel(self) -> list[StoragePanel]:
+        self._read_part("storage")
+        return [storage_panel_row()]
+
+    async def delivery_panel(self) -> list[DeliveryPanel]:
+        self._read_part("delivery")
+        return [delivery_panel_row()]
 
 
 @contextmanager

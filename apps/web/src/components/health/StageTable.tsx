@@ -2,7 +2,7 @@
 // hourly cells under one shared axis, the last processing run, and the
 // median duration. Serving has no row: the measurements render only when the
 // API answers, so a row for it could never say anything but "up".
-import type { CellState, HealthPanel, StageRow } from "@/lib/panel";
+import type { CellState, RunsPanel, StageRow } from "@/lib/panel";
 import {
   axisRunTimes,
   currentStageState,
@@ -84,7 +84,7 @@ function Stage({ stage, models }: { stage: StageRow; models: number | null }) {
   );
 }
 
-export function StageTable({ panel }: { panel: HealthPanel }) {
+export function StageTable({ panel }: { panel: RunsPanel }) {
   const axis = axisRunTimes(new Date(panel.read_at));
   const models = panel.last_build?.project_models ?? null;
   return (
