@@ -8,6 +8,7 @@ import type { Viewer } from "@/lib/load";
 import styles from "./AppShell.module.css";
 import { BottomNav, MobileHeader } from "./MobileNav";
 import type { Section } from "./navItems";
+import { SectionMain } from "./SectionMain";
 import { Sidebar } from "./Sidebar";
 
 export function AppShell({
@@ -19,17 +20,22 @@ export function AppShell({
   viewer: Viewer;
   children: ReactNode;
 }) {
-  // A visitor's section fades in (ADR-0049, note of 2026-11-11); the owner's
-  // stays instant. Every page renders this same shell, so the section as key
-  // makes a section change mount a new content area, which plays the fade.
-  const mainClass = viewer === "visitor" ? `${styles.main} ${styles.fadeIn}` : styles.main;
+  // A visitor's section fades in once (ADR-0049, note of 2026-11-11); the
+  // owner's stays instant. Every page renders this same shell, so the
+  // section as key makes a section change mount a new content area.
   return (
     <div className={styles.shell}>
       <MobileHeader viewer={viewer} />
       <Sidebar active={active} viewer={viewer} />
-      <main key={active} className={mainClass}>
+      <SectionMain
+        key={active}
+        section={active}
+        fade={viewer === "visitor"}
+        className={styles.main}
+        fadeClassName={styles.fadeIn}
+      >
         {children}
-      </main>
+      </SectionMain>
       <BottomNav active={active} viewer={viewer} />
     </div>
   );
