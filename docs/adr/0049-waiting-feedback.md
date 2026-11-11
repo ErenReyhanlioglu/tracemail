@@ -248,7 +248,13 @@ quietly; the timings change in one file.
 **Note, 2026-11-11:** the decision on rejected alternative 6 changed for
 visitors. A visitor's section now fades in over `--motion-base` (150 ms):
 the content area is keyed by section, so a section change mounts a new one
-and its CSS fade-in plays. The sidebar does not fade. The owner's
+and its CSS fade-in plays. The sidebar does not fade. A section with a
+loading screen mounts the content area twice, so the first version faded
+twice in a row (measured on production: opacity 0 to 1, back to 0, and to
+1 again). The page that replaces the loading screen now continues the
+fade the loading screen began, by a negative animation delay (measured on
+a local production build, with no added latency and with 300 ms: one rise
+from 0 to 1). The page the browser first loads does not fade. The owner's
 navigation stays instant, as rejected alternative 6 decided, because the
 owner reads tables there and a visitor's sections have none. The fade
 changes opacity only, so it is kept under reduced motion. React's
