@@ -1,22 +1,32 @@
-/* Empty and error states take the list panel's place, in the same shape;
-   a no-match message sits inside the panel, under its toolbar. */
-.panel,
-.inset {
+/* Empty and no-match states take the rows' place (ADR-0052): centred in
+   the room the rows would fill, with no frame of their own, since the list
+   card or the page already frames them. */
+.state {
   display: flex;
+  flex: 1;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
   gap: var(--space-2);
-  padding: var(--space-8) var(--space-6);
+  padding: var(--space-12) var(--space-6);
+  text-align: center;
 }
 
-.panel {
-  background: var(--color-surface);
-  border: var(--border);
-  border-radius: var(--radius-md);
+/* A soft disc behind the icon, so the message has a focal point. */
+.icon {
+  display: grid;
+  place-items: center;
+  width: var(--state-icon-disc);
+  height: var(--state-icon-disc);
+  margin-bottom: var(--space-2);
+  border: 1px solid var(--color-control-border);
+  border-radius: 50%;
+  background: var(--color-raised);
+  color: var(--color-text-meta);
 }
 
 .title {
-  font-size: var(--text-lg);
+  font-size: var(--text-section);
   font-weight: var(--weight-semibold);
 }
 
@@ -28,9 +38,9 @@
 .action {
   margin-top: var(--space-2);
   padding: var(--space-2) var(--space-4);
-  border: var(--border);
+  border: 1px solid var(--color-control-border);
   border-radius: var(--radius-sm);
-  background: var(--color-surface);
+  background: none;
   color: var(--color-text);
   font: inherit;
   font-size: var(--text-sm);
@@ -41,12 +51,12 @@
 
 @media (hover: hover) {
   .action:hover {
-    border-color: var(--color-text-muted);
+    border-color: var(--color-text-meta);
   }
 }
 
 .action:disabled {
-  color: var(--color-text-muted);
+  color: var(--color-text-meta);
   cursor: default;
 }
 

@@ -49,3 +49,7 @@ out/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Design mockups drawn over real applications and postings: kept local,
+# since real mail content never enters the repository (CLAUDE.md, Privacy).
+docs/interface_concept/v2/

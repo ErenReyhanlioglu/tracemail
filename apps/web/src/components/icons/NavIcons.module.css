@@ -9,3 +9,11 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+
+/* Filled marks (the GitHub and LinkedIn logos): the same box, no stroke. */
+.filled {
+  flex-shrink: 0;
+  width: var(--nav-icon);
+  height: var(--nav-icon);
+  fill: currentColor;
+}

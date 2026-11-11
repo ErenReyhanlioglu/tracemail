@@ -7,6 +7,7 @@ import Link from "next/link";
 import { PANEL_PATH } from "@/lib/paths";
 import { strings } from "@/lib/strings";
 
+import { HealthIcon } from "../icons/NavIcons";
 import styles from "./LockedSection.module.css";
 import { MailEasterEgg } from "./MailEasterEgg";
 
@@ -62,6 +63,7 @@ export function LockedSection({ section, viewer }: { section: LockedKey; viewer:
         </h2>
         <p className={styles.description}>{text.held(text.sections[section])}</p>
         <Link className={styles.link} href={PANEL_PATH}>
+          <HealthIcon />
           {text.panelLink}
         </Link>
       </div>

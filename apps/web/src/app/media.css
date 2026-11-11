@@ -6,5 +6,10 @@
  *
  * Phones: below 48rem (768 px) the sidebar gives way to a top bar and a
  * bottom bar, and lists stack their rows.
+ * Tablets: from 48rem to below 75rem (1200 px) the sidebar can collapse to
+ * its icons (ADR-0052); from 75rem on, a computer, it stays open. The
+ * bounds follow Android's window size classes: tablets in either
+ * orientation fall below 1200 dp.
  */
 @custom-media --phone (width < 48rem);
+@custom-media --tablet (48rem <= width < 75rem);

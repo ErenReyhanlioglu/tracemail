@@ -1,0 +1,66 @@
+/*
+ * The phone's menu sheet (ADR-0052): rises from the bottom over a dimmed
+ * page, rounded at the top, with a handle; its rows are the sidebar's own.
+ */
+.sheet {
+  width: 100%;
+  max-width: 100%;
+  max-height: var(--sheet-max-height);
+  margin: auto 0 0;
+  padding: var(--space-2) var(--space-3)
+    calc(var(--space-5) + env(safe-area-inset-bottom, 0));
+  overflow-y: auto;
+  border: 0;
+  border-top: 1px solid var(--color-control-border);
+  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+  background: var(--color-raised);
+  box-shadow: var(--shadow-sheet);
+  color: var(--color-text-secondary);
+  transition: transform var(--motion-slow) ease-out;
+}
+
+.sheet::backdrop {
+  background: var(--sheet-backdrop);
+  transition: opacity var(--motion-slow) ease-out;
+}
+
+/* Opening slides the sheet up and fades the page out; closing is at once. */
+@starting-style {
+  .sheet[open] {
+    transform: translateY(100%);
+  }
+
+  .sheet[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet,
+  .sheet::backdrop {
+    transition: none;
+  }
+}
+
+.handle {
+  width: var(--sheet-handle-width);
+  height: 4px;
+  margin: 0 auto var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--color-control-border);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sheet-gap);
+}
+
+/* The viewer and the theme switch on one row, inset like the rows. */
+.account {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-inline: var(--space-3);
+}

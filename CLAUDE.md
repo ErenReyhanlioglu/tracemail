@@ -501,16 +501,20 @@ company correspondence). This section overrides convenience.
 - Read-only UI (until Phase 4). No forms that write data.
 - Private data is fetched server-side with the session; it never reaches a
   visitor's browser, not even hidden. Visitors' locked pages are static.
-- Design tokens come from the mockups: IBM Plex Sans / IBM Plex Mono, sidebar
-  `#151A21` in dark and white in light (ADR-0034), accent `#1F4FD8`,
-  background `#F5F6F8`, success `#0B6B57`, warning
-  `#FCEBD0` / `#7A4300`. Define them once as tokens, not inline per component.
+- Design rules are ADR-0052: IBM Plex Sans for text, IBM Plex Mono for
+  metadata; layered surfaces from the app's ground to the active item; one
+  accent (`#7AA2FF` dark, `#1F4FD8` light) used sparingly, never as a large
+  fill; one color per status meaning (green fine, red error or rejection,
+  amber progress or delay, a hollow grey ring for waiting), with softer
+  cell colors in light. Every color is a `light-dark()` pair defined once in
+  `globals.css`; components use the names, never raw values.
 - Numbers use the mono font, as in the mockups.
-- Phones (ADR-0047): one breakpoint, named once in `src/app/media.css`
-  (`@custom-media --phone`). Stylesheets write `@media (--phone)`, never a
-  width; no JavaScript width checks. Each component keeps its phone rules
-  at the end of its own stylesheet; navigation is the only separate phone
-  component (`components/shell/`).
+- Screen ranges (ADR-0047, ADR-0052): phone and tablet, each named once in
+  `src/app/media.css` (`@custom-media --phone`, `--tablet`); wider is a
+  computer. Stylesheets write `@media (--phone)` or `@media (--tablet)`,
+  never a width; no JavaScript width checks. Each component keeps its phone
+  rules at the end of its own stylesheet; navigation is the only separate
+  phone component (`components/shell/`).
 - Every report screen keeps the disclaimer that the match report is overlap,
   not hiring probability.
 

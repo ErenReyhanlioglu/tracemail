@@ -21,6 +21,7 @@ export function HistoryRow({
   cells,
   window,
   words,
+  thin = false,
 }: {
   name: string;
   detail?: string;
@@ -29,6 +30,8 @@ export function HistoryRow({
   cells: CellState[];
   window?: string;
   words?: CellWords;
+  // Deployments draw a thin strip (ADR-0052).
+  thin?: boolean;
 }) {
   return (
     <div className={styles.history}>
@@ -42,7 +45,12 @@ export function HistoryRow({
           <span className={styles.sub}>{caption}</span>
         </div>
       </div>
-      <Strip cells={cells} label={summary(`${name}, ${text.title}`, cells, words)} tall />
+      <Strip
+        cells={cells}
+        label={summary(`${name}, ${text.title}`, cells, words)}
+        tall={!thin}
+        thin={thin}
+      />
       <div className={styles.window}>
         <span>{text.from}</span>
         <span className={styles.rule} />
@@ -108,12 +116,13 @@ export function History({ panel }: { panel: RunsPanel }) {
         <h2 id="history-title" className={styles.heading}>
           {text.title}
         </h2>
+        <CellLegend className={styles.legendWide} />
       </div>
       <div className={styles.card}>
         <Freshness panel={panel} today={today} />
         <Builds panel={panel} today={today} />
       </div>
-      <CellLegend />
+      <CellLegend className={styles.legendNarrow} />
     </section>
   );
 }

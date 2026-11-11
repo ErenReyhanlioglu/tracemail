@@ -12,6 +12,53 @@
   overflow-x: auto;
 }
 
+/* Wide screens (ADR-0052): the scroller takes the panel's free height and
+   scrolls the rows; the header sticks to its top. It is also the container
+   the crowded rule below measures, so the sidebar's width counts. */
+.scroll {
+  container-type: inline-size;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* The channel beside the company, only once its column is given up. */
+.inlineChannel {
+  display: none;
+}
+
+/* A narrower table (ADR-0052): below 90rem of table width the short
+   columns take their compact widths, so the first column keeps its room. */
+@container (width < 90rem) {
+  .table {
+    --col-channel: var(--col-channel-compact);
+    --col-location: var(--col-location-compact);
+    --col-date: var(--col-date-compact);
+    --col-last-event: var(--col-last-event-compact);
+    --col-status: var(--col-status-compact);
+  }
+}
+
+/* A crowded table (tablets, ADR-0052): below 60rem of table width the
+   droppable column shrinks to nothing and its value moves into the first
+   column's second line. (Container queries cannot read custom properties,
+   so the width is written here.) */
+@container (width < 60rem) {
+  .table {
+    --col-channel: 0px;
+  }
+
+  .table th.droppable,
+  .table td.droppable {
+    padding: 0;
+    border-left: 0;
+  }
+
+  .inlineChannel {
+    display: inline;
+  }
+}
+
 .table {
   width: 100%;
   min-width: var(--table-min-width, 0);
@@ -27,13 +74,22 @@
 
 .table thead th,
 .table thead td {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   height: var(--table-header-height);
   padding: 0 var(--space-4);
-  border-bottom: var(--border);
-  /* The panel is one tone (ADR-0042); lines, not fills, separate its parts. */
-  color: var(--color-text-muted);
-  font-size: var(--text-xs);
+  /* A drawn line, not a border: a collapsed border stays behind when a
+     sticky cell moves. */
+  box-shadow: inset 0 -1px 0 var(--color-border);
+  /* The header sits on the band tone (ADR-0052). */
+  background: var(--color-band);
+  color: var(--color-text-meta);
+  font-family: var(--font-mono);
+  font-size: var(--text-column);
   font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-column);
+  text-transform: uppercase;
   /* Headers align like their column's content (ADR-0039); every column
      here is text or a date, so all are left-aligned. */
   text-align: left;
@@ -91,7 +147,7 @@
 .table tbody td {
   height: var(--table-row-height);
   padding: 0 var(--space-4);
-  border-bottom: var(--border);
+  border-bottom: 1px solid var(--color-rule);
   vertical-align: middle;
   font-size: var(--text-sm);
 }
@@ -107,7 +163,7 @@
 
 @media (hover: hover) {
   .table tbody tr:hover {
-    background: var(--color-row-hover);
+    background: var(--color-raised);
   }
 }
 
@@ -119,44 +175,94 @@
   white-space: nowrap;
 }
 
+/* The company's monogram beside the row's two lines (ADR-0052). */
+.withMark {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.names {
+  flex: 1;
+  min-width: 0;
+}
+
+/* One hue per company (--mono-hue, set on the tile), at fixed saturation
+   and lightness per theme: the v2 mockup's recipe in dark; in light a pale
+   tile with a dark letter, at least 4.84:1 on every hue (dark: 7.17:1). The
+   colors depend on the tile's own hue, so they live here, not in the
+   global tokens. */
+.monogram {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: var(--monogram-size);
+  height: var(--monogram-size);
+  border: 1px solid
+    light-dark(hsl(var(--mono-hue) 30% 85%), hsl(var(--mono-hue) 28% 25%));
+  border-radius: var(--radius-tile);
+  background: light-dark(hsl(var(--mono-hue) 40% 94%), hsl(var(--mono-hue) 28% 17%));
+  color: light-dark(hsl(var(--mono-hue) 45% 30%), hsl(var(--mono-hue) 55% 78%));
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+/* No company: one fixed grey tile with a question mark, never a hue. */
+.monogramBlank {
+  border-color: var(--color-control-border);
+  background: var(--color-raised);
+  color: var(--color-text-meta);
+}
+
 /* A row's two lines: the position first, the company under it. */
 .lead {
-  font-size: var(--text-base);
-  font-weight: var(--weight-semibold);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
 }
 
 .sub {
   margin-top: var(--space-1);
-  color: var(--color-text-secondary);
+  color: var(--color-text-tertiary);
+  font-size: var(--text-xs);
 }
 
 .mono {
   font-family: var(--font-mono);
-  font-size: var(--text-xs);
+  font-size: var(--text-2xs);
 }
 
 .secondary {
   color: var(--color-text-secondary);
 }
 
-.ago {
-  margin-top: var(--space-1);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
-}
-
-.badges {
+/* A posting's last sighting and its alert count, on one line. */
+.dateLine {
   display: flex;
-  flex-wrap: nowrap;
-  gap: var(--space-2);
-  overflow: hidden;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
 }
 
-.closedNote {
+.mentions {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-meta);
   font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
+  font-size: var(--text-2xs);
+}
+
+.mentions svg {
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+}
+
+.mentionsMany {
+  color: var(--color-text);
+  font-weight: var(--weight-semibold);
 }
 
 /* Closed without reply: quieter, without lowering text contrast. */
@@ -176,12 +282,12 @@
   width: 2rem;
   height: 2rem;
   border-radius: var(--radius-sm);
-  color: var(--color-text-muted);
+  color: var(--color-text-meta);
 }
 
 @media (hover: hover) {
   .link:hover {
-    background: var(--color-page);
+    background: var(--color-raised);
     color: var(--color-text);
   }
 }
@@ -196,33 +302,9 @@
   stroke-linejoin: round;
 }
 
-/* A posting's status: a dot and the word, in the status's colour (owner's
-   review): new asks for a look, saved is in progress, applied is done. */
-.status {
-  font-weight: var(--weight-medium);
-}
-
-.status::before {
-  content: "";
-  display: inline-block;
-  width: var(--space-2);
-  height: var(--space-2);
-  margin-right: var(--space-2);
-  border-radius: 50%;
-  background: currentColor;
-  vertical-align: middle;
-}
-
-.statusNew {
-  color: var(--color-warning-text);
-}
-
-.statusSaved {
-  color: var(--color-progress-text);
-}
-
-.statusApplied {
-  color: var(--color-success-text);
+/* The location after the company: phones' cards only. */
+.inlinePlace {
+  display: none;
 }
 
 /* Phone-only parts (ADR-0047). */
@@ -237,6 +319,25 @@
    without sideways scrolling). Rules on cells name the cell element, so
    they outrank the general cell rule they override. */
 @media (--phone) {
+  /* Phones show no channel (ADR-0047). */
+  .inlineChannel {
+    display: none;
+  }
+
+  .dateLine {
+    display: contents;
+  }
+
+  /* Phones keep the stacked rows without the monogram (ADR-0047). */
+  .monogram {
+    display: none;
+  }
+
+  .withMark,
+  .names {
+    display: contents;
+  }
+
   .scroll {
     overflow-x: visible;
   }
@@ -322,22 +423,6 @@
     line-height: var(--row-line-first);
   }
 
-  .cellDate .ago {
-    margin-top: var(--row-line-gap);
-    font-size: var(--text-2xs);
-    line-height: var(--row-line-second);
-  }
-
-  /* The location under the date, in the room the title leaves. */
-  .place {
-    max-width: var(--phone-place-width);
-    margin-top: var(--row-line-gap);
-    color: var(--color-text-muted);
-    font-size: var(--text-2xs);
-    line-height: var(--row-line-second);
-    text-align: right;
-  }
-
   .table tbody td.cellStatus {
     display: flex;
     grid-area: status;
@@ -345,22 +430,6 @@
     gap: var(--space-2);
     min-width: 0;
     min-height: var(--row-line-first);
-  }
-
-  .cellStatus .status {
-    flex-shrink: 0;
-    font-size: var(--text-xs);
-    line-height: var(--row-line-first);
-  }
-
-  /* A posting's location, beside its status, in the same plain type as an
-     application's location (owner's review). */
-  .cellStatus .place {
-    min-width: 0;
-    max-width: none;
-    margin-top: 0;
-    line-height: var(--row-line-first);
-    text-align: left;
   }
 
   /* A flex box, so the icon's cell takes no text line of its own. */
@@ -374,6 +443,82 @@
     width: var(--touch-target);
     height: var(--touch-target);
     margin: calc(var(--space-3) * -1);
+  }
+
+  /* Each row is a card (ADR-0052, owner's review): the monogram beside
+     the position over "company · location", and on the right the date
+     (for a posting with its alert count) over the status badge. The whole
+     card opens the posting: the row's link is stretched over it, its icon
+     hidden. */
+  .cards tbody tr {
+    position: relative;
+    grid-template-areas:
+      "main date"
+      "main status";
+  }
+
+  .cards .withMark {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .cards .names {
+    display: block;
+    min-width: 0;
+  }
+
+  .cards .monogram {
+    display: grid;
+  }
+
+  .cards .inlinePlace {
+    display: inline;
+  }
+
+  .cards .dateLine {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .cards tbody td.cellStatus {
+    justify-content: flex-end;
+  }
+
+  .cards tbody td.linkCell {
+    display: contents;
+  }
+
+  .cards .link {
+    position: absolute;
+    inset: 0;
+    width: auto;
+    height: auto;
+    margin: 0;
+    border-radius: 0;
+  }
+
+  .cards .link svg {
+    display: none;
+  }
+
+  /* The stretched link stays clear, so it never covers the text (the
+     stretched-link pattern); the card itself answers: lighter on hover
+     (the row rule above), darker while pressed, and a focus ring drawn
+     inside its edge. */
+  .cards .link,
+  .cards .link:hover,
+  .cards .link:active {
+    background: none;
+    transform: none;
+  }
+
+  .cards tbody tr:has(.link:active) {
+    background: var(--color-pressed);
+  }
+
+  .cards .link:focus-visible {
+    outline-offset: -2px;
   }
 }
 

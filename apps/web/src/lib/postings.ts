@@ -46,9 +46,17 @@ export function parsePeriod(value: string | undefined): Period {
   return PERIODS.find((period) => period === value) ?? DEFAULT_PERIOD;
 }
 
-// Date columns the list can be sorted by (ADR-0042); the API sorts.
-export type PostingSortKey = "first_seen" | "last_seen";
-export const POSTING_SORT_KEYS: readonly PostingSortKey[] = ["first_seen", "last_seen"];
+// What the list can be sorted by (ADR-0042, ADR-0052): the two date
+// columns, or how many alert mails carried a posting; the API sorts.
+export type PostingSortKey = "first_seen" | "last_seen" | "mentions";
+export const POSTING_SORT_KEYS: readonly PostingSortKey[] = ["first_seen", "last_seen", "mentions"];
+// The sort menu's choices in order, each with the order it starts in.
+export const POSTING_SORT_MENU: readonly PostingSortKey[] = ["last_seen", "first_seen", "mentions"];
+export const POSTING_SORT_ORDER: Record<PostingSortKey, "asc" | "desc"> = {
+  last_seen: "desc",
+  first_seen: "desc",
+  mentions: "desc",
+};
 // Newest sighting first (owner's review, ADR-0047): the last time a posting
 // was seen matters more than the first, and it is the one date a phone row
 // shows.

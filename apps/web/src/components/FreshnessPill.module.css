@@ -1,0 +1,80 @@
+/* The mailbox pill (ADR-0052): the state's tint and edge, a haloed dot, the
+   source, and how long ago in mono. Wide screens only; phones keep their
+   toolbar as it is (ADR-0047). */
+.pill {
+  --tone: var(--color-ok);
+  --tone-text: var(--color-ok-text);
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--field-height);
+  padding: 0 var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--tone) var(--edge), transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--tone) var(--tint), transparent);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+.pill::before {
+  content: "";
+  width: var(--dot-size);
+  height: var(--dot-size);
+  margin-right: var(--space-1);
+  border-radius: 50%;
+  background: var(--tone);
+  box-shadow: 0 0 0 var(--dot-halo) color-mix(in srgb, var(--tone) var(--halo), transparent);
+}
+
+.source {
+  color: var(--tone-text);
+  font-weight: var(--weight-medium);
+}
+
+.detail {
+  color: var(--color-text-tertiary);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+}
+
+.late {
+  --tone: var(--color-attention);
+  --tone-text: var(--color-attention-text);
+}
+
+.failed {
+  --tone: var(--color-error);
+  --tone-text: var(--color-error-text);
+}
+
+/* A narrow toolbar (ADR-0052): the time steps aside, so tabs, search, and
+   the pill stay on one line; it is still in the pill's title and read
+   aloud. */
+.detailSpoken {
+  display: none;
+}
+
+@container (width < 64rem) {
+  .detail {
+    display: none;
+  }
+
+  .detailSpoken {
+    display: inline;
+  }
+}
+
+/* Narrower still, the pill gives way to the tabs and the search; the
+   sidebar's dot and the health panel still tell the system's state. */
+@container (width < 56rem) {
+  .pill {
+    display: none;
+  }
+}
+
+@media (--phone) {
+  .pill {
+    display: none;
+  }
+}

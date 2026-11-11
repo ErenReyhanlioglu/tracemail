@@ -16,7 +16,7 @@ export default async function Loading() {
     return <LockedPage section="applications" title={strings.applications.title} viewer="visitor" />;
   }
   return (
-    <AppShell active="applications" viewer="owner">
+    <AppShell active="applications" viewer="owner" flush>
       <h1 className="visually-hidden">{strings.applications.title}</h1>
       <TableSkeleton
         shape={APPLICATION_TABLE}

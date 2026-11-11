@@ -82,6 +82,26 @@ const ORDER = Object.keys(text.rows);
 // The allowances come from two parts of the panel, run records and storage
 // metadata (ADR-0050); a part that cannot be read leaves a notice under the
 // rows it could give, or in their place when there are none.
+// Beside the heading on wide screens, under the bars on phones (ADR-0052).
+function ResourcesLegend({ className }: { className: string | undefined }) {
+  return (
+    <ul className={`${styles.legend} ${className ?? ""}`}>
+      <li>
+        <span className={`${styles.swatch} ${styles.swatchUsed}`} aria-hidden="true" />
+        {text.used}
+      </li>
+      <li>
+        <span className={`${styles.swatch} ${styles.swatchProjected}`} aria-hidden="true" />
+        {text.projected}
+      </li>
+      <li>
+        <span className={`${styles.swatch} ${styles.swatchLimit}`} aria-hidden="true" />
+        {text.limit}
+      </li>
+    </ul>
+  );
+}
+
 export function Resources({
   resources,
   notice,
@@ -98,6 +118,7 @@ export function Resources({
         <h2 id="resources-title" className={styles.heading}>
           {text.title}
         </h2>
+        {rows.length > 0 ? <ResourcesLegend className={styles.legendWide} /> : null}
       </div>
       {rows.length > 0 ? (
         <div className={`${styles.card} ${styles.resources}`}>
@@ -107,22 +128,7 @@ export function Resources({
         </div>
       ) : null}
       {notice}
-      {rows.length > 0 ? (
-        <ul className={styles.legend}>
-          <li>
-            <span className={`${styles.swatch} ${styles.swatchUsed}`} aria-hidden="true" />
-            {text.used}
-          </li>
-          <li>
-            <span className={`${styles.swatch} ${styles.swatchProjected}`} aria-hidden="true" />
-            {text.projected}
-          </li>
-          <li>
-            <span className={`${styles.swatch} ${styles.swatchLimit}`} aria-hidden="true" />
-            {text.limit}
-          </li>
-        </ul>
-      ) : null}
+      {rows.length > 0 ? <ResourcesLegend className={styles.legendNarrow} /> : null}
     </section>
   );
 }

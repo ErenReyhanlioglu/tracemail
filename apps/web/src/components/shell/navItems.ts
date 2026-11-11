@@ -19,6 +19,18 @@ import {
 
 export type Section = "overview" | "postings" | "applications" | "reports" | "health";
 
+// The sidebar's groups (ADR-0052); the first section stands above them.
+export type NavGroup = "tracking" | "system";
+
+// The owner's counts shown beside sidebar items (lib/navData.ts).
+export type CountKey =
+  | "postings"
+  | "applications"
+  | "inProgress"
+  | "waiting"
+  | "saved"
+  | "rejected";
+
 export interface NavItem {
   label: string;
   // The bottom bar's label: five fit across a 320 px screen.
@@ -29,6 +41,8 @@ export interface NavItem {
   ownerOnly?: boolean;
   // Built for the owner; a section that is not is dimmed for the owner.
   ready?: boolean;
+  group?: NavGroup;
+  count?: CountKey;
 }
 
 // The sidebar and the bottom bar show one current section; a click moves it
@@ -52,6 +66,8 @@ export const NAV: readonly NavItem[] = [
     href: "/postings",
     ownerOnly: true,
     ready: true,
+    group: "tracking",
+    count: "postings",
   },
   {
     label: strings.nav.applications,
@@ -61,6 +77,8 @@ export const NAV: readonly NavItem[] = [
     href: "/applications",
     ownerOnly: true,
     ready: true,
+    group: "tracking",
+    count: "applications",
   },
   {
     label: strings.nav.reports,
@@ -69,6 +87,7 @@ export const NAV: readonly NavItem[] = [
     section: "reports",
     href: "/reports",
     ownerOnly: true,
+    group: "tracking",
   },
   {
     label: strings.nav.health,
@@ -77,6 +96,7 @@ export const NAV: readonly NavItem[] = [
     section: "health",
     href: PANEL_PATH,
     ready: true,
+    group: "system",
   },
 ];
 

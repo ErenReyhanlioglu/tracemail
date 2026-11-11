@@ -66,3 +66,4 @@ written at the moment the decision is made — not drafted ahead of time.
 | [0049](0049-waiting-feedback.md) | Waiting Feedback — Instant Selection, a Quiet Pending State, and Loading on Every Route | Accepted; visitor sections fade in (2026-11-11) |
 | [0050](0050-health-panel-sections-load-and-fail-independently.md) | Health Panel Sections Load and Fail Independently | Accepted; cold path (point 4) open |
 | [0051](0051-free-managed-inference-apis-and-a-routed-model-pool.md) | Free Managed Inference APIs and a Routed Model Pool | Accepted (not yet implemented) |
+| [0052](0052-web-redesign-v2-design-rules.md) | Web Redesign v2 — One Color per Meaning, Layered Surfaces, Mono for Metadata | Accepted |

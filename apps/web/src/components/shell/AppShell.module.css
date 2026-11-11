@@ -1,3 +1,9 @@
+/*
+ * The app's frame (ADR-0052). On wide screens the sidebar sits on the app's
+ * ground and the content is one card beside it: inset from the screen's
+ * top, right, and bottom, flush against the sidebar, and scrolling inside
+ * itself. Phones keep the earlier layout: no card, the page scrolls.
+ */
 .shell {
   display: flex;
   min-height: 100vh;
@@ -5,9 +11,48 @@
 }
 
 .main {
+  /* Positioned, so text hidden for screen readers (absolutely placed) stays
+     inside the scrolling card; without it, such text deep in the card
+     stretched the page and gave it a second scrollbar. */
+  position: relative;
   flex: 1;
   min-width: 0;
+  height: calc(100vh - 2 * var(--frame-gap));
+  height: calc(100dvh - 2 * var(--frame-gap));
+  margin: var(--frame-gap) var(--frame-gap) var(--frame-gap) 0;
+  overflow-y: auto;
   padding: var(--space-10) var(--space-12);
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  /* What the content stands on, for parts that cut a ring into it. */
+  --color-ground: var(--color-surface);
+  background: var(--color-ground);
+}
+
+/* A list fills its card edge to edge: the list's own bars are its frame.
+   Two classes, so it outranks the content cap below. */
+.main.flush {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+/* The list (or its loading screen) takes the card's height and width; it
+   scrolls its rows itself (ListPanel). No auto margins: in a column they
+   would shrink a list without a table to its content and centre it. */
+.main.flush > * {
+  max-width: none;
+  margin-inline: 0;
+}
+
+/* Without weight (:where), so each part's own display wins, on phones
+   too. */
+:where(.main.flush) > * {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
 }
 
 /* A visitor's section fades in (ADR-0049, note of 2026-11-11). Opacity
@@ -35,8 +80,23 @@
     flex-direction: column;
   }
 
-  .main {
+  .main.flush {
+    display: block;
+  }
+
+  .main,
+  .main.flush {
+    height: auto;
+    margin: 0;
+    overflow: visible;
     padding: var(--space-6) var(--space-4)
       calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0) + var(--space-8));
+    border: 0;
+    border-radius: 0;
+    /* The content stands on the card's tone on phones too (ADR-0052), with
+       the top and bottom bars on the app's ground around it, as the sidebar
+       sits beside the card on wide screens. */
+    --color-ground: var(--color-surface);
+    background: var(--color-ground);
   }
 }

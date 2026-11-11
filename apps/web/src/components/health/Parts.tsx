@@ -65,5 +65,12 @@ export async function ReadAt({ runs }: { runs: Promise<Loaded<RunsPanel>> }) {
     return null;
   }
   const readAt = formatDayMonthTime(new Date(part.data.read_at));
-  return <p className={styles.footer}>{strings.health.footer(readAt)}</p>;
+  return (
+    <footer className={styles.footer}>
+      <span>{strings.health.footerSource}</span>
+      <span>
+        {strings.health.footerReadAt} <b>{readAt}</b> {strings.health.footerZone}
+      </span>
+    </footer>
+  );
 }

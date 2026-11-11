@@ -42,11 +42,15 @@ export default async function HealthPage() {
   const delivery = loadPart(fetchDeliveryPanel);
   return (
     <AppShell active="health" viewer={await currentViewer()}>
-      <header className={listStyles.header}>
-        <h1 className={listStyles.title}>{text.title}</h1>
-      </header>
       <div className={styles.panel}>
-        <PanelIntro />
+        {/* The title and introduction, with the source button beside them
+            on wide screens (ADR-0052). */}
+        <div className={styles.top}>
+          <header className={listStyles.header}>
+            <h1 className={listStyles.title}>{text.title}</h1>
+          </header>
+          <PanelIntro />
+        </div>
         <Suspense fallback={<RunsSkeleton />}>
           <RunsPart runs={runs} version={version()} />
         </Suspense>

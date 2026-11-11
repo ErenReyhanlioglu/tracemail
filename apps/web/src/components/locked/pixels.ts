@@ -21,13 +21,17 @@ export interface Palette {
 // through a probe element's computed colour.
 const TOKENS: Record<keyof Palette, string> = {
   ink: "--color-text",
-  muted: "--color-text-muted",
+  muted: "--color-text-meta",
   paper: "--color-surface",
-  accent: "--logo-accent",
+  accent: "--color-accent",
   faint: "--color-border",
-  line: "--color-border",
-  danger: "--color-game-hit",
-  bg: "--color-page",
+  // The ground line: the control edge, as visible as the old border tone.
+  line: "--color-control-border",
+  danger: "--color-error",
+  // What the game stands on: the content card on wide screens, the page on
+  // phones (AppShell's --color-ground, ADR-0052), so its stage never shows
+  // as a darker box.
+  bg: "--color-ground",
 };
 
 export function readPalette(host: HTMLElement): Palette {

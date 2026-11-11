@@ -52,7 +52,7 @@
   display: block;
   height: var(--skeleton-bar-height);
   border-radius: var(--radius-sm);
-  background: var(--color-neutral-bg);
+  background: var(--color-control-border);
   animation:
     appear 0s linear var(--skeleton-delay) both,
     pulse var(--skeleton-pulse) ease-in-out var(--skeleton-delay) infinite alternate;

@@ -1,82 +1,94 @@
 /*
- * Design tokens (ADR-0034). Every color, size, space, radius, and border in
- * the app comes from here; components never use raw values. Light values
- * come from the mockups; dark values are their counterparts. light-dark()
- * picks by color-scheme: the system setting by default, or the owner's
- * choice stored in the theme cookie (data-theme on <html>).
+ * Design tokens (ADR-0052, amending ADR-0034). Every color, size, space,
+ * radius, and border in the app comes from here; components never use raw
+ * values. light-dark() picks by color-scheme: the system setting by default,
+ * or the owner's choice stored in the theme cookie (data-theme on <html>).
  */
 
 :root {
   color-scheme: light dark;
 
-  /* Surfaces and text */
-  --color-page: light-dark(#f5f6f8, #0f1318);
-  --color-surface: light-dark(#ffffff, #171c23);
-  --color-border: light-dark(#e3e6eb, #29303a);
-  --color-row-hover: light-dark(#f9fafb, #1c222a);
-  --color-text: light-dark(#14181f, #e6e9ee);
-  --color-text-secondary: light-dark(#4b5563, #aab2be);
-  --color-text-muted: light-dark(#5b6472, #8f99a8);
+  /* Colors (ADR-0052). Each value is written once, here; everything else
+     refers to these names. Surfaces go from the app ground to the active
+     item, text from primary to label. */
+  --color-page: light-dark(#f3f4f6, #0b0d10);
+  --color-band: light-dark(#f8f9fa, #0e1115);
+  --color-surface: light-dark(#ffffff, #111419);
+  --color-raised: light-dark(#f1f3f5, #14181d);
+  --color-active: light-dark(#e8ebef, #171b21);
+  --color-text: light-dark(#14181f, #e9ecf1);
+  --color-text-secondary: light-dark(#2f3742, #c9d0da);
+  --color-text-tertiary: light-dark(#4b5563, #9aa3af);
+  --color-text-meta: light-dark(#57606c, #8a93a0);
+  --color-text-label: light-dark(#5f6874, #7c8593);
+  /* Lines: panel and section edges, table rows, control outlines. */
+  --color-border: light-dark(#e3e6eb, #1f232a);
+  --color-rule: light-dark(#eceef1, #1b1f26);
+  --color-control-border: light-dark(#d5d9df, #262b33);
+  /* The one accent, used sparingly: the active item's icon, the active
+     tab's underline and count, the "new" badge, the logo's dot, links.
+     Never a large fill. */
+  --color-accent: light-dark(#1f4fd8, #7aa2ff);
 
-  /* Sidebar and phone bars follow the theme (ADR-0034, note of
-     2026-11-11): a white surface in light, the mockups' #151a21 in dark. */
-  --color-sidebar: light-dark(#ffffff, #151a21);
-  --color-sidebar-text: light-dark(#4b5563, #c9cfd8);
-  --color-sidebar-text-strong: light-dark(#14181f, #ffffff);
-  --color-sidebar-text-dim: light-dark(#6b7480, #7d8794);
-  --color-sidebar-rule: light-dark(#e3e6eb, #2a313b);
-  --color-sidebar-track: light-dark(#eceef1, #232a34);
-  --color-sidebar-knob: light-dark(#14181f, #e6e9ee);
-  --color-sidebar-knob-icon: light-dark(#ffffff, #151a21);
-  --color-accent: #1f4fd8;
-  --color-on-accent: #ffffff;
+  /* Status: one color per meaning. Green is fine and running, red is an
+     error or a rejection, amber is progress or delay; waiting is a hollow
+     grey ring in the meta color. Green and red share a lightness, so an
+     error stands out without shouting. The base color draws dots and
+     cells; the text color is the base in dark and a darker shade in light,
+     where the base is too light for text on white. */
+  --color-ok: light-dark(#2f8f6e, #45a882);
+  --color-ok-text: light-dark(#0b6b57, #45a882);
+  --color-error: light-dark(#c8604f, #d9776b);
+  --color-error-text: light-dark(#9b1c1c, #d9776b);
+  --color-attention: light-dark(#b8801f, #d9a253);
+  --color-attention-text: light-dark(#7a4300, #d9a253);
+  /* Status cells and strips (ADR-0052): the base colors in dark; in light a
+     softer, less saturated set, since a run of solid cells on white weighs
+     far more than on the dark card (owner's review). About 2.5:1 against
+     the block they sit on: below WCAG 1.4.11's 3:1, which binds only where
+     the graphic alone carries the meaning; every strip has a text summary
+     and every row its numbers. The no-record hatch is darker in light, so
+     it shows at all. */
+  --cell-ok: light-dark(#5fa88b, #45a882);
+  --cell-late: light-dark(#c4913c, #d9a253);
+  --cell-failed: light-dark(#d4806f, #d9776b);
+  --cell-hatch: light-dark(#a9b0ba, #262b33);
+  /* A tone's fill and edge strength, as shares of its base color. */
+  --tint: 10%;
+  --edge: 30%;
+  --halo: 18%;
+  --color-attention-tint: color-mix(in srgb, var(--color-attention) var(--tint), transparent);
+  --color-accent-tint: color-mix(in srgb, var(--color-accent) var(--tint), transparent);
 
-  /* Logo dot: the accent on light surfaces, a lighter blue on dark ones.
-     From the owner's logo set. */
-  --logo-accent: light-dark(#1f4fd8, #7ea0ff);
   --logo-size: 1.5rem;
   --logo-size-lg: 3rem;
   /* Health panel introduction (ADR-0040): readable line length. */
   --prose-width: 46rem;
 
   /* Login, not found, and error pages: one narrow column. */
-  --centered-column-width: 22rem;
+  --centered-column-width: 25rem;
+  /* The standalone pages' decorative strip cells (ADR-0052). */
+  --page-cell: 1rem;
 
   /* Chips */
-  --color-chip-active: light-dark(#14181f, #e6e9ee);
-  --color-on-chip-active: light-dark(#ffffff, #14181f);
+  --color-chip-active: var(--color-text);
+  --color-on-chip-active: var(--color-surface);
 
-  /* Status badges: one meaning per tone */
-  --color-warning-bg: light-dark(#fcebd0, #3a2a10);
-  --color-warning-text: light-dark(#7a4300, #f5c77e);
-  --color-danger-bg: light-dark(#fbe4e4, #3d1717);
-  --color-danger-text: light-dark(#9b1c1c, #ffb3b3);
-  --color-progress-bg: light-dark(#e3ebfd, #16264d);
-  --color-progress-text: light-dark(#1a3fa8, #a9c1ff);
-  --color-neutral-bg: light-dark(#eceef1, #262d37);
-  --color-neutral-text: light-dark(#3d4450, #c9cfd8);
-
-  /* Health panel (ADR-0044): one meaning per color in every strip. Success
-     is a muted tone of the success text, as status pages color their bars;
-     grey means skipped, never success. Resource bars are quantities, not
-     states, so they stay neutral. */
-  --color-success-text: light-dark(#0b6b57, #5fd3a8);
-  --cell-ok: light-dark(#4a9e86, #3b9a7d);
-  --cell-skipped: light-dark(#e3e6eb, #262d37);
-  --cell-late: light-dark(#c27a1a, #e0a24a);
-  --cell-failed: light-dark(#b42318, #f07167);
-  /* No record: hatched, so it never reads as skipped. */
-  --cell-none-line: light-dark(#cfd4db, #3a424e);
+  /* Health panel cells (ADR-0052): the v2 mockup's low rounded blocks;
+     the 30-day strips a little taller. Stage columns: name, state badge,
+     the strip, and two numbers. */
+  --cell-height: 1.375rem;
+  --cell-height-tall: 1.375rem;
+  --cell-height-thin: 0.625rem;
+  --cell-radius: 4px;
+  --cell-gap: 4px;
+  --stage-col-name: 10.5rem;
+  --stage-col-state: 8rem;
+  --stage-col-num: 8rem;
   /* Stage cells on phones (ADR-0047): near square, as status pages draw. */
   --cell-compact: 0.875rem;
   --bar-compact: 0.375rem;
-  --bar-used: light-dark(#6b7684, #8792a2);
   --bar-projected-opacity: 0.35;
-
-  /* The locked page's mail game: the runner's colour when it is hit, a warm
-     coral in both themes (the health panel's failure red is too harsh for a
-     game). */
-  --color-game-hit: light-dark(#e5604e, #f07167);
 
   /* Type */
   --font-sans: var(--font-plex-sans), system-ui, sans-serif;
@@ -88,8 +100,18 @@
   --text-sm: 0.875rem;
   --text-base: 1rem;
   --text-lg: 1.125rem;
-  --text-xl: 1.5rem;
   --text-2xl: 2rem;
+  /* Roles (ADR-0052): the page title, a section title, column headers in
+     mono capitals, the sidebar's mono section labels, and the health
+     panel's large figures (a 30-day score, a delivery measure). */
+  --text-score: 1.375rem;
+  --text-measure: 1.25rem;
+  --text-title: 1.625rem;
+  --text-section: 0.9375rem;
+  --text-column: 0.6875rem;
+  --text-nav-label: 0.65625rem;
+  --tracking-column: 0.06em;
+  --tracking-nav-label: 0.08em;
   --weight-regular: 400;
   --weight-medium: 500;
   --weight-semibold: 600;
@@ -108,6 +130,7 @@
   /* Shape */
   --radius-sm: 0.375rem;
   --radius-md: 0.625rem;
+  --radius-lg: 0.75rem;
   --radius-pill: 999px;
   --border: 1px solid var(--color-border);
   /* Motion (ADR-0049): every site motion takes one of three durations.
@@ -115,34 +138,65 @@
   --motion-fast: 80ms;
   --motion-base: 150ms;
   --motion-slow: 250ms;
-  --sidebar-width: 16rem;
-  /* Collapsed: the icon column, wide enough for the theme switch. */
-  --sidebar-collapsed-width: 4.5rem;
+  /* The v2 sidebar (ADR-0052), widened on the owner's review: 14.5 rem
+     read as cramped on a wide screen. */
+  --sidebar-width: 17rem;
+  /* Collapsed (tablets): the icon column, wide enough for a three-digit
+     count on an icon's top right (ADR-0052). */
+  --sidebar-collapsed-width: 5.5rem;
   --sidebar-transition: var(--motion-base);
   --nav-icon: 1.125rem;
   --nav-control: 2rem;
+  /* Sidebar rows (ADR-0052): a status dot, the external-link arrow, and the
+     viewer's avatar in the foot. */
+  --dot-size: 0.4375rem;
+  /* A view's dot in the collapsed sidebar, near an icon's weight. */
+  --dot-size-lg: 0.625rem;
+  /* The health dot's halo: a ring of its own color around it (ADR-0052). */
+  --dot-halo: 3px;
+  --icon-xs: 0.75rem;
+  --avatar-size: 2rem;
+  /* The disc behind an empty list's icon (ADR-0052). */
+  --state-icon-disc: 3rem;
+  /* A small square button inside a control, such as a chip's cross. */
+  --icon-button: 1.5rem;
+  /* A company's monogram tile in the lists (ADR-0052). */
+  --monogram-size: 2.5rem;
+  /* Status badges (ADR-0052): one pill per status with its dot. */
+  --badge-height: 1.625rem;
+  --badge-dot: 0.375rem;
+  --radius-tile: 0.5rem;
   /* Phone layout sizes (ADR-0047); the phone width itself is the named
      query --phone in media.css. */
   --mobile-header-height: 3.5rem;
-  --bottom-nav-height: 4rem;
+  /* Room above the icons for their count marks, shown in full (ADR-0052). */
+  --bottom-nav-height: 4.5rem;
   --nav-bar-icon: 1.375rem;
   --nav-bar-lock: 0.75rem;
   --nav-bar-label: 0.75rem;
   --nav-bar-indicator-width: 3.5rem;
   --nav-bar-indicator-height: 2rem;
+  /* A count badge on a bar icon (ADR-0052). */
+  --nav-badge-height: 1rem;
+  --nav-badge-text: 0.625rem;
   /* Apple's 44 pt and Material's 48 dp touch targets; WCAG 2.5.8 asks 24 px. */
   --touch-target: 2.75rem;
   /* Filter chips and the search field on phones (ADR-0047). */
   --chip-height: 1.875rem;
   --field-height: 2.25rem;
-  --count-on-chip-opacity: 0.6;
-  /* A phone row's location, under its date, and the row's line grid
-     (ADR-0047). */
-  --phone-place-width: 9rem;
+  /* A phone row's line grid (ADR-0047). */
   --row-line-first: 1.25rem;
   --row-line-second: 1.125rem;
   --row-line-gap: 0.125rem;
   --layer-nav: 20;
+  /* The phone's menu sheet (ADR-0052). */
+  --sheet-max-height: 85dvh;
+  --sheet-handle-width: 2.5rem;
+  --sheet-gap: 1.125rem;
+  --radius-sheet: 1.125rem;
+  --sheet-backdrop: light-dark(rgb(20 24 31 / 0.35), rgb(5 6 8 / 0.62));
+  --shadow-sheet: 0 -1rem 2.5rem light-dark(rgb(20 24 31 / 0.12), rgb(0 0 0 / 0.5));
+  --avatar-size-lg: 2.5rem;
   --layer-sheet: 30;
   /* A locked page on phones (ADR-0047): the closed envelope and its text
      (measured 199 px at 360 px and wider), and the share of the free room
@@ -153,27 +207,49 @@
   --locked-open-growth: 10.875rem;
   /* The filter row's edge fades on phones (ADR-0047). */
   --filter-fade: 2.5rem;
+  /* The content card on wide screens (ADR-0052): the room left around it
+     on the app's ground; none on the sidebar's side. */
+  --frame-gap: var(--space-2);
+  /* Scrollbar thumb (ADR-0052): the label grey, faint at rest. */
+  --scrollbar-thumb: color-mix(in srgb, var(--color-text-label) 35%, transparent);
+  --scrollbar-thumb-hover: color-mix(in srgb, var(--color-text-label) 60%, transparent);
   /* Wide enough to use a large screen, narrow enough to keep rows readable. */
   --content-max-width: 100rem;
   /* List tables: fixed columns (the first takes the rest), fixed heights so
      rows never shift; below the minimum width a table scrolls sideways. */
+  /* Applications: full widths on a wide card, and compact ones once the
+     table runs narrower (DataTable's container rule, ADR-0052), so the
+     short columns give way and the position keeps its room. Fixed steps,
+     not shares: table columns treat a calc() mixing a percentage with a
+     length (min(), clamp()) as auto. */
   --col-channel: 11rem;
   --col-location: 11rem;
   --col-date: 10.75rem;
   --col-last-event: 11.75rem;
   --col-status: 20.75rem;
+  --col-channel-compact: 7rem;
+  --col-location-compact: 9rem;
+  --col-date-compact: 6rem;
+  --col-last-event-compact: 7.5rem;
+  --col-status-compact: 9rem;
   --col-link: 3.5rem;
-  --applications-min-width: 84rem;
-  --col-posting-location: 13rem;
-  --col-first-seen: 9rem;
-  --col-last-seen: 11rem;
-  --col-posting-status: 14rem;
-  --postings-min-width: 72rem;
+  --applications-min-width: 53rem;
+  /* Postings (ADR-0052): shares of the table, so on a wide card the room
+     spreads over every column instead of all going to the first; the
+     first keeps about 45%. */
+  --col-posting-location: 17%;
+  --col-first-seen: 10%;
+  --col-last-seen: 14%;
+  --col-posting-status: 14%;
+  --postings-min-width: 44rem;
+  /* List toolbar (ADR-0042; tabs and height, ADR-0052): the toolbar's
+     height, as in the v2 mockup, and the selected tab's line. */
+  --toolbar-height: 4rem;
+  /* The tabs' own line once the search sits above them. */
+  --tab-row-height: 3rem;
+  --tab-line: 2px;
   /* List toolbar (ADR-0042): segmented filter, counters, period menu. */
   --segment-height: 2rem;
-  --segment-inset: 0.1875rem;
-  --counter-min-width: 1.5rem;
-  --counter-line-height: 1.25rem;
   --icon-sm: 1rem;
   --search-min-width: 14rem;
   --search-max-width: 28rem;
@@ -200,15 +276,16 @@
   --press-duration: var(--motion-fast);
   --press-opacity: 0.6;
   --color-pressed: light-dark(rgb(20 24 31 / 0.08), rgb(230 233 238 / 0.08));
-  --color-sidebar-pressed: light-dark(rgb(20 24 31 / 0.08), rgb(255 255 255 / 0.12));
 
-  /* "Sign in with Google" button: Google's light and dark themes, sizes,
-     and padding, fixed by its branding guidelines (ADR-0039), not ours. */
+  /* "Sign in with Google" button: Google's light and dark themes, logo
+     size, and padding, fixed by its branding guidelines (ADR-0039), not
+     ours. Height and corners are left open there (Material's), so they
+     match the page's other buttons (ADR-0052). */
   --google-fill: light-dark(#ffffff, #131314);
   --google-stroke: light-dark(#747775, #8e918f);
   --google-text: light-dark(#1f1f1f, #e3e3e3);
-  --google-height: 2.5rem;
-  --google-radius: 0.25rem;
+  --google-height: var(--touch-target);
+  --google-radius: var(--radius-tile);
   --google-logo: 1.25rem;
   --google-pad-start: 0.75rem;
   --google-logo-gap: 0.625rem;
@@ -233,24 +310,41 @@
   --skeleton-bar-height: 0.75rem;
   --skeleton-segment-width: 6rem;
   /* Health panel parts while they load (ADR-0050): each placeholder takes
-     its block's height as measured on production on 2026-10-16 (1440 px
-     wide; phones below), so the page does not move when data arrives. */
-  --panel-status-height: 3.625rem;
-  --panel-stages-height: 28rem;
-  --panel-history-height: 25.875rem;
-  --panel-resources-height: 22.875rem;
-  --panel-delivery-height: 38.25rem;
+     its block's height, so the page does not move when data arrives.
+     Re-measured for the v2 layout (ADR-0052) on 2026-11-11 against dev
+     data in headless Chrome, 1440 px wide; tablets (1000 px) and phones
+     (390 px) below. */
+  --panel-status-height: 3.125rem;
+  --panel-stages-height: 25.1875rem;
+  --panel-history-height: 21.125rem;
+  --panel-resources-height: 20.25rem;
+  --panel-delivery-height: 33.5rem;
   --skeleton-menu-width: 9rem;
+}
+
+/* The panel placeholders' heights on tablets, measured at 1000 px: rows
+   stack and legends sit under their sections there, so the blocks are
+   taller. A tablet narrower or wider than that still moves a little. */
+@media (--tablet) {
+  :root {
+    --panel-status-height: 4.9375rem;
+    --panel-stages-height: 49.5rem;
+    --panel-history-height: 23.3125rem;
+    --panel-resources-height: 37.75rem;
+    --panel-delivery-height: 49rem;
+  }
 }
 
 /* The panel placeholders' heights on phones (390 px wide), as measured. */
 @media (--phone) {
   :root {
-    --panel-status-height: 5.6875rem;
-    --panel-stages-height: 35.875rem;
-    --panel-history-height: 22.3125rem;
-    --panel-resources-height: 31.125rem;
-    --panel-delivery-height: 34rem;
+    --text-title: 1.375rem;
+    /* The status card (ADR-0052), measured at 118 px. */
+    --panel-status-height: 7.375rem;
+    --panel-stages-height: 35.8125rem;
+    --panel-history-height: 22.1875rem;
+    --panel-resources-height: 31rem;
+    --panel-delivery-height: 33.625rem;
   }
 }
 
@@ -280,6 +374,19 @@ html,
 body {
   margin: 0;
   padding: 0;
+}
+
+/* Scrollbars in the app's own style (ADR-0052): thin, a grey thumb drawn
+   from the label color, no track, in both themes; the thumb strengthens
+   while its area is hovered. Standard properties only (scrollbar-color and
+   scrollbar-width); a browser without them keeps its own bar. */
+* {
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+  scrollbar-width: thin;
+}
+
+*:hover {
+  --scrollbar-thumb: var(--scrollbar-thumb-hover);
 }
 
 /* No browser tap flash on touch screens (ADR-0047): every control shows
