@@ -82,6 +82,7 @@ YYYY-MM-DD (or: pending approval).
 |---|---|---|
 | 2026-10-12 | [Manual runs without a logical date failed](2026-10-12-manual-runs-without-a-logical-date.md) | Resolved |
 | 2026-10-14 | [Health panel down after the delivery metrics deploy](2026-10-14-panel-down-after-the-delivery-deploy.md) | Mitigated |
+| 2026-11-08 | [Hourly runs stopped by a suspended billing account](2026-11-08-runs-stopped-by-a-suspended-billing-account.md) | Mitigated |
 
 ## References
 
