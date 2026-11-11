@@ -10,6 +10,18 @@
   padding: var(--space-10) var(--space-12);
 }
 
+/* A visitor's section fades in (ADR-0049, note of 2026-11-11). Opacity
+   only, so it is kept under reduced motion. */
+.fadeIn {
+  animation: section-fade-in var(--motion-base) ease-out;
+}
+
+@keyframes section-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
 /* Capped for readable rows and centered, so space beyond the cap (a wide
    screen, or a collapsed sidebar) splits evenly on both sides. */
 .main > * {

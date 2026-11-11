@@ -10,7 +10,6 @@ import { FILTERS } from "@/lib/applications";
 import { hasSession } from "@/lib/api";
 import { strings } from "@/lib/strings";
 
-import styles from "../list.module.css";
 
 export default async function Loading() {
   if (!(await hasSession())) {
@@ -18,9 +17,7 @@ export default async function Loading() {
   }
   return (
     <AppShell active="applications" viewer="owner">
-      <header className={styles.header}>
-        <h1 className={styles.title}>{strings.applications.title}</h1>
-      </header>
+      <h1 className="visually-hidden">{strings.applications.title}</h1>
       <TableSkeleton
         shape={APPLICATION_TABLE}
         segments={FILTERS.length}

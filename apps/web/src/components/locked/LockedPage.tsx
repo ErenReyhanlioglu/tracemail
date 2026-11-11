@@ -6,7 +6,6 @@ import type { Viewer } from "@/lib/load";
 import { AppShell } from "../shell/AppShell";
 import type { Section } from "../shell/navItems";
 import { type LockedKey, LockedSection } from "./LockedSection";
-import listStyles from "../../app/list.module.css";
 
 export function LockedPage({
   section,
@@ -17,11 +16,12 @@ export function LockedPage({
   title: string;
   viewer: Viewer;
 }) {
+  // No visible title, as on the list pages: the sidebar already marks the
+  // section (owner's review, 2026-11-11). The heading stays for screen
+  // readers.
   return (
     <AppShell active={section} viewer={viewer}>
-      <header className={listStyles.header}>
-        <h1 className={listStyles.title}>{title}</h1>
-      </header>
+      <h1 className="visually-hidden">{title}</h1>
       <LockedSection section={section} viewer={viewer} />
     </AppShell>
   );

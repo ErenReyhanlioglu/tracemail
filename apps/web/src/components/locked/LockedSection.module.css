@@ -15,7 +15,10 @@
   align-items: center;
   justify-content: flex-start;
   gap: 10px;
-  padding-top: 120px;
+  /* The page shows no title over the lock (owner's review, 2026-11-11);
+     the offset grows by the title row it replaced, so the message stays
+     where it was tuned. Phones hid that row already. */
+  padding-top: calc(120px + var(--text-2xl) * 1.2 + var(--space-6));
   box-sizing: border-box;
 }
 

@@ -24,7 +24,7 @@
   height: var(--toggle-knob);
   border-radius: 50%;
   background: var(--color-sidebar-knob);
-  color: var(--color-sidebar);
+  color: var(--color-sidebar-knob-icon);
   transition: transform var(--motion-base) ease;
 }
 

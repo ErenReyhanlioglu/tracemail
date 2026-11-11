@@ -123,6 +123,21 @@ Verified 2026-10-11 against dev data, screenshots in both themes at 1920 and
 
 **Note, 2026-10-16:** the application labels are now "Yanıtsız" (was "Yanıt bekleniyor"), "Kapandı" (was "yanıtsız kapandı"), and "N+" on the silent badge, read aloud as "N gündür sessiz"; postings show a coloured status dot, green for applied ([ADR-0047](0047-mobile-layout.md)). The phone layout of point 4 is ADR-0047.
 
+**Note, 2026-11-11:** the decision on the sidebar changed. The sidebar was
+dark in both themes, as in the mockups; on a theme switch only the content
+area changed, so the switch read as half done. The sidebar and the phone's
+top and bottom bars now follow the theme: a white surface with a 1 px edge
+line in light, the mockups' `#151A21` in dark. Every sidebar text pair
+meets 4.5:1 in both themes (measured: 7.56 and 11.15 for item text, 4.74
+and 4.80 for the dim role label). The switch itself was instant; it now
+cross-fades through a view transition [13]: `startViewTransition` snapshots
+the page, applies the new theme, and fades between the two [14], over
+`--motion-slow` (250 ms, the spec's default duration for the fade [15]).
+The fade is kept under reduced motion, since it moves nothing; reduced
+motion "doesn't mean the user wants *no motion*" [14]. Browsers without the
+API switch at once. A tap on the switch is the only view transition on the
+site; navigation keeps none (ADR-0049).
+
 ## References
 
 1. [Status indicator pattern — Carbon Design System](https://www.carbondesignsystem.com/patterns/status-indicator-pattern)
@@ -137,3 +152,6 @@ Verified 2026-10-11 against dev data, screenshots in both themes at 1920 and
 10. [TypeScript configuration — Next.js docs](https://nextjs.org/docs/app/api-reference/config/typescript) (known from search-result summaries)
 11. [Pagination usage — Carbon Design System](https://carbondesignsystem.com/components/pagination/usage/)
 12. [Pagination — GitHub Primer](https://primer.style/product/components/pagination)
+13. [Document: startViewTransition() method — MDN](https://developer.mozilla.org/en-US/docs/Web/API/Document/startViewTransition)
+14. [Same-document view transitions for single-page applications — Chrome for Developers](https://developer.chrome.com/docs/web-platform/view-transitions/same-document)
+15. [CSS View Transitions Module Level 1 — W3C](https://www.w3.org/TR/css-view-transitions-1/)

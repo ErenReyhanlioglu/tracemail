@@ -10,7 +10,6 @@ import { STATUS_FILTERS } from "@/lib/postings";
 import { hasSession } from "@/lib/api";
 import { strings } from "@/lib/strings";
 
-import styles from "../list.module.css";
 
 export default async function Loading() {
   if (!(await hasSession())) {
@@ -18,9 +17,7 @@ export default async function Loading() {
   }
   return (
     <AppShell active="postings" viewer="owner">
-      <header className={styles.header}>
-        <h1 className={styles.title}>{strings.postings.title}</h1>
-      </header>
+      <h1 className="visually-hidden">{strings.postings.title}</h1>
       <TableSkeleton
         shape={POSTING_TABLE}
         segments={STATUS_FILTERS.length}

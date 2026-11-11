@@ -245,6 +245,17 @@ quietly; the timings change in one file.
 - Revisit the 300 / 200 ms pair and the menu timing with the "after"
   measurement and on a real phone.
 
+**Note, 2026-11-11:** the decision on rejected alternative 6 changed for
+visitors. A visitor's section now fades in over `--motion-base` (150 ms):
+the content area is keyed by section, so a section change mounts a new one
+and its CSS fade-in plays. The sidebar does not fade. The owner's
+navigation stays instant, as rejected alternative 6 decided, because the
+owner reads tables there and a visitor's sections have none. The fade
+changes opacity only, so it is kept under reduced motion. React's
+`<ViewTransition>` was tried first and dropped: on the local build, a
+section change under the shared shell never started a view transition.
+The cause was not found.
+
 ## References
 
 1. [Network throttling — Lighthouse docs, GitHub](https://github.com/GoogleChrome/lighthouse/blob/main/docs/throttling.md)
