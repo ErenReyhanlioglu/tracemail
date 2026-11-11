@@ -1,21 +1,23 @@
 // Navigation on phones (ADR-0047), in place of the sidebar: a top bar with
-// the logo, the theme switch, and sign-in or sign-out, and a bar fixed to
-// the bottom with the five sections, each an icon over a visible label
+// the logo and a menu button whose sheet holds the rest of the sidebar
+// (ADR-0052), and a bar fixed to the bottom with the five sections, each an icon over a visible label
 // (NN/g). The bottom bar only navigates; actions stay in the top bar
 // (Apple HIG). Hidden on wide screens by CSS, so the server renders one
 // markup for every width. A tapped section shows as current at once
 // (ADR-0049).
-import Link from "next/link";
+import { Suspense } from "react";
 
 import type { Viewer } from "@/lib/load";
-import { LOGIN_PATH } from "@/lib/paths";
+import { loadNavCounts, loadSystemState } from "@/lib/navData";
 import { strings } from "@/lib/strings";
+import type { SystemState } from "@/lib/systemState";
 
-import { LockIcon, SignInIcon } from "../icons/NavIcons";
+import { LockIcon } from "../icons/NavIcons";
 import { LogoMark } from "../icons/LogoMark";
 import { PendingLink, PendingNavigation } from "../navigation/Pending";
 import styles from "./MobileNav.module.css";
 import {
+  type CountKey,
   isComingLater,
   isLocked,
   NAV,
@@ -23,8 +25,8 @@ import {
   SECTION_GROUP,
   type Section,
 } from "./navItems";
-import { SignOutButton } from "./SignOutButton";
-import { ThemeIconButton } from "./ThemeToggle";
+import { MenuSheet } from "./MenuSheet";
+import { MobileMenu } from "./MobileMenu";
 
 export function MobileHeader({ viewer }: { viewer: Viewer }) {
   return (
@@ -34,18 +36,73 @@ export function MobileHeader({ viewer }: { viewer: Viewer }) {
         <span className={styles.brandName}>{strings.appName}</span>
       </span>
       <div className={styles.actions}>
-        <ThemeIconButton className={styles.action} />
-        {viewer === "owner" ? (
-          <SignOutButton className={styles.action} labelClassName="visually-hidden" />
-        ) : (
-          <Link href={LOGIN_PATH} className={styles.action} title={strings.account.signIn}>
-            <SignInIcon />
-            <span className="visually-hidden">{strings.account.signIn}</span>
-          </Link>
-        )}
+        <MobileMenu buttonClassName={styles.action}>
+          <MenuSheet viewer={viewer} />
+        </MobileMenu>
       </div>
     </header>
   );
+}
+
+const HEALTH_CLASS: Record<SystemState, string | undefined> = {
+  running: styles.healthOk,
+  late: styles.healthLate,
+  failed: styles.healthFailed,
+  noRun: styles.healthLate,
+};
+
+// The sidebar's counts as notification badges on the bar's icons (ADR-0052):
+// the owner's only, and they arrive on their own.
+async function CountBadge({ count }: { count: CountKey }) {
+  const counts = await loadNavCounts();
+  const value = counts?.[count] ?? 0;
+  if (value === 0) {
+    return null;
+  }
+  return (
+    <>
+      <span className={styles.badge} aria-hidden="true">
+        {value}
+      </span>
+      <span className="visually-hidden">, {value}</span>
+    </>
+  );
+}
+
+// The system's state as the sidebar's haloed dot, for everyone.
+async function HealthBadge() {
+  const state = await loadSystemState();
+  if (state === null) {
+    return null;
+  }
+  return (
+    <>
+      <span className={`${styles.healthDot} ${HEALTH_CLASS[state] ?? ""}`} aria-hidden="true" />
+      <span className="visually-hidden">, {strings.health.status[state]}</span>
+    </>
+  );
+}
+
+function Corner({ item, locked }: { item: NavItem; locked: boolean }) {
+  if (locked) {
+    return (
+      <span className={styles.lock}>
+        <LockIcon />
+      </span>
+    );
+  }
+  if (item.section === "health") {
+    return (
+      <Suspense fallback={null}>
+        <HealthBadge />
+      </Suspense>
+    );
+  }
+  return item.count ? (
+    <Suspense fallback={null}>
+      <CountBadge count={item.count} />
+    </Suspense>
+  ) : null;
 }
 
 function BarItem({ item, active, viewer }: { item: NavItem; active: Section; viewer: Viewer }) {
@@ -54,11 +111,7 @@ function BarItem({ item, active, viewer }: { item: NavItem; active: Section; vie
     <>
       <span className={styles.indicator}>
         <item.icon />
-        {locked ? (
-          <span className={styles.lock}>
-            <LockIcon />
-          </span>
-        ) : null}
+        <Corner item={item} locked={locked} />
       </span>
       {/* Screen readers get the full name, as in the sidebar. */}
       <span className={styles.label} aria-hidden="true">

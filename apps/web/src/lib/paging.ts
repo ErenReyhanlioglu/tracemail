@@ -58,9 +58,11 @@ export function pageItems(current: number, pages: number, phone = false): PageIt
   const items: PageItem[] = [];
   let previous = 0;
   for (const page of shown) {
+    // A gap of exactly one page: shown on wide screens, an ellipsis on
+    // phones. Before, phones dropped it without a mark ("1 2 4").
     if (!phone && page - previous === 2) {
       items.push({ kind: "page", page: page - 1 });
-    } else if (page - previous > 2) {
+    } else if (page - previous > 1) {
       items.push({ kind: "gap", after: previous });
     }
     items.push({ kind: "page", page });

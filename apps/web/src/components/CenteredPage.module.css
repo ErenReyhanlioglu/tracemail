@@ -1,5 +1,5 @@
-/* One narrow centered column on the page background: logo, title, short
-   text, actions. */
+/* One centered column on the app's ground (ADR-0039; v2, ADR-0052): logo,
+   an optional strip, title, short text, a code line, actions. */
 .page {
   display: grid;
   place-items: center;
@@ -30,14 +30,44 @@
   height: var(--logo-size-lg);
 }
 
+/* The decorative strip: the panel's cells, ok then the page's own end. */
+.strip {
+  display: flex;
+  gap: var(--cell-gap);
+  margin-block: var(--space-2);
+}
+
+.cell {
+  width: var(--page-cell);
+  height: var(--page-cell);
+  border-radius: var(--cell-radius);
+  background: var(--cell-ok);
+}
+
+/* No record, hatched as in the health panel. */
+.missing {
+  border: 1px solid var(--cell-hatch);
+  background: repeating-linear-gradient(
+    135deg,
+    var(--cell-hatch) 0 1.5px,
+    transparent 1.5px 4px
+  );
+}
+
+/* The failed delivery, haloed so it reads as the page's subject. */
+.failed {
+  background: var(--cell-failed);
+  box-shadow: 0 0 0 var(--dot-halo) color-mix(in srgb, var(--cell-failed) var(--halo), transparent);
+}
+
 .title {
-  font-size: var(--text-xl);
+  font-size: var(--text-title);
   font-weight: var(--weight-semibold);
   line-height: 1.3;
 }
 
 .text {
-  color: var(--color-text-secondary);
+  color: var(--color-text-tertiary);
   font-size: var(--text-sm);
 }
 
@@ -45,63 +75,256 @@
   align-self: stretch;
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-sm);
-  background: var(--color-warning-bg);
-  color: var(--color-warning-text);
+  background: var(--color-attention-tint);
+  color: var(--color-attention-text);
   font-size: var(--text-sm);
 }
 
-.action {
+/* The status and the address or request, in mono, on a quiet chip. */
+.code {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-raised);
+  color: var(--color-text-meta);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  overflow-wrap: anywhere;
+}
+
+.code b {
+  color: var(--color-text);
+  font-weight: var(--weight-regular);
+}
+
+.code .error {
+  color: var(--color-error-text);
+}
+
+/* The actions side by side, each as wide as the other; one fills the row. */
+.actions {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   align-self: stretch;
+  gap: var(--space-3);
   margin-top: var(--space-2);
 }
 
-.primary {
-  padding: var(--space-3) var(--space-4);
-  border: 0;
+.actions > * {
+  flex: 1 1 0;
+}
+
+/* Primary: the accent on the edge and text only, never as a fill. */
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--touch-target);
+  padding: 0 var(--space-4);
   border-radius: var(--radius-sm);
-  background: var(--color-accent);
-  color: var(--color-on-accent);
   font: inherit;
+  font-size: var(--text-sm);
   font-weight: var(--weight-medium);
-  text-align: center;
   text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
+}
+
+.primary {
+  border: 1px solid color-mix(in srgb, var(--color-accent) var(--edge), transparent);
+  background: var(--color-accent-tint);
+  color: var(--color-accent);
+}
+
+.secondary {
+  border: 1px solid var(--color-control-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.primary svg,
+.secondary svg {
+  width: var(--icon-sm);
+  height: var(--icon-sm);
 }
 
 @media (hover: hover) {
   .primary:hover {
-    filter: brightness(1.1);
+    background: color-mix(in srgb, var(--color-accent) var(--edge), transparent);
   }
-}
 
-.secondary {
-  color: var(--color-text-secondary);
-  font-size: var(--text-sm);
-  text-align: center;
-}
-
-@media (hover: hover) {
   .secondary:hover {
-    color: var(--color-text);
+    background: var(--color-raised);
   }
 }
 
 /* Pressed (ADR-0047): an answer the moment it is pressed. */
-.primary {
-  transition: transform var(--press-duration) ease;
-}
-
-.primary:active {
-  transform: scale(var(--press-scale));
-  filter: brightness(0.92);
-}
-
+.primary,
 .secondary {
-  transition: opacity var(--press-duration) ease;
+  transition:
+    transform var(--press-duration) ease,
+    background-color var(--press-duration) ease;
 }
 
+.primary:active,
 .secondary:active {
-  opacity: var(--press-opacity);
+  transform: scale(var(--press-scale));
+}
+
+/* The login page's parts below its button. */
+.footnote {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-meta);
+  font-size: var(--text-xs);
+}
+
+.footnote svg {
+  width: var(--icon-xs);
+  height: var(--icon-xs);
+}
+
+/* "Ziyaretçi misin" between two rules. */
+.divider {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+  color: var(--color-text-label);
+  font-family: var(--font-mono);
+  font-size: var(--text-nav-label);
+  letter-spacing: var(--tracking-nav-label);
+  text-transform: uppercase;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+/* The visitor's card: the health panel, with the system's live state. */
+.visitorCard {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-align: left;
+  text-decoration: none;
+}
+
+.visitorHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.visitorHead > span {
+  flex: 1;
+}
+
+.visitorHead svg {
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+  color: var(--color-text-meta);
+}
+
+.visitorStatus {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-meta);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+}
+
+.visitorStatus::before {
+  content: "";
+  width: var(--dot-size);
+  height: var(--dot-size);
+  border-radius: 50%;
+  background: var(--state);
+  box-shadow: 0 0 0 var(--dot-halo) color-mix(in srgb, var(--state) var(--halo), transparent);
+}
+
+.stateRunning {
+  --state: var(--color-ok);
+}
+
+.stateLate {
+  --state: var(--color-attention);
+}
+
+.stateFailed {
+  --state: var(--color-error);
+}
+
+.stateRunning .stateWord {
+  color: var(--color-ok-text);
+}
+
+.stateLate .stateWord {
+  color: var(--color-attention-text);
+}
+
+.stateFailed .stateWord {
+  color: var(--color-error-text);
+}
+
+@media (hover: hover) {
+  .visitorCard:hover {
+    background: var(--color-raised);
+  }
+}
+
+.visitorCard {
+  transition: background-color var(--press-duration) ease;
+}
+
+.visitorCard:active {
+  background: var(--color-pressed);
+}
+
+/* The copy button inside the code line. */
+.copy {
+  display: grid;
+  place-items: center;
+  width: var(--icon-button);
+  height: var(--icon-button);
+  margin: calc(-1 * var(--space-1)) calc(-1 * var(--space-2)) calc(-1 * var(--space-1)) 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-meta);
+  cursor: pointer;
+}
+
+.copy svg {
+  width: var(--icon-xs);
+  height: var(--icon-xs);
+}
+
+@media (hover: hover) {
+  .copy:hover {
+    background: var(--color-active);
+    color: var(--color-text);
+  }
 }

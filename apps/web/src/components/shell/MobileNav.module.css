@@ -17,9 +17,9 @@
     min-height: var(--mobile-header-height);
     padding: env(safe-area-inset-top, 0) calc(var(--space-4) + env(safe-area-inset-right, 0)) 0
       calc(var(--space-4) + env(safe-area-inset-left, 0));
-    border-bottom: 1px solid var(--color-sidebar-rule);
-    background: var(--color-sidebar);
-    color: var(--color-sidebar-text);
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-page);
+    color: var(--color-text-secondary);
   }
 
   .bar {
@@ -30,8 +30,8 @@
     /* The iPhone's home indicator sits below the items, not on them. */
     padding: 0 env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0)
       env(safe-area-inset-left, 0);
-    border-top: 1px solid var(--color-sidebar-rule);
-    background: var(--color-sidebar);
+    border-top: 1px solid var(--color-border);
+    background: var(--color-page);
   }
 }
 
@@ -39,7 +39,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  color: var(--color-sidebar-text-strong);
+  color: var(--color-text);
 }
 
 .logo {
@@ -69,7 +69,7 @@
   border: 0;
   border-radius: var(--radius-sm);
   background: none;
-  color: var(--color-sidebar-text);
+  color: var(--color-text-secondary);
   cursor: pointer;
 }
 
@@ -77,8 +77,8 @@
    would otherwise keep the hover colour until the next tap elsewhere. */
 @media (hover: hover) {
   .action:hover {
-    background: var(--color-sidebar-track);
-    color: var(--color-sidebar-text-strong);
+    background: var(--color-raised);
+    color: var(--color-text);
   }
 }
 
@@ -99,20 +99,21 @@
   justify-content: center;
   gap: var(--space-1);
   min-height: var(--bottom-nav-height);
-  padding-block: var(--space-2);
+  /* The extra height goes above the icon, where its count mark sits. */
+  padding-block: var(--space-4) var(--space-2);
   text-decoration: none;
 }
 
 .item {
-  color: var(--color-sidebar-text);
+  color: var(--color-text-secondary);
 }
 
 .itemActive {
-  color: var(--color-sidebar-text-strong);
+  color: var(--color-text);
 }
 
 .itemDisabled {
-  color: var(--color-sidebar-text-dim);
+  color: var(--color-text-label);
 }
 
 /* The active section's pill behind its icon, in the sidebar's accent. */
@@ -131,8 +132,8 @@
 }
 
 .itemActive .indicator {
-  background: var(--color-accent);
-  color: var(--color-on-accent);
+  background: var(--color-active);
+  color: var(--color-accent);
 }
 
 .lock {
@@ -140,16 +141,58 @@
   top: 0;
   right: var(--space-2);
   display: flex;
-  color: var(--color-sidebar-text-dim);
+  color: var(--color-text-label);
 }
 
 .itemActive .lock {
-  color: var(--color-on-accent);
+  color: var(--color-text);
 }
 
 .lock > svg {
   width: var(--nav-bar-lock);
   height: var(--nav-bar-lock);
+}
+
+/* A count on the icon's top right, as a notification (ADR-0052): accent,
+   mono, cut out of the bar by a ring of its ground. */
+.badge {
+  position: absolute;
+  top: calc(-1 * var(--space-1));
+  left: calc(50% + var(--space-1));
+  display: grid;
+  place-items: center;
+  min-width: var(--nav-badge-height);
+  height: var(--nav-badge-height);
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-page);
+  color: var(--color-page);
+  font-family: var(--font-mono);
+  font-size: var(--nav-badge-text);
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+}
+
+/* The health panel's dot, haloed as in the sidebar. */
+.healthDot {
+  --tone: var(--color-ok);
+  position: absolute;
+  top: var(--space-1);
+  left: calc(50% + var(--space-2));
+  width: var(--dot-size);
+  height: var(--dot-size);
+  border-radius: 50%;
+  background: var(--tone);
+  box-shadow: 0 0 0 var(--dot-halo) color-mix(in srgb, var(--tone) var(--halo), transparent);
+}
+
+.healthLate {
+  --tone: var(--color-attention);
+}
+
+.healthFailed {
+  --tone: var(--color-error);
 }
 
 .label {
@@ -168,7 +211,7 @@
 
 .action:active {
   transform: scale(var(--press-scale));
-  background: var(--color-sidebar-pressed);
+  background: var(--color-pressed);
 }
 
 .indicator {
@@ -179,7 +222,7 @@
 
 .item:active .indicator {
   transform: scale(var(--press-scale));
-  background: var(--color-sidebar-pressed);
+  background: var(--color-pressed);
 }
 
 .itemActive:active .indicator {

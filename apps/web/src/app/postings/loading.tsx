@@ -16,7 +16,7 @@ export default async function Loading() {
     return <LockedPage section="postings" title={strings.postings.title} viewer="visitor" />;
   }
   return (
-    <AppShell active="postings" viewer="owner">
+    <AppShell active="postings" viewer="owner" flush>
       <h1 className="visually-hidden">{strings.postings.title}</h1>
       <TableSkeleton
         shape={POSTING_TABLE}

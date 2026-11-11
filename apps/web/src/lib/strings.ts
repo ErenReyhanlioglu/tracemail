@@ -24,12 +24,38 @@ export const strings = {
     // Not shown as text: for screen readers and the collapsed tooltip.
     comingLater: "yakında",
     ownerOnly: "yalnızca hesap sahibi",
+    opensInNewTab: "yeni sekmede açılır",
+    // The phone's menu sheet (ADR-0052).
+    menu: "Menü",
+    openMenu: "Menüyü aç",
+    closeMenu: "Menüyü kapat",
+    // The sidebar's groups and its quick views of the lists (ADR-0052).
+    groups: {
+      tracking: "Takip",
+      views: "Görünümler",
+      system: "Sistem",
+      developer: "Geliştiren",
+    },
+    views: {
+      inProgress: "İlerleyenler",
+      waiting: "Yanıt bekleyenler",
+      saved: "Kaydedilen ilanlar",
+      rejected: "Ret alınanlar",
+    },
+    links: {
+      github: "GitHub",
+      linkedin: "LinkedIn",
+      portfolio: "Portfolyo",
+    },
   },
   account: {
+    ownerName: "Eren Reyhanlıoğlu",
+    ownerInitials: "ER",
     owner: "hesap sahibi",
-    visitor: "ziyaretçi",
-    signIn: "Giriş",
-    signOut: "Çıkış",
+    visitorName: "Ziyaretçi",
+    visitor: "salt okunur",
+    signIn: "Giriş yap",
+    signOut: "Çıkış yap",
     collapseSidebar: "Kenar çubuğunu daralt",
     expandSidebar: "Kenar çubuğunu genişlet",
     themeToDark: "Karanlık tema",
@@ -37,9 +63,14 @@ export const strings = {
   },
   login: {
     title: "TraceMail'e giriş",
-    footnote: "Yalnızca hesap sahibi giriş yapabilir ve yeni hesap oluşturulamaz.",
+    lead: "Eren'in iş başvurularını ve gelen ilanlarını izleyen kişisel veri sistemi.",
+    footnote: "Yalnızca hesap sahibi giriş yapabilir",
     google: "Google ile giriş yap",
-    backToPanel: "Sağlık paneline dön",
+    // The visitor's way on (ADR-0052): a divider, then the health panel
+    // with the system's live state.
+    visitor: "Ziyaretçi misin",
+    toPanel: "Sağlık panelini incele",
+    lastRun: (time: string) => `son çalışma ${time}`,
     // Why the API sent the browser back here (ADR-0040).
     errors: {
       not_authorized:
@@ -57,7 +88,6 @@ export const strings = {
       "TraceMail, gelen postaları izleyen kişisel bir veri sistemidir. Posta kutusunu saatte bir okur, başvuruların ve gelen ilanların durumunu çıkarır. Bu sayfa sistemin kendi çalışmasını gösterir.",
     linksLabel: "Bağlantılar",
     sourceCode: "Kaynak kodu",
-    decisions: "Mimari kararlar",
     opensInNewTab: "yeni sekmede açılır",
     status: {
       running: "Sistem çalışıyor",
@@ -69,10 +99,14 @@ export const strings = {
       minutesAgo: (minutes: number) => `${minutes} dk`,
       hoursAgo: (hours: number) => `${hours} saat`,
       daysAgo: (days: number) => `${days} gün`,
-      ago: "önce",
       streak: (hours: number) => `${hours} saat`,
       streakLabel: "kesintisiz",
       version: "sürüm",
+      // The phone's status card (ADR-0052): three labelled cells, and how
+      // far a late run is past its target.
+      cells: { lastRun: "Son çalışma", streak: "Kesintisiz", version: "Sürüm" },
+      delay: (time: string) => `${time} gecikme`,
+      none: "—",
     },
     // Short enough for one legend line on a phone (ADR-0047).
     cells: {
@@ -179,8 +213,26 @@ export const strings = {
         },
       ],
     },
-    footer: (time: string) =>
-      `Veriler saatlik çalışma kayıtlarından · ${time} itibarıyla · saatler Türkiye saati`,
+    // The page's foot (ADR-0052): where the data comes from, and when it
+    // was read.
+    footerSource: "Airflow çalışma kayıtları · saatte bir güncellenir",
+    footerReadAt: "Son güncelleme",
+    footerZone: "(UTC+3)",
+  },
+  // The lists' sort menu (ADR-0052), shared by both lists.
+  sortMenu: {
+    label: "Sıralama",
+    heading: "Sırala",
+    reset: "Varsayılan sıralamaya dön",
+  },
+  // The lists' mailbox pill (ADR-0052): when the mailbox was last read,
+  // in the system state's tone.
+  freshness: {
+    source: "Gmail",
+    label: "Posta kutusu son okunma",
+    ago: (time: string) => `${time} önce`,
+    failed: "son çalışma başarısız",
+    noRun: "henüz çalışma yok",
   },
   // A private section seen by a visitor: what it holds, never its data.
   locked: {
@@ -193,7 +245,7 @@ export const strings = {
       applications: "Her başvurunun aşaması ve kaç gündür yanıt beklendiği",
       reports: "İlan gereksinimlerinin profildeki kanıtla karşılaştırması",
     },
-    panelLink: "Sistemin nasıl çalıştığını sağlık panelinde gör",
+    panelLink: "Sistemin nasıl çalıştığını gör",
     comingTitle: "Bu bölüm yakında",
     comingBody: "Bu bölümün verisi sonraki aşamalarda gelecek.",
     // The pixel font has no lowercase dotless i, so game text stays upper case.
@@ -234,18 +286,32 @@ export const strings = {
     retryingNow: "Yeniden deneniyor.",
   },
   notFound: {
-    title: "Sayfa bulunamadı",
+    title: "Bu adrese hiç posta gelmedi",
     body: "Adresi elle yazdıysan doğru olup olmadığını kontrol et. Bir bağlantıdan geldiysen bağlantı eskimiş olabilir.",
-    home: "Ana sayfaya dön",
+    status: "HTTP 404",
+    toPanel: "Sağlık paneline git",
   },
   errorPage: {
-    title: "Bir sorun oluştu",
-    body: "Sayfa yüklenirken beklenmeyen bir hata oluştu. Biraz sonra tekrar dene.",
+    title: "Bu istek teslim edilemedi",
+    body: "Sayfa yüklenirken beklenmeyen bir hata oluştu. Birkaç saniye sonra tekrar dene. Sorun sürerse aşağıdaki kodu paylaşman yeterli.",
+    protocol: "HTTP",
+    code: "500",
+    request: "istek",
+    copy: "Kodu kopyala",
+    copied: "Kopyalandı",
   },
   applications: {
     title: "Başvurularım",
     noun: "başvuru",
     filterLabel: "Durum",
+    // The sort menu (ADR-0052): long names in the menu, short ones on its
+    // button.
+    sort: {
+      last_event: { label: "En son gelişme", short: "Son gelişme" },
+      applied: { label: "En yeni başvuru", short: "Yeni başvuru" },
+      silence: { label: "En uzun süredir yanıtsız", short: "Bekleme süresi" },
+      company: { label: "Şirkete göre (A–Z)", short: "Şirket A–Z" },
+    },
     filters: {
       all: "Tümü",
       waiting: "Yanıtsız",
@@ -285,6 +351,16 @@ export const strings = {
     title: "Gelen ilanlar",
     noun: "ilan",
     periodLabel: "Dönem",
+    // Read aloud for the period chip's cross (ADR-0052).
+    resetPeriod: "Varsayılan döneme dön",
+    // The sort menu (ADR-0052): long names in the menu, short ones on its
+    // button. The match score waits for Phase 2 and cannot be chosen yet.
+    sort: {
+      last_seen: { label: "En son görülen", short: "Son görülen" },
+      first_seen: { label: "En yeni gelen", short: "Yeni gelen" },
+      mentions: { label: "En çok uyarıda görülen", short: "Uyarı sayısı" },
+      match: { label: "Eşleşme skoru en yüksek", short: "Eşleşme" },
+    },
     periods: {
       week: "Son 7 gün",
       month: "Son 30 gün",

@@ -20,15 +20,19 @@ function phoneRole(cell: number, cells: number): string | undefined {
   return cell === cells - 3 ? tableStyles.cellDate : tableStyles.cellExtra;
 }
 
-function Row({ cells }: { cells: number }) {
+function Row({ shape }: { shape: TableShape }) {
+  const cells = shape.columns.length;
   return (
     <tr>
       <td className={tableStyles.cellMain}>
         <span className={`${styles.bar} ${styles.wide}`} />
         <span className={`${styles.bar} ${styles.wider}`} />
       </td>
-      {Array.from({ length: cells - 1 }, (_, cell) => (
-        <td key={cell} className={phoneRole(cell, cells)}>
+      {shape.columns.slice(1).map((column, cell) => (
+        <td
+          key={column.label}
+          className={`${phoneRole(cell, cells) ?? ""} ${column.droppable ? tableStyles.droppable : ""}`}
+        >
           <span className={`${styles.bar} ${styles.short}`} />
         </td>
       ))}
@@ -68,7 +72,7 @@ export function TableSkeleton({
             <TableHead shape={shape} />
             <tbody className={styles.delayed}>
               {Array.from({ length: ROWS }, (_, row) => (
-                <Row key={row} cells={shape.columns.length} />
+                <Row key={row} shape={shape} />
               ))}
             </tbody>
           </table>

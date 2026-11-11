@@ -1,14 +1,18 @@
 // The incoming-postings list: same table style as the application list. The
-// status is a coloured dot and its word (new orange, saved blue, applied
-// green, owner's review); the match report joins as a column in a later
-// phase. On phones each row stacks into the position
-// beside the last sighting, the company beside its mention count, then the
-// status beside the location (ADR-0047).
+// status is a badge (ADR-0052): new in the accent, saved in amber, applied
+// in green; the match report joins as a column in a later phase. On phones
+// each row is a card that opens the posting (ADR-0052): the monogram, then
+// the position over the company and location on the left, the last
+// sighting with its alert count over the status on the right.
 import { formatDayMonth } from "@/lib/format";
 import type { Posting } from "@/lib/postings";
+import { postingBadge } from "@/lib/status";
 import { strings } from "@/lib/strings";
 
 import styles from "./DataTable.module.css";
+import { BellIcon } from "./icons/NavIcons";
+import { Monogram } from "./Monogram";
+import { StatusBadge } from "./StatusBadge";
 import {
   Clipped,
   ExternalLink,
@@ -19,6 +23,9 @@ import {
 } from "./TableParts";
 
 const text = strings.postings;
+// From this many alert mails a posting's count stands out (as in the v2
+// mockup): the same posting kept coming back.
+const MANY_MENTIONS = 3;
 
 export const POSTING_TABLE: TableShape = {
   columns: [
@@ -44,19 +51,27 @@ function statusLabel(posting: Posting): string {
   }
 }
 
-const STATUS_CLASS: Record<Posting["status"], string | undefined> = {
-  new: styles.statusNew,
-  saved: styles.statusSaved,
-  applied: styles.statusApplied,
-};
-
 function Row({ posting }: { posting: Posting }) {
   const company = posting.company ?? strings.applications.noCompany;
   return (
     <tr>
       <td className={styles.cellMain}>
-        <Clipped value={posting.title ?? strings.applications.noTitle} className={styles.lead} />
-        <Clipped value={company} className={styles.sub} />
+        <div className={styles.withMark}>
+          <Monogram name={posting.company} />
+          <div className={styles.names}>
+            <Clipped value={posting.title ?? strings.applications.noTitle} className={styles.lead} />
+            {/* Phones add the location after the company (ADR-0052). */}
+            <span className={`${styles.clip} ${styles.sub}`} title={company}>
+              {company}
+              {posting.location ? (
+                <span className={styles.inlinePlace}>
+                  {" · "}
+                  {posting.location}
+                </span>
+              ) : null}
+            </span>
+          </div>
+        </div>
       </td>
       <td className={styles.cellExtra}>
         <Clipped value={posting.location ?? strings.applications.unknown} className={styles.secondary} />
@@ -65,18 +80,26 @@ function Row({ posting }: { posting: Posting }) {
         <Clipped value={formatDayMonth(posting.first_seen_date)} className={styles.mono} />
       </td>
       <td className={styles.cellDate}>
-        <Clipped value={formatDayMonth(posting.last_seen_date)} className={styles.mono} />
-        <Clipped value={text.mentions(posting.mention_count)} className={styles.ago} />
+        {/* The date and a bell with the alert count on one line
+            (ADR-0052). */}
+        <div className={styles.dateLine}>
+          <Clipped value={formatDayMonth(posting.last_seen_date)} className={styles.mono} />
+          <span
+            className={
+              posting.mention_count >= MANY_MENTIONS
+                ? `${styles.mentions} ${styles.mentionsMany}`
+                : styles.mentions
+            }
+            title={text.mentions(posting.mention_count)}
+          >
+            <BellIcon />
+            <span aria-hidden="true">{posting.mention_count}</span>
+            <span className="visually-hidden">{text.mentions(posting.mention_count)}</span>
+          </span>
+        </div>
       </td>
       <td className={styles.cellStatus}>
-        <Clipped
-          value={statusLabel(posting)}
-          className={`${styles.status} ${STATUS_CLASS[posting.status]}`}
-        />
-        {/* Phones only: the location, beside the status. */}
-        {posting.location ? (
-          <Clipped value={posting.location} className={`${styles.place} ${styles.phoneOnly}`} />
-        ) : null}
+        <StatusBadge badge={postingBadge(posting, statusLabel(posting))} />
       </td>
       <td className={styles.linkCell}>
         <ExternalLink href={posting.posting_url} label={strings.applications.openPosting(company)} />
@@ -94,7 +117,7 @@ export function PostingTable({
 }) {
   return (
     <div className={styles.scroll}>
-      <table className={styles.table} style={tableStyle(POSTING_TABLE)}>
+      <table className={`${styles.table} ${styles.cards}`} style={tableStyle(POSTING_TABLE)}>
         <TableHead shape={POSTING_TABLE} sorting={sorting} />
         <tbody>
           {postings.map((posting) => (

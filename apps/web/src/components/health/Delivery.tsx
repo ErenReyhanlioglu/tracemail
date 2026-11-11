@@ -93,13 +93,15 @@ function Recent({ deployments }: { deployments: RecentDeployment[] }) {
   );
 }
 
-export function DeliveryHead() {
+// The section's head; its legend only once the deliveries are read.
+export function DeliveryHead({ legend = false }: { legend?: boolean }) {
   return (
     <div className={styles.head}>
       <h2 id="delivery-title" className={styles.heading}>
         {text.title}
       </h2>
       <span className={styles.aside}>{text.aside}</span>
+      {legend ? <CellLegend words={text.cells} className={styles.legendWide} /> : null}
     </div>
   );
 }
@@ -111,7 +113,7 @@ export function Delivery({ panel }: { panel: DeliveryPanel }) {
   const last = delivery.last_deployed_at;
   return (
     <section className={styles.section} aria-labelledby="delivery-title">
-      <DeliveryHead />
+      <DeliveryHead legend />
       <div className={styles.card}>
         <HistoryRow
           name={text.deployments}
@@ -120,11 +122,12 @@ export function Delivery({ panel }: { panel: DeliveryPanel }) {
           cells={deliveryCells(panel.delivery_days, new Date(panel.read_at))}
           detail={last ? text.lastDeploy(formatDayMonthTime(new Date(last))) : DASH}
           words={text.cells}
+          thin
         />
         <Measures delivery={delivery} />
         <Recent deployments={panel.recent_deployments} />
       </div>
-      <CellLegend words={text.cells} />
+      <CellLegend words={text.cells} className={styles.legendNarrow} />
     </section>
   );
 }

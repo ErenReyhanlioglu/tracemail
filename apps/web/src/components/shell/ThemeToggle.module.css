@@ -8,9 +8,9 @@
   width: var(--toggle-width);
   height: var(--toggle-height);
   padding: 0;
-  border: 1px solid var(--color-sidebar-rule);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
-  background: var(--color-sidebar-track);
+  background: var(--color-raised);
   cursor: pointer;
 }
 
@@ -23,8 +23,8 @@
   width: var(--toggle-knob);
   height: var(--toggle-knob);
   border-radius: 50%;
-  background: var(--color-sidebar-knob);
-  color: var(--color-sidebar-knob-icon);
+  background: var(--color-text);
+  color: var(--color-page);
   transition: transform var(--motion-base) ease;
 }
 

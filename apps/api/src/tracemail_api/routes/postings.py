@@ -53,10 +53,12 @@ class StatusFilter(StrEnum):
 
 
 class SortKey(StrEnum):
-    """The date column the list is ordered by (ADR-0042)."""
+    """What the list is ordered by: a date column (ADR-0042), or how many
+    alert mails carried the posting (ADR-0052)."""
 
     FIRST_SEEN = "first_seen"
     LAST_SEEN = "last_seen"
+    MENTIONS = "mentions"
 
 
 class SortOrder(StrEnum):
@@ -114,19 +116,21 @@ def counts_of(postings: list[Posting]) -> PostingCounts:
 def sorted_postings(
     postings: list[Posting], sort: SortKey, order: SortOrder
 ) -> list[Posting]:
-    """Postings by the chosen date; the stable sort keeps the warehouse order
-    (newest first, then by key) among equal dates."""
+    """Postings by the chosen date, or by their alert count with the last
+    sighting breaking ties; the stable sort keeps the warehouse order
+    (newest first, then by key) among equal values."""
+    reverse = order is SortOrder.DESC
     if sort is SortKey.FIRST_SEEN:
         return sorted(
-            postings,
-            key=lambda posting: posting.first_seen_date,
-            reverse=order is SortOrder.DESC,
+            postings, key=lambda posting: posting.first_seen_date, reverse=reverse
         )
-    return sorted(
-        postings,
-        key=lambda posting: posting.last_seen_date,
-        reverse=order is SortOrder.DESC,
-    )
+    if sort is SortKey.MENTIONS:
+        return sorted(
+            postings,
+            key=lambda posting: (posting.mention_count, posting.last_seen_date),
+            reverse=reverse,
+        )
+    return sorted(postings, key=lambda posting: posting.last_seen_date, reverse=reverse)
 
 
 @router.get("")

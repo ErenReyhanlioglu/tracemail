@@ -51,6 +51,9 @@ export interface Column {
   width: string | null;
   // Set on columns the list can be sorted by (ADR-0042).
   sortKey?: string;
+  // Given up first when the table runs narrow (ADR-0052): its value then
+  // moves into the first column's second line.
+  droppable?: boolean;
 }
 
 export interface TableShape {
@@ -109,7 +112,11 @@ export function TableHead({ shape, sorting }: { shape: TableShape; sorting?: Tab
     <>
       <colgroup>
         {shape.columns.map((column) => (
-          <col key={column.label} style={columnStyle(column.width)} />
+          <col
+            key={column.label}
+            className={column.droppable ? styles.droppable : undefined}
+            style={columnStyle(column.width)}
+          />
         ))}
         <col style={columnStyle("--col-link")} />
       </colgroup>
@@ -117,12 +124,15 @@ export function TableHead({ shape, sorting }: { shape: TableShape; sorting?: Tab
         <tr>
           {shape.columns.map((column) => {
             const sorted = ariaSort(column, sorting);
+            const className = [sorted ? styles.sorted : "", column.droppable ? styles.droppable : ""]
+              .filter(Boolean)
+              .join(" ");
             return (
               <th
                 key={column.label}
                 scope="col"
                 aria-sort={sorted}
-                className={sorted ? styles.sorted : undefined}
+                className={className || undefined}
               >
                 {column.sortKey && sorting ? (
                   <SortLink column={column} sorting={sorting} />

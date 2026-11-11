@@ -20,17 +20,22 @@ export function summary(window: string, cells: CellState[], words = defaultWords
   return [window, ...parts].join(", ");
 }
 
+// Height: the default, a taller strip for the 30-day rows, or a thin one
+// for deployments, as the v2 mockup draws them (ADR-0052).
 export function Strip({
   cells,
   label,
   tall = false,
+  thin = false,
 }: {
   cells: CellState[];
   label: string;
   tall?: boolean;
+  thin?: boolean;
 }) {
+  const size = thin ? styles.thin : tall ? styles.tall : "";
   return (
-    <div className={`${styles.strip} ${tall ? styles.tall : ""}`} role="img" aria-label={label}>
+    <div className={`${styles.strip} ${size ?? ""}`} role="img" aria-label={label}>
       {cells.map((cell, index) => (
         <span key={index} className={`${styles.cell} ${styles[cell]}`} />
       ))}
@@ -38,9 +43,17 @@ export function Strip({
   );
 }
 
-export function CellLegend({ words = defaultWords }: { words?: CellWords }) {
+// Drawn twice per section (ADR-0052): beside the heading on wide screens
+// (legendWide), under the section on phones (legendNarrow); one shows.
+export function CellLegend({
+  words = defaultWords,
+  className,
+}: {
+  words?: CellWords;
+  className: string | undefined;
+}) {
   return (
-    <ul className={styles.legend}>
+    <ul className={`${styles.legend} ${className ?? ""}`}>
       {ORDER.filter((state) => words[state] !== undefined).map((state) => (
         <li key={state}>
           <span className={`${styles.swatch} ${styles[state]}`} aria-hidden="true" />

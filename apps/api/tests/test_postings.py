@@ -115,6 +115,18 @@ def test_list_can_be_ordered_by_last_seen() -> None:
         assert keys(body) == ["old-but-recent", "new-yesterday"]
 
 
+def test_list_can_be_ordered_by_mention_count_with_last_seen_breaking_ties() -> None:
+    often = posting("often", TODAY - timedelta(days=9))
+    often.mention_count = 4
+    once_recent = posting("once-recent", TODAY - timedelta(days=1))
+    once_old = posting("once-old", TODAY - timedelta(days=30))
+    rows = [once_old, often, once_recent]
+    with api_client(marts=FakeMarts(postings=rows)) as client:
+        sign_in(client)
+        body = client.get(URL, params={"sort": "mentions"}).json()
+        assert keys(body) == ["often", "once-recent", "once-old"]
+
+
 def test_pages_slice_the_filtered_list() -> None:
     body = get({"page": 2, "page_size": 3})
     assert keys(body) == ["new-40d"]

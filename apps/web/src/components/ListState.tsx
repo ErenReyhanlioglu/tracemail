@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 
 import type { FailureReason } from "@/lib/failures";
 
+import { SearchIcon } from "./icons/NavIcons";
 import styles from "./ListState.module.css";
 import { PendingLink } from "./navigation/Pending";
 import { PageFailure } from "./PageFailure";
@@ -13,15 +14,20 @@ function StatePanel({
   title,
   body,
   action,
-  inset = false,
+  icon,
 }: {
   title: string;
   body?: string;
   action?: ReactNode;
-  inset?: boolean;
+  icon?: ReactNode;
 }) {
   return (
-    <section className={inset ? styles.inset : styles.panel}>
+    <section className={styles.state}>
+      {icon ? (
+        <span className={styles.icon} aria-hidden="true">
+          {icon}
+        </span>
+      ) : null}
       <h2 className={styles.title}>{title}</h2>
       {body ? <p className={styles.body}>{body}</p> : null}
       {action}
@@ -45,7 +51,7 @@ export function NoMatchState({
   return (
     <StatePanel
       title={title}
-      inset
+      icon={<SearchIcon />}
       action={
         <PendingLink className={styles.action} href={clearHref} group="clear">
           {clearLabel}

@@ -910,7 +910,18 @@ export function createGame(el: GameElements, audio: AudioContext | null): GameCo
     cv.focus({ preventScroll: true });
   }
 
+  // While the game runs (or waits after a crash), a press anywhere on the
+  // content card jumps, not only on the game's own strip (owner's review):
+  // the strip is a small target. Links and buttons keep their own action,
+  // and while the game is closed a press does nothing, so opening it still
+  // takes the envelope.
+  const INTERACTIVE = "a, button, input, textarea, select, label";
+  const surface: HTMLElement = el.stage.closest("main") ?? el.stage;
+
   function onPointerDown(e: PointerEvent): void {
+    if (state !== "run" && state !== "over") return;
+    if (!e.isPrimary || e.button !== 0) return;
+    if (e.target instanceof Element && e.target.closest(INTERACTIVE)) return;
     e.preventDefault();
     press();
   }
@@ -941,7 +952,7 @@ export function createGame(el: GameElements, audio: AudioContext | null): GameCo
   muteLabel();
   el.close.addEventListener("click", close);
   el.mute.addEventListener("click", onMute);
-  cv.addEventListener("pointerdown", onPointerDown);
+  surface.addEventListener("pointerdown", onPointerDown);
   window.addEventListener("pointerup", release);
   window.addEventListener("pointercancel", release);
   window.addEventListener("blur", release);
@@ -963,7 +974,7 @@ export function createGame(el: GameElements, audio: AudioContext | null): GameCo
       timers.forEach((id) => window.clearTimeout(id));
       el.close.removeEventListener("click", close);
       el.mute.removeEventListener("click", onMute);
-      cv.removeEventListener("pointerdown", onPointerDown);
+      surface.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("pointerup", release);
       window.removeEventListener("pointercancel", release);
       window.removeEventListener("blur", release);

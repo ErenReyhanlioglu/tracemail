@@ -1,4 +1,4 @@
-// One row per pipeline stage (ADR-0044): its state as a word, the last 24
+// One row per pipeline stage (ADR-0044): its state as a badge, the last 24
 // hourly cells under one shared axis, the last processing run, and the
 // median duration. Serving has no row: the measurements render only when the
 // API answers, so a row for it could never say anything but "up".
@@ -10,8 +10,10 @@ import {
   formatDuration,
   stageCells,
 } from "@/lib/panel";
+import type { Badge } from "@/lib/status";
 import { strings } from "@/lib/strings";
 
+import { StatusBadge } from "../StatusBadge";
 import { CellLegend, Strip, summary } from "./Cells";
 import styles from "./HealthPanel.module.css";
 
@@ -26,15 +28,15 @@ function detail(stage: StageRow, models: number | null): string {
 }
 
 // The state word follows the latest hour: skipping is running as intended.
-function stateWord(cells: CellState[], lastRunStatus: string | null) {
+function stateWord(cells: CellState[], lastRunStatus: string | null): Badge {
   const state = currentStageState(cells, lastRunStatus);
   if (state === "late") {
-    return { label: text.late, className: styles.wordLate };
+    return { label: text.late, tone: "attention" };
   }
   if (state === "failed") {
-    return { label: text.failed, className: styles.wordFailed };
+    return { label: text.failed, tone: "error" };
   }
-  return { label: text.running, className: styles.wordOk };
+  return { label: text.running, tone: "ok" };
 }
 
 function Stage({ stage, models }: { stage: StageRow; models: number | null }) {
@@ -47,7 +49,9 @@ function Stage({ stage, models }: { stage: StageRow; models: number | null }) {
         <span className={styles.name}>{name}</span>
         <span className={styles.detail}>{detail(stage, models)}</span>
       </div>
-      <span className={`${styles.word} ${word.className}`}>{word.label}</span>
+      <span className={styles.word}>
+        <StatusBadge badge={word} />
+      </span>
       <div className={styles.cellsColumn}>
         <Strip cells={cells} label={summary(`${name}, ${text.window}`, cells)} />
       </div>
@@ -94,6 +98,7 @@ export function StageTable({ panel }: { panel: RunsPanel }) {
           {text.title}
         </h2>
         <span className={styles.aside}>{text.aside}</span>
+        <CellLegend className={styles.legendWide} />
       </div>
       <div className={styles.card}>
         <div className={`${styles.row} ${styles.headRow}`} aria-hidden="true">
@@ -117,7 +122,7 @@ export function StageTable({ panel }: { panel: RunsPanel }) {
           <Stage key={stage.job_name} stage={stage} models={models} />
         ))}
       </div>
-      <CellLegend />
+      <CellLegend className={styles.legendNarrow} />
     </section>
   );
 }

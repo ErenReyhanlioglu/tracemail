@@ -28,8 +28,9 @@ and health panel parts that load and fail on their own
 Alongside:
 
 - **Web before Phase 3** ([ADR-0039](adr/0039-web-ux-baseline.md)): the
-  "last checked" time on the lists, which shares the health panel core's
-  authorization; the Lighthouse and manual pass, desktop and phone; a web
+  v2 redesign ([ADR-0052](adr/0052-web-redesign-v2-design-rules.md),
+  which also brings the lists' "last checked" pill); the Lighthouse and
+  manual pass, desktop and phone; a web
   app manifest for the owner's 192, 512, and maskable icons (the image must
   then copy `public/`).
 - **The health panel's cold path** (point 4 of

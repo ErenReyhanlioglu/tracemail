@@ -19,11 +19,13 @@ import listStyles from "../list.module.css";
 export default async function Loading() {
   return (
     <AppShell active="health" viewer={(await hasSession()) ? "owner" : "visitor"}>
-      <header className={listStyles.header}>
-        <h1 className={listStyles.title}>{strings.health.title}</h1>
-      </header>
       <div className={styles.panel}>
-        <PanelIntro />
+        <div className={styles.top}>
+          <header className={listStyles.header}>
+            <h1 className={listStyles.title}>{strings.health.title}</h1>
+          </header>
+          <PanelIntro />
+        </div>
         <RunsSkeleton />
         <ResourcesSkeleton />
         <DeliverySkeleton />

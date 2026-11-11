@@ -16,7 +16,7 @@
 .warning {
   display: flex;
   align-self: flex-start;
-  color: var(--color-warning-text);
+  color: var(--color-attention-text);
 }
 
 .text {
@@ -67,12 +67,12 @@
 
 @media (hover: hover) {
   .button:not(:disabled):hover {
-    border-color: var(--color-text-muted);
+    border-color: var(--color-text-meta);
   }
 }
 
 .button:disabled {
-  color: var(--color-text-muted);
+  color: var(--color-text-meta);
   cursor: default;
 }
 

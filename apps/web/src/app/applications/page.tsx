@@ -3,23 +3,25 @@
 // Data is fetched on the server with the session cookie; without a session
 // the visitor sees the section's locked page and receives no data.
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import { type ReactNode, Suspense } from "react";
 
 import { AppShell } from "@/components/shell/AppShell";
 import { LockedPage } from "@/components/locked/LockedPage";
 import { ApplicationTable } from "@/components/ApplicationTable";
 import { EmptyState, NoMatchState, UnavailableState } from "@/components/ListState";
+import { FreshnessPill } from "@/components/FreshnessPill";
 import { ListPanel } from "@/components/ListPanel";
-import { ListSummary } from "@/components/ListSummary";
-import { PendingLink } from "@/components/navigation/Pending";
-import panelStyles from "@/components/ListPanel.module.css";
+import { SortableIcon } from "@/components/icons/NavIcons";
 import { Pagination } from "@/components/Pagination";
 import { SearchBox } from "@/components/SearchBox";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import type { TableSorting } from "@/components/TableParts";
-import { fetchAllApplications } from "@/lib/api";
+import { ToolbarMenu } from "@/components/ToolbarMenu";
+import { loadApplications } from "@/lib/navData";
 import {
   APPLICATION_SORT_KEYS,
+  APPLICATION_SORT_MENU,
+  APPLICATION_SORT_ORDER,
   type Application,
   type ApplicationSortKey,
   DEFAULT_APPLICATION_SORT,
@@ -48,8 +50,6 @@ import { strings } from "@/lib/strings";
 export const dynamic = "force-dynamic";
 
 const PATH = "/applications";
-// Phones sort by the last event only, the one date a phone row shows.
-const PHONE_SORT_KEY: ApplicationSortKey = "last_event";
 const text = strings.applications;
 
 // Behind login: never indexed, whatever the response status (ADR-0039).
@@ -102,12 +102,12 @@ export default async function ApplicationsPage({
     search: parseQuery(params.q),
     sort: parseSort(APPLICATION_SORT_KEYS, DEFAULT_APPLICATION_SORT, params.sort, params.order),
   };
-  const loaded = await loadPrivate(fetchAllApplications);
+  const loaded = await loadPrivate(loadApplications);
   if (loaded.locked) {
     return <LockedPage section="applications" title={text.title} viewer="visitor" />;
   }
   return (
-    <AppShell active="applications" viewer="owner">
+    <AppShell active="applications" viewer="owner" flush>
       <h1 className="visually-hidden">{text.title}</h1>
       {!loaded.ok ? (
         <UnavailableState reason={loaded.reason} />
@@ -125,41 +125,65 @@ export default async function ApplicationsPage({
   );
 }
 
-// The toolbar: status segments, counted within the search, on the left; a
-// way back to the full list once filtered, and the search, on the right.
+// The sort menu (ADR-0052): each choice in the order it starts in.
+function SortMenu({ filters, size }: { filters: Filters; size: PageSize }) {
+  return (
+    <ToolbarMenu
+      label={strings.sortMenu.label}
+      group="sort"
+      icon={<SortableIcon />}
+      heading={strings.sortMenu.heading}
+      reset={{
+        key: DEFAULT_APPLICATION_SORT.key,
+        href: at({ ...filters, sort: DEFAULT_APPLICATION_SORT }, size),
+        label: strings.sortMenu.reset,
+      }}
+      options={APPLICATION_SORT_MENU.map((key) => ({
+        key,
+        ...text.sort[key],
+        href: at({ ...filters, sort: { key, order: APPLICATION_SORT_ORDER[key] } }, size),
+        selected: key === filters.sort.key,
+      }))}
+    />
+  );
+}
+
+// The toolbar: status segments, counted within the search, and the sort
+// menu on the left; the search on the right.
 function toolbarParts(
   searched: Application[],
   filters: Filters,
   size: PageSize,
 ): { start: ReactNode; end: ReactNode } {
-  const cleared = { ...filters, filter: "all" as const, search: "" };
   return {
     start: (
-      <SegmentedControl
-        group="filter"
-        label={text.filterLabel}
-        segments={FILTERS.map((option) => ({
-          key: option,
-          label: FILTER_LABELS[option],
-          count: searched.filter((a) => matchesFilter(a, option)).length,
-          href: at({ ...filters, filter: option }, size),
-          selected: option === filters.filter,
-        }))}
-      />
+      <>
+        <SegmentedControl
+          group="filter"
+          label={text.filterLabel}
+          segments={FILTERS.map((option) => ({
+            key: option,
+            label: FILTER_LABELS[option],
+            count: searched.filter((a) => matchesFilter(a, option)).length,
+            href: at({ ...filters, filter: option }, size),
+            selected: option === filters.filter,
+          }))}
+        />
+        <SortMenu filters={filters} size={size} />
+      </>
     ),
     end: (
       <>
-        {filters.filter !== "all" || filters.search !== "" ? (
-          <PendingLink className={panelStyles.clear} href={at(cleared, size)} group="clear">
-            {text.clearFilters}
-          </PendingLink>
-        ) : null}
         <SearchBox
           path={PATH}
           query={filters.search}
           keep={{ ...query({ ...filters, search: "" }), ...sizeQuery(size) }}
           placeholder={text.searchPlaceholder}
         />
+        {/* When the mailbox was last read (ADR-0052); it arrives on its own. */}
+        <Suspense fallback={null}>
+          <FreshnessPill />
+        </Suspense>
       </>
     ),
   };
@@ -204,22 +228,10 @@ function ApplicationList({
       </ListPanel>
     );
   }
-  const byLastEvent = filters.sort.key === PHONE_SORT_KEY;
-  const filtered = filters.filter !== "all" || filters.search !== "";
   return (
     <ListPanel
       start={start}
       end={end}
-      summary={
-        <ListSummary
-          clearHref={filtered ? at({ ...filters, filter: "all", search: "" }, size) : null}
-          clearLabel={text.clearFilters}
-          sortLabel={text.columns.lastEvent}
-          sortHref={at({ ...filters, sort: nextSort(filters.sort, PHONE_SORT_KEY) }, size)}
-          order={byLastEvent ? filters.sort.order : null}
-          nextOrder={nextSort(filters.sort, PHONE_SORT_KEY).order}
-        />
-      }
       footer={
         <Pagination
           location={location(filters)}
@@ -230,7 +242,10 @@ function ApplicationList({
         />
       }
     >
+      {/* Keyed by the list's address: a new page or filter starts its
+          rows at the top of their scroller (ADR-0052). */}
       <ApplicationTable
+        key={listUrl(location(filters), page, size)}
         applications={pageSlice(matching, page, size)}
         sorting={sortingOf(filters, size)}
       />

@@ -25,7 +25,8 @@ export function PageSizeSelect({ location, size }: { location: ListLocation; siz
   }
   return (
     <label className={styles.sizeLabel}>
-      {strings.pagination.perPage}
+      {/* A narrow bar hides the words, not the name (ADR-0052). */}
+      <span className={styles.sizeText}>{strings.pagination.perPage}</span>
       <span className={styles.selectWrap}>
         <select
           name="pageSize"
