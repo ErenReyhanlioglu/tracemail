@@ -84,7 +84,7 @@ Nothing alerted in between.
 | Pay the past-due invoice and enable billing again | mitigate | Done (2026-11-10) |
 | Check that no dataset or table was set to expire | process | Done (2026-11-11): none |
 | Check that no mail of 2026-11-08 was missed | process | Done (2026-11-11): 12 of 12 stored |
-| Set up a budget with e-mail alerts and billing notifications on the billing account | prevent | Open (owner, in the console) |
+| Set up a budget with e-mail alerts and billing notifications on the billing account | prevent | Done (2026-11-11, in the console) |
 | Measure October's GCS Class A operations against the free tier; apply the 85% rule (ADR-0030) if needed | prevent | Open |
 | Alert when no run record arrives for several hours, without a separate observability stack | mitigate | Open (needs an ADR) |
 | Keep a trace of a failed step when the run record cannot be written to BigQuery | mitigate | Open |
