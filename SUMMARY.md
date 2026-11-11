@@ -34,15 +34,16 @@ them on a public panel.
 6. Measures its own operation: run history, parse rates, data tests.
 7. Measures the LLM side: every call's model, prompt version, token count,
    duration, cost, and schema conformance are recorded; summarized over weekly
-   windows, with a monthly budget cap enforced.
+   windows, with per-model daily quotas and a zero spending cap enforced.
 
 ## LLM evaluation and monitoring
 
 Model selection is done by measurement. On a hand-labeled golden set of 30–40
-postings, two or three models and several prompt versions are compared on
-accuracy, consistency, cost, and latency; results are kept in MLflow. Every
-time a prompt changes, the same measurement runs in CI, and the change does not
-pass if accuracy drops.
+postings, candidate models and several prompt versions are compared on
+accuracy, consistency, cost, and latency; results are kept in MLflow. Models
+that pass form a pool, and each call is routed to the first model in the pool
+with quota left. Every time a prompt changes, the same measurement runs in CI
+for every model in the pool, and the change does not pass if accuracy drops.
 
 In production, quality is monitored through indirect signals: schema error and
 retry rate, the share of verdicts with no supporting evidence, and drift in the
@@ -87,7 +88,7 @@ clean URL.
 | Transformation and modeling | dbt |
 | Backend | FastAPI (capture and interface endpoints) |
 | Frontend | Next.js |
-| LLM | Via Gemini Enterprise Agent Platform (formerly Vertex AI), two tiers; starting with Gemini, final choice by golden-set comparison |
+| LLM | Free managed inference APIs (Groq, Cloudflare Workers AI), two tiers, each routed over a pool of models chosen by golden-set comparison ([ADR-0051](docs/adr/0051-free-managed-inference-apis-and-a-routed-model-pool.md)) |
 | Matching | LLM evaluation with the full master profile as context, no retrieval ([ADR-0001](docs/adr/0001-no-retrieval-in-matching-embeddings-only-for-rough-ranking.md)) |
 | LLM evaluation | MLflow (experiment tracking), golden set |
 | LLM call log | BigQuery table, weekly summary with dbt |
@@ -140,7 +141,8 @@ formats, Kubernetes, and Azure.
 
 ## Open decisions
 
-- The list of models to compare
+None at present. The list of models to compare was decided in
+[ADR-0051](docs/adr/0051-free-managed-inference-apis-and-a-routed-model-pool.md).
 
 ## Competencies the project must deliver
 
@@ -157,7 +159,7 @@ implementation, the concrete counterparts of these items must not be skipped.
 | Data modeling | Fact and dimension tables (star schema); deduplicating the same entity arriving from different sources; incremental models | dbt |
 | Data quality | Schema and content tests, cross-source consistency checks, measuring parse success rate | dbt tests, pytest |
 | Cloud fundamentals | Project and billing setup, service accounts with least privilege, secret management, budget and quota limits | GCP IAM, Oracle Cloud VM |
-| Using a managed AI service | Calling the LLM through the cloud platform's own service; a single provider-independent interface | Gemini Enterprise Agent Platform (Vertex AI) |
+| Using a managed AI service | Calling LLMs through managed inference APIs behind a single provider-independent interface; routing over a measured model pool with quota-aware fallback | Groq, Cloudflare Workers AI |
 | Structured LLM output | Output in a fixed schema instead of free text; schema validation and retry on failure | LLM, Pydantic |
 | LLM evaluation | Hand-labeled golden set; comparing model and prompt versions on accuracy, consistency, cost, and latency | MLflow |
 | CI/CD for ML/LLM | Evaluation runs automatically when a prompt or code changes, and the change is rejected if accuracy drops; successful changes are deployed to the server automatically | GitHub Actions |

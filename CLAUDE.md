@@ -214,7 +214,6 @@ docs/                ADRs, roadmap
   - ingestion → write to the raw and parsed zones only
   - transform (dbt) → BigQuery job user + data editor on its datasets
   - api → BigQuery read on mart datasets only
-  - llm (Phase 2) → the LLM platform user role only
   Never reuse a broad key "to get it working". If a permission is missing,
   name the exact role that is needed.
 
@@ -412,18 +411,26 @@ company correspondence). This section overrides convenience.
 
 - All calls go through one provider-agnostic interface (`Protocol`). Switching
   model is a config change, not a code change.
-- Two tiers: a cheap model for reply classification, a strong model for
-  matching verdicts. Which models is decided by the golden-set comparison, not
+- Free managed inference APIs only (ADR-0051). A model enters a tier's pool
+  only if its provider's own terms say inputs are not used for training and
+  it has passed the golden set. Which models is decided by measurement, not
   by preference.
+- **Routing:** each tier (classification, matching) has an ordered pool in
+  config. The router falls back to the next model on an exhausted daily quota
+  or a rate-limit or availability error. One item (a mail, a posting's
+  report) uses one model for all its calls; the report records which.
 - **Structured output only.** Every response is validated against a Pydantic
   schema. On validation failure: limited retries (count in config), then
   record the failure. Never accept free text as a fallback.
-- **Every call is logged** to `ops.llm_calls`: model, prompt version, input and
-  output tokens, latency, cost, schema-valid flag, retry count, run id. No
+- **Every call is logged** to `ops.llm_calls`: provider, model, prompt version,
+  input and output tokens, latency, cost, schema-valid flag, retry count,
+  fallback flag, run id. No
   call bypasses the logger, including in evals.
-- **Budget cap** is checked before every call against the current month's
-  logged cost. Over the cap → `LlmBudgetExceededError`, the item is skipped
-  and recorded, the run continues.
+- **Budget cap** is zero: a call to a model whose configured price is not
+  zero is refused. Per-model daily quotas are checked against usage logged in
+  `ops.llm_calls`. Over the cap or with every pool model exhausted →
+  `LlmBudgetExceededError`, the item is skipped and recorded, the run
+  continues.
 - Prompts live in `packages/llm/prompts/` as text files with an explicit version in the
   filename. Changing prompt text means a new version, never an in-place edit.
 - Timeout on every call.
@@ -456,7 +463,8 @@ company correspondence). This section overrides convenience.
 - Every eval run is logged to MLflow with model, prompt version, accuracy,
   consistency (repeat runs), cost, and latency.
 - The CI eval gate runs when anything under `packages/llm/` or
-  `packages/evals/` changes, and fails if accuracy drops below the recorded baseline.
+  `packages/evals/` changes, and fails if any pool model's accuracy drops below
+  its recorded baseline.
   It is the only place in CI that makes real LLM calls.
 
 ---

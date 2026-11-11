@@ -88,8 +88,8 @@ from any device, running hourly in production. No LLM.
 Reply classification for unclaimed mail; master profile (owner-written);
 capture button and endpoint; two-step match report with verbatim quotes and
 substring verification; golden set (owner-labeled); model and prompt
-comparison in MLflow; LLM call log and monthly budget cap; CI eval gate.
-Open decision: which models to compare. Ends with `v0.2.0`.
+comparison in MLflow; LLM call log, model pool routing, and a zero spending
+cap (ADR-0051); CI eval gate. Ends with `v0.2.0`.
 
 ## Phase 3: Interface
 
