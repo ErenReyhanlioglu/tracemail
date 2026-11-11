@@ -18,21 +18,22 @@
   --color-text-secondary: light-dark(#4b5563, #aab2be);
   --color-text-muted: light-dark(#5b6472, #8f99a8);
 
-  /* Sidebar: dark in both themes, as in the mockups */
-  --color-sidebar: light-dark(#151a21, #0b0e12);
-  --color-sidebar-text: #c9cfd8;
-  --color-sidebar-text-strong: #ffffff;
-  --color-sidebar-text-dim: #7d8794;
-  --color-sidebar-rule: #2a313b;
-  --color-sidebar-track: #232a34;
-  --color-sidebar-knob: #e6e9ee;
+  /* Sidebar and phone bars follow the theme (ADR-0034, note of
+     2026-11-11): a white surface in light, the mockups' #151a21 in dark. */
+  --color-sidebar: light-dark(#ffffff, #151a21);
+  --color-sidebar-text: light-dark(#4b5563, #c9cfd8);
+  --color-sidebar-text-strong: light-dark(#14181f, #ffffff);
+  --color-sidebar-text-dim: light-dark(#6b7480, #7d8794);
+  --color-sidebar-rule: light-dark(#e3e6eb, #2a313b);
+  --color-sidebar-track: light-dark(#eceef1, #232a34);
+  --color-sidebar-knob: light-dark(#14181f, #e6e9ee);
+  --color-sidebar-knob-icon: light-dark(#ffffff, #151a21);
   --color-accent: #1f4fd8;
   --color-on-accent: #ffffff;
 
-  /* Logo dot: the accent on light surfaces, a lighter blue on dark ones
-     (the sidebar is dark in both themes). From the owner's logo set. */
+  /* Logo dot: the accent on light surfaces, a lighter blue on dark ones.
+     From the owner's logo set. */
   --logo-accent: light-dark(#1f4fd8, #7ea0ff);
-  --logo-accent-on-dark: #7ea0ff;
   --logo-size: 1.5rem;
   --logo-size-lg: 3rem;
   /* Health panel introduction (ADR-0040): readable line length. */
@@ -199,7 +200,7 @@
   --press-duration: var(--motion-fast);
   --press-opacity: 0.6;
   --color-pressed: light-dark(rgb(20 24 31 / 0.08), rgb(230 233 238 / 0.08));
-  --color-sidebar-pressed: rgb(255 255 255 / 0.12);
+  --color-sidebar-pressed: light-dark(rgb(20 24 31 / 0.08), rgb(255 255 255 / 0.12));
 
   /* "Sign in with Google" button: Google's light and dark themes, sizes,
      and padding, fixed by its branding guidelines (ADR-0039), not ours. */
@@ -259,6 +260,14 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
+}
+
+/* Theme switch (ADR-0034, note of 2026-11-11): the toggle wraps the change
+   in a view transition, so the old theme cross-fades into the new one
+   instead of jumping. The spec's default cross-fade, at the slow token. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--motion-slow);
 }
 
 *,

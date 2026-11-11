@@ -494,7 +494,8 @@ company correspondence). This section overrides convenience.
 - Private data is fetched server-side with the session; it never reaches a
   visitor's browser, not even hidden. Visitors' locked pages are static.
 - Design tokens come from the mockups: IBM Plex Sans / IBM Plex Mono, sidebar
-  `#151A21`, accent `#1F4FD8`, background `#F5F6F8`, success `#0B6B57`, warning
+  `#151A21` in dark and white in light (ADR-0034), accent `#1F4FD8`,
+  background `#F5F6F8`, success `#0B6B57`, warning
   `#FCEBD0` / `#7A4300`. Define them once as tokens, not inline per component.
 - Numbers use the mono font, as in the mockups.
 - Phones (ADR-0047): one breakpoint, named once in `src/app/media.css`

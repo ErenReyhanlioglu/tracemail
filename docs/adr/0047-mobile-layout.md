@@ -240,6 +240,13 @@ after each check):
   Safari 26); Firefox shows the row without it.
 - Loading and transition states were left for later (ADR-0048).
 
+**Note, 2026-11-11:** point 6 now applies to wide screens as well, except
+on the health panel. The applications, postings, and locked pages show no
+title row at any width. The sidebar marks the section, and the row held
+nothing but the title above a large table. The `h1` stays for screen
+readers. The health panel keeps its title as the public landing page
+(ADR-0040).
+
 ## References
 
 ## References

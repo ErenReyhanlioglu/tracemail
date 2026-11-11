@@ -48,7 +48,7 @@ written at the moment the decision is made — not drafted ahead of time.
 | [0031](0031-sent-mail-is-a-phase-4-option.md) | Sent Mail Is Not Ingested; Direct Applications Are a Phase 4 Option | Accepted |
 | [0032](0032-owner-login-implementation.md) | Owner Login Implementation — Authlib, a Signed Session Cookie, and Fixed Routes | Accepted; refusal page superseded by [0040](0040-viewer-routing-and-public-landing.md) |
 | [0033](0033-ui-copy-in-turkish.md) | User-Facing UI Copy Is Turkish | Accepted |
-| [0034](0034-web-ui-design-system.md) | Web UI Design System — Mockup Tokens, Semantic Status Colors, Light and Dark Themes | Accepted; status labels amended by [0047](0047-mobile-layout.md) |
+| [0034](0034-web-ui-design-system.md) | Web UI Design System — Mockup Tokens, Semantic Status Colors, Light and Dark Themes | Accepted; status labels amended by [0047](0047-mobile-layout.md); sidebar follows the theme (2026-11-11) |
 | [0035](0035-deploy-user-restricted-by-login-shell-and-sudo.md) | Deploy User Restricted by Login Shell and One Sudo Rule | Accepted |
 | [0036](0036-dev-and-prod-share-the-free-tier.md) | Dev and Prod Share One Free Tier | Accepted |
 | [0037](0037-dbt-build-in-ci-on-dev-data.md) | dbt Build in CI on Dev Data through Workload Identity Federation | Accepted |
@@ -61,7 +61,7 @@ written at the moment the decision is made — not drafted ahead of time.
 | [0044](0044-health-panel-core-metrics.md) | Health Panel Core — What to Measure and Show before Phase 2 | Accepted; panel copy amended by [0047](0047-mobile-layout.md) |
 | [0045](0045-delivery-metrics.md) | Delivery Metrics (DORA) — Source, Failure Definition, and Lead Time | Accepted; failure list amended by ADR-0046, measure captions by [0047](0047-mobile-layout.md) |
 | [0046](0046-failure-list-by-pull-request-and-separate-delivery-query.md) | Failure List by Pull Request, and a Separate Delivery Query | Accepted |
-| [0047](0047-mobile-layout.md) | Mobile Layout — Bottom Bar, Named Breakpoint, Stacked List Rows | Accepted |
+| [0047](0047-mobile-layout.md) | Mobile Layout — Bottom Bar, Named Breakpoint, Stacked List Rows | Accepted; no title row on list pages at any width (2026-11-11) |
 | [0048](0048-interaction-feedback.md) | Interaction Feedback — Pressing and Hover | Accepted |
-| [0049](0049-waiting-feedback.md) | Waiting Feedback — Instant Selection, a Quiet Pending State, and Loading on Every Route | Accepted |
+| [0049](0049-waiting-feedback.md) | Waiting Feedback — Instant Selection, a Quiet Pending State, and Loading on Every Route | Accepted; visitor sections fade in (2026-11-11) |
 | [0050](0050-health-panel-sections-load-and-fail-independently.md) | Health Panel Sections Load and Fail Independently | Accepted; cold path (point 4) open |

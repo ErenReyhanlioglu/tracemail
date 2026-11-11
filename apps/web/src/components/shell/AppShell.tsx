@@ -19,11 +19,17 @@ export function AppShell({
   viewer: Viewer;
   children: ReactNode;
 }) {
+  // A visitor's section fades in (ADR-0049, note of 2026-11-11); the owner's
+  // stays instant. Every page renders this same shell, so the section as key
+  // makes a section change mount a new content area, which plays the fade.
+  const mainClass = viewer === "visitor" ? `${styles.main} ${styles.fadeIn}` : styles.main;
   return (
     <div className={styles.shell}>
       <MobileHeader viewer={viewer} />
       <Sidebar active={active} viewer={viewer} />
-      <main className={styles.main}>{children}</main>
+      <main key={active} className={mainClass}>
+        {children}
+      </main>
       <BottomNav active={active} viewer={viewer} />
     </div>
   );

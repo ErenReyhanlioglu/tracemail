@@ -46,7 +46,6 @@ import { parseQuery } from "@/lib/search";
 import { nextSort, parseSort } from "@/lib/sorting";
 import { strings } from "@/lib/strings";
 
-import styles from "../list.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -230,9 +229,7 @@ export default async function PostingsPage({
     data !== null && data.counts.all === 0 && filters.period === "all" && filters.search === "";
   return (
     <AppShell active="postings" viewer="owner">
-      <header className={styles.header}>
-        <h1 className={styles.title}>{text.title}</h1>
-      </header>
+      <h1 className="visually-hidden">{text.title}</h1>
       {!loaded.ok ? (
         <UnavailableState reason={loaded.reason} />
       ) : neverAny ? (

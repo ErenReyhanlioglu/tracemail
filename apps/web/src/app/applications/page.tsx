@@ -44,7 +44,6 @@ import { matchesSearch, parseQuery, SEARCH_PARAM } from "@/lib/search";
 import { nextSort, parseSort, type Sort, sortQuery } from "@/lib/sorting";
 import { strings } from "@/lib/strings";
 
-import styles from "../list.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -109,9 +108,7 @@ export default async function ApplicationsPage({
   }
   return (
     <AppShell active="applications" viewer="owner">
-      <header className={styles.header}>
-        <h1 className={styles.title}>{text.title}</h1>
-      </header>
+      <h1 className="visually-hidden">{text.title}</h1>
       {!loaded.ok ? (
         <UnavailableState reason={loaded.reason} />
       ) : loaded.data.length === 0 ? (

@@ -19,10 +19,22 @@ function effectiveTheme(): Theme {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
-function toggle(): void {
-  const next: Theme = effectiveTheme() === "dark" ? "light" : "dark";
+function applyTheme(next: Theme): void {
   document.documentElement.dataset.theme = next;
   document.cookie = `${THEME_COOKIE}=${next}; path=/; max-age=${THEME_COOKIE_MAX_AGE_SECONDS}; samesite=lax`;
+}
+
+// The old theme cross-fades into the new one (ADR-0034, note of
+// 2026-11-11). Browsers without view transitions switch at once.
+function toggle(): void {
+  const next: Theme = effectiveTheme() === "dark" ? "light" : "dark";
+  if (typeof document.startViewTransition !== "function") {
+    applyTheme(next);
+    return;
+  }
+  document.startViewTransition(() => {
+    applyTheme(next);
+  });
 }
 
 function SunIcon() {
