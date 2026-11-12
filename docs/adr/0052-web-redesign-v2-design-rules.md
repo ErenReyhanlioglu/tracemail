@@ -297,7 +297,8 @@ panel, phone menu) are implemented one at a time on top of these rules.
     22 px and a delivery measure at 20 px, both mono and semibold
     (`--text-score`, `--text-measure`); names in medium weight, their
     notes and the windows' captions a step smaller; the 30-day strips at
-    22 px and the deployments' strip thin (10 px); the deployments table's
+    22 px, the deployments' strip too (the mockup's
+    thin 10 px strip read as squashed beside them, owner's review); the deployments table's
     head in the columns' mono capitals. The placeholders that hold each part's
     height while it loads (ADR-0050) were re-measured for this layout on
     2026-11-11, in headless Chrome against dev data: at 1440 px the parts
