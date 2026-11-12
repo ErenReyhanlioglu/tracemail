@@ -308,11 +308,6 @@
   height: var(--cell-height-tall);
 }
 
-.thin .cell {
-  height: var(--cell-height-thin);
-  border-radius: calc(var(--cell-radius) - 1px);
-}
-
 .ok {
   background: var(--cell-ok);
 }

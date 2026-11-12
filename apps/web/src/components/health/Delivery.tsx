@@ -122,7 +122,6 @@ export function Delivery({ panel }: { panel: DeliveryPanel }) {
           cells={deliveryCells(panel.delivery_days, new Date(panel.read_at))}
           detail={last ? text.lastDeploy(formatDayMonthTime(new Date(last))) : DASH}
           words={text.cells}
-          thin
         />
         <Measures delivery={delivery} />
         <Recent deployments={panel.recent_deployments} />

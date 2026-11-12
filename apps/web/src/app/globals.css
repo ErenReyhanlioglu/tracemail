@@ -79,7 +79,6 @@
      the strip, and two numbers. */
   --cell-height: 1.375rem;
   --cell-height-tall: 1.375rem;
-  --cell-height-thin: 0.625rem;
   --cell-radius: 4px;
   --cell-gap: 4px;
   --stage-col-name: 10.5rem;
@@ -318,7 +317,7 @@
   --panel-stages-height: 25.1875rem;
   --panel-history-height: 21.125rem;
   --panel-resources-height: 20.25rem;
-  --panel-delivery-height: 33.5rem;
+  --panel-delivery-height: 34.25rem;
   --skeleton-menu-width: 9rem;
 }
 
@@ -331,7 +330,7 @@
     --panel-stages-height: 49.5rem;
     --panel-history-height: 23.3125rem;
     --panel-resources-height: 37.75rem;
-    --panel-delivery-height: 49rem;
+    --panel-delivery-height: 49.75rem;
   }
 }
 
@@ -344,7 +343,7 @@
     --panel-stages-height: 35.8125rem;
     --panel-history-height: 22.1875rem;
     --panel-resources-height: 31rem;
-    --panel-delivery-height: 33.625rem;
+    --panel-delivery-height: 34.375rem;
   }
 }
 
